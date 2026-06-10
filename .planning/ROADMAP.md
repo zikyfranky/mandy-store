@@ -29,7 +29,7 @@
 **Plans**: 4 plans (4 waves)
 Plans:
 **Wave 1**
-- [~] 01-01-PLAN.md — Dev env, Drizzle schema (order_status enum + webhook table) pushed to Neon, Vitest/Playwright Wave 0 test infra *(Tasks 1-3 complete; paused at Task 4 checkpoint — awaiting .env.local secrets)*
+- [x] 01-01-PLAN.md — Dev env, Drizzle schema (order_status enum + webhook table) pushed to Neon, Vitest/Playwright Wave 0 test infra *(COMPLETE 2026-06-10 — schema live in Neon; all 4 schema tests pass; ROADMAP SC5 satisfied)*
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-02-PLAN.md — Auth.js v5 config (Credentials + DB sessions, D-08 workaround), DAL verifySession, Resend email seam
@@ -106,7 +106,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/4 | Planned | - |
+| 1. Foundation | 1/4 | Executing | 01-01 complete 2026-06-10 |
 | 2. Product Catalog | 0/0 | Not started | - |
 | 3. Cart | 0/0 | Not started | - |
 | 4. Checkout & Payments | 0/0 | Not started | - |
