@@ -26,7 +26,12 @@
   3. A logged-in user can log out from any page and is returned to a logged-out state
   4. Unauthenticated requests to protected routes (/admin/*, /account/*) are redirected to login, and every protected Server Action re-verifies the session (not proxy.ts alone)
   5. The database schema exists with a canonical order status enum (pending_payment, awaiting_bank_transfer, payment_confirmed, processing, shipped, delivered, cancelled, payment_failed) and a processed_webhook_events table with a unique constraint on event ID
-**Plans**: TBD
+**Plans**: 4 plans (4 waves)
+Plans:
+- [ ] 01-01-PLAN.md — Dev env, Drizzle schema (order_status enum + webhook table) pushed to Neon, Vitest/Playwright Wave 0 test infra
+- [ ] 01-02-PLAN.md — Auth.js v5 config (Credentials + DB sessions, D-08 workaround), DAL verifySession, Resend email seam
+- [ ] 01-03-PLAN.md — Auth server actions (register/login/logout/verifyEmail) + admin seed script
+- [ ] 01-04-PLAN.md — proxy.ts route protection, auth UI pages/forms, protected route stubs, proxy e2e tests
 
 ### Phase 2: Product Catalog
 **Goal**: Customers can discover products by browsing, searching, and filtering, and can inspect a product with live variant-aware pricing — the first publicly shippable piece of the store.
@@ -94,7 +99,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/0 | Not started | - |
+| 1. Foundation | 0/4 | Planned | - |
 | 2. Product Catalog | 0/0 | Not started | - |
 | 3. Cart | 0/0 | Not started | - |
 | 4. Checkout & Payments | 0/0 | Not started | - |
