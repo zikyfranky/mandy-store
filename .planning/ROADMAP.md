@@ -28,9 +28,16 @@
   5. The database schema exists with a canonical order status enum (pending_payment, awaiting_bank_transfer, payment_confirmed, processing, shipped, delivered, cancelled, payment_failed) and a processed_webhook_events table with a unique constraint on event ID
 **Plans**: 4 plans (4 waves)
 Plans:
+**Wave 1**
 - [ ] 01-01-PLAN.md — Dev env, Drizzle schema (order_status enum + webhook table) pushed to Neon, Vitest/Playwright Wave 0 test infra
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-02-PLAN.md — Auth.js v5 config (Credentials + DB sessions, D-08 workaround), DAL verifySession, Resend email seam
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 01-03-PLAN.md — Auth server actions (register/login/logout/verifyEmail) + admin seed script
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 01-04-PLAN.md — proxy.ts route protection, auth UI pages/forms, protected route stubs, proxy e2e tests
 
 ### Phase 2: Product Catalog
