@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-06-10T18:35:00Z"
+last_updated: "2026-06-10T19:52:00Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
-  percent: 4
+  completed_plans: 2
+  percent: 8
 ---
 
 # Project State: Mandy Store
@@ -25,18 +25,18 @@ progress:
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 4 — NEXT (01-02-PLAN.md)
+Plan: 3 of 4 — NEXT (01-03-PLAN.md)
 
 - **Phase:** 1 of 6 — Foundation
-- **Plan:** 01-01 COMPLETE; next is 01-02 (Auth.js v5 config + DAL)
-- **Status:** EXECUTING — Plan 01-01 done; Plans 01-02 through 01-04 remaining
-- **Progress:** [#         ] 1/4 phase-1 plans complete
+- **Plan:** 01-01 COMPLETE; 01-02 COMPLETE; next is 01-03 (register/login/logout actions + admin seed)
+- **Status:** EXECUTING — Plans 01-01 and 01-02 done; Plans 01-03 and 01-04 remaining
+- **Progress:** [##        ] 2/4 phase-1 plans complete
 
 ## Performance Metrics
 
 - Phases completed: 0/6
-- Plans completed: 1 (01-01 complete 2026-06-10, ~35 min)
-- Requirements delivered: 0/27 (AUTH-01/02/03 partially scaffolded — schema + test infra; full delivery in Plans 01-02 through 01-04)
+- Plans completed: 2 (01-01 complete 2026-06-10 ~35 min; 01-02 complete 2026-06-10 ~67 min)
+- Requirements delivered: 0/27 (AUTH-02/AUTH-03 infra delivered; full delivery with UI in Plan 01-04)
 
 ## Accumulated Context
 
@@ -49,7 +49,10 @@ Plan: 2 of 4 — NEXT (01-02-PLAN.md)
 - Cart cookie stores only { variantId, quantity }; totals always recalculated server-side.
 - Node 22 pinned via .nvmrc; all deps (argon2 native addon, drizzle-orm, next-auth@beta) installed on Node 22.
 - Drizzle schema uses pgEnum for order_status (8 values) and role; processedWebhookEvents table has named unique constraint for webhook idempotency.
-- Auth.js v5 Drizzle adapter shape confirmed; D-08 workaround (manual session insert in jwt callback) will be implemented in Plan 01-02.
+- Auth.js v5 Drizzle adapter shape confirmed; D-08 workaround implemented in Plan 01-02 (manual db.insert(sessions) in jwt callback when account.provider === "credentials").
+- DAL verifySession()/verifyAdminSession() implemented in src/lib/dal.ts with import "server-only" guard; 9 unit tests passing.
+- Resend email seam implemented in src/lib/email/send-verification.ts; React Email template in src/emails/VerificationEmail.tsx.
+- Auth.js route handler wired at src/app/api/auth/[...nextauth]/route.ts.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -77,9 +80,9 @@ Plan: 2 of 4 — NEXT (01-02-PLAN.md)
 
 ## Session Continuity
 
-**Last session:** 2026-06-10T18:35:00Z
-**Stopped at:** Plan 01-01 fully complete (Tasks 1-5 done; schema live in Neon; ROADMAP SC5 satisfied)
-**Resume file:** .planning/phases/01-foundation/01-02-PLAN.md
+**Last session:** 2026-06-10T19:52:00Z
+**Stopped at:** Plan 01-02 fully complete (Tasks 1-3 done; auth.ts+dal.ts+send-verification.ts live; 9/9 tests pass; tsc clean)
+**Resume file:** .planning/phases/01-foundation/01-03-PLAN.md
 
 ---
 *State initialized: 2026-06-10*
