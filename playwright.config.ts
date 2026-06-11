@@ -18,7 +18,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // Must use --webpack: Turbopack native bindings unavailable on darwin/arm64 (CLAUDE.md)
+    command: "npx next dev --webpack",
     url: "http://localhost:3000",
     reuseExistingServer: true,
   },
