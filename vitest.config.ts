@@ -19,6 +19,9 @@ export default defineConfig({
     globals: true,
     // Run test files sequentially so auth DB tests don't collide (shared Neon DB)
     fileParallelism: false,
+    // Neon serverless latency can exceed the default 5s/10s timeouts — extend generously
+    testTimeout: 30000,
+    hookTimeout: 30000,
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

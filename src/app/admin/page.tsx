@@ -3,11 +3,13 @@
 // SECURITY: verifyAdminSession() is called FIRST — in-page re-verify (SC4, CLAUDE.md dual-layer).
 // proxy.ts alone is NOT sufficient; Server Actions/Server Components must re-verify independently.
 // T-01-16, T-01-17: double-auth enforces admin role at the render layer, not just the proxy redirect.
+// cacheComponents: session verification (dynamic data) is inside Suspense.
 
+import { Suspense } from "react"
 import { verifyAdminSession } from "@/lib/dal"
 import { logout } from "@/lib/actions/auth"
 
-export default async function AdminPage() {
+async function AdminContent() {
   // In-page re-verify — DAL layer 2 of dual-layer protection (CLAUDE.md, RESEARCH Pitfall 3)
   const user = await verifyAdminSession()
 
@@ -43,5 +45,13 @@ export default async function AdminPage() {
         Admin panel is coming in Phase 5 (Admin Panel).
       </p>
     </main>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<div className="max-w-5xl mx-auto px-4 py-10 animate-pulse" aria-hidden="true" />}>
+      <AdminContent />
+    </Suspense>
   )
 }

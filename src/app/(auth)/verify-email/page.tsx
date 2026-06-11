@@ -2,7 +2,9 @@
 // Email verification landing page — Server Component.
 // Reads token + email from query params, calls verifyEmail() server action.
 // Next.js 16: searchParams is a Promise — must await before accessing.
+// cacheComponents: All dynamic data (searchParams + verifyEmail DB call) is inside Suspense.
 
+import { Suspense } from "react"
 import { verifyEmail } from "@/lib/actions/auth"
 import Link from "next/link"
 
@@ -10,7 +12,12 @@ interface VerifyEmailPageProps {
   searchParams: Promise<{ token?: string; email?: string }>
 }
 
-export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
+async function VerificationContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string; email?: string }>
+}) {
+  // All dynamic data access is inside this Suspense-wrapped component
   const { token, email } = await searchParams
 
   if (!token || !email) {
@@ -67,5 +74,19 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
         Sign in
       </Link>
     </div>
+  )
+}
+
+export default function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Verifying your email…</p>
+        </div>
+      }
+    >
+      <VerificationContent searchParams={searchParams} />
+    </Suspense>
   )
 }

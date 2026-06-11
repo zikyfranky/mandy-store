@@ -1,65 +1,111 @@
-import Image from "next/image";
+// src/app/page.tsx
+// Storefront landing — replaces Next.js scaffold (D-07).
+// Server Component; no searchParams (no query-param filtering on landing page).
+// Zones: A (hero) | B (category entry points) | C (featured products grid)
+// cacheComponents: getCatalog call wrapped in Suspense-based inner component.
 
-export default function Home() {
+import type { Metadata } from "next"
+import { Suspense } from "react"
+import Link from "next/link"
+import { getCatalog } from "@/lib/catalog/queries"
+import { ProductCard } from "@/components/catalog/ProductCard"
+import { CategoryCard } from "@/components/catalog/CategoryCard"
+
+export const metadata: Metadata = {
+  title: "Mandy Store — Electronics, Watches & Phones",
+  description: "Shop the best electronics, watches, and phones in Nigeria. Free delivery on orders over ₦50,000.",
+}
+
+const CATEGORIES = [
+  { name: "Electronics", slug: "electronics" },
+  { name: "Watches", slug: "watches" },
+  { name: "Phones", slug: "phones" },
+]
+
+async function FeaturedProducts() {
+  const featured = await getCatalog({ sort: "newest", page: 1 })
+  const featuredProducts = featured.products.slice(0, 8)
+
+  if (featuredProducts.length === 0) {
+    return (
+      <div className="text-center py-16 text-zinc-500 dark:text-zinc-400">
+        <p className="text-base">No products available yet. Check back soon!</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {featuredProducts.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <main className="flex-1">
+      {/* Zone A: Hero banner */}
+      <section
+        className="relative w-full h-56 sm:h-80 bg-zinc-900 flex items-center overflow-hidden"
+        aria-label="Hero banner"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-zinc-900/40" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <h1 className="text-3xl font-semibold text-white leading-tight max-w-xl">
+            Find the best in electronics, watches &amp; phones
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-3 text-base text-zinc-300 font-normal">
+            Free delivery on orders over ₦50,000
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Zone B: Category entry points */}
+        <section className="py-12" aria-label="Shop by category">
+          <h2 className="sr-only">Shop by category</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {CATEGORIES.map((cat) => (
+              <CategoryCard key={cat.slug} name={cat.name} slug={cat.slug} />
+            ))}
+          </div>
+        </section>
+
+        {/* Zone C: Featured products */}
+        <section className="pb-16" aria-label="Featured products">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+              Featured Products
+            </h2>
+            <Link
+              href="/products"
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            >
+              View all products
+            </Link>
+          </div>
+
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden" aria-hidden="true">
+                    <div className="aspect-[4/3] bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+                    <div className="p-4 space-y-2">
+                      <div className="h-3 w-16 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+                      <div className="h-4 w-full rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            }
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+            <FeaturedProducts />
+          </Suspense>
+        </section>
+      </div>
+    </main>
+  )
 }
