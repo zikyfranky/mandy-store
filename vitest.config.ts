@@ -7,6 +7,8 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    // Run test files sequentially so auth DB tests don't collide (shared Neon DB)
+    fileParallelism: false,
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
