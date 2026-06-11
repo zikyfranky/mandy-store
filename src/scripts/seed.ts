@@ -3,6 +3,7 @@
 // Run: npx tsx src/scripts/seed.ts   (also: npm run seed)
 // Source: RESEARCH.md §Open Question 3, CONTEXT.md D-10b, PLAN 01-03 Task 3
 
+import "@/scripts/load-env" // MUST be first — populates .env.local before the db client reads DATABASE_URL
 import { db } from "@/lib/db/client"
 import { users } from "@/lib/db/schema"
 import * as argon2 from "argon2"
