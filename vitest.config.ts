@@ -1,6 +1,16 @@
 import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 import path from "path"
+import { loadEnvFile } from "node:process"
+
+// Load .env.local so DB-backed auth tests (DATABASE_URL) run without requiring
+// the var to be exported in the shell. No-op if .env.local is absent (e.g. CI
+// injecting real env vars). Mirrors src/scripts/load-env.ts for standalone runs.
+try {
+  loadEnvFile(".env.local")
+} catch {
+  // env vars assumed to be provided by the runtime
+}
 
 export default defineConfig({
   plugins: [react()],
