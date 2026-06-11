@@ -40,3 +40,28 @@ export async function truncateAuthTables() {
   await db.delete(schema.processedWebhookEvents)
   await db.delete(schema.users)
 }
+
+/**
+ * Truncate all catalog tables in the correct FK-safe order.
+ * RESEARCH.md §Validation Architecture: variantOptionValues → variants → optionValues
+ *   → productOptions → productImages → products → brands → categories
+ * Call in `beforeEach` or `afterEach` for test isolation.
+ */
+export async function truncateCatalogTables() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not set — cannot truncate tables")
+  }
+
+  const { db } = await import("@/lib/db/client")
+  const schema = await import("@/lib/db/schema")
+
+  // Delete in FK-safe order: junction table first, then leaves, then roots
+  await db.delete(schema.variantOptionValues)
+  await db.delete(schema.variants)
+  await db.delete(schema.optionValues)
+  await db.delete(schema.productOptions)
+  await db.delete(schema.productImages)
+  await db.delete(schema.products)
+  await db.delete(schema.brands)
+  await db.delete(schema.categories)
+}
