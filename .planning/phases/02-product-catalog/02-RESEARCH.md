@@ -861,24 +861,28 @@ export async function generateStaticParams() {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Production domain for canonical URLs / metadataBase**
+   - RESOLVED: Use `NEXT_PUBLIC_BASE_URL` env var, placeholder `https://mandy-store.vercel.app` for dev (Plan 02-02 sets `metadataBase`; Plan 02-04 carries the deploy-time `user_setup` note).
    - What we know: The metadata API needs a `metadataBase` URL for canonical links to resolve correctly
    - What's unclear: The actual production domain (CLAUDE.md says Vercel deployment but no domain name given)
    - Recommendation: Use a placeholder `https://mandy-store.vercel.app` in seed/development; plan a task to set via `NEXT_PUBLIC_BASE_URL` env var at deploy time
 
 2. **Seed image source**
+   - RESOLVED: `picsum.photos` (Plan 02-01 seeds `https://picsum.photos/seed/<slug>-N/...`; Plan 02-04 whitelists it in `images.remotePatterns`).
    - What we know: Seed script must populate image URLs (Vercel Blob is Phase 5)
    - What's unclear: Which specific CDN or placeholder service to use for seeded images (Unsplash API requires attribution; `picsum.photos` is simpler for dev)
    - Recommendation: Use `https://picsum.photos` for seed images (no attribution required for development); plan a single `remotePatterns` entry
 
 3. **All-products page URL**
+   - RESOLVED: `/products` (Plan 02-02 creates `src/app/products/page.tsx`).
    - What we know: D-06 requires an "all-products page" in addition to category pages
    - What's unclear: The URL — `/products`, `/shop`, or `/catalog`?
    - Recommendation: `/products` (consistent with the `/products/[slug]` PDP pattern); planner should decide and create the route
 
 4. **Price sort implementation detail**
+   - RESOLVED: `MIN(price_kobo)` subquery per product, displayed as "From ₦X,XXX" on listing cards (Plan 02-02 Task 1).
    - What we know: Sorting a product list by "Price ↑/↓" requires the minimum variant price per product
    - What's unclear: Whether to show only the min price on listing cards, or "From ₦X,XXX"
    - Recommendation: Show "From ₦X,XXX" (friendlier for products with variant price ranges); planner should document this in the task
