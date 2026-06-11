@@ -56,7 +56,7 @@ Plans:
 - [x] 02-01-PLAN.md — Catalog Drizzle schema (8 tables + relations), [BLOCKING] schema push to Neon, realistic catalog seed, Wave 0 catalog test infra (schema/queries/variant-resolver + FK-safe truncation helper) *(COMPLETE 2026-06-11 — 8 tables live in Neon; 6-product seed across 3 categories; 64/64 tests pass)*
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 02-02-PLAN.md — Catalog query module (getCatalog/getProduct, search/filter/sort/pagination), NGN formatter, Zod searchParams validator, global header + search bar, listing surfaces (home, category pages, all-products, search) with facets/sort/pagination/empty state
+- [x] 02-02-PLAN.md — Catalog query module (getCatalog/getProduct, search/filter/sort/pagination), NGN formatter, Zod searchParams validator, global header + search bar, listing surfaces (home, category pages, all-products, search) with facets/sort/pagination/empty state *(COMPLETE 2026-06-11 — getCatalog (MIN-price subquery), 14/14 query tests pass, 15/15 routes build; CATA-01/02/03 delivered)*
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 02-03-PLAN.md — Product detail page (/products/<slug>): pure variant resolver + unit tests, VariantSelector (live price/stock, OOS-disable, CTA stub), ProductGallery (variant image swap), Suspense content/stock split
@@ -119,7 +119,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
-| 2. Product Catalog | 1/4 | Executing | 02-01 complete 2026-06-11; 02-02 next |
+| 2. Product Catalog | 2/4 | Executing | 02-01 complete 2026-06-11; 02-02 complete 2026-06-11; 02-03 next |
 | 3. Cart | 0/0 | Not started | - |
 | 4. Checkout & Payments | 0/0 | Not started | - |
 | 5. Admin Panel | 0/0 | Not started | - |

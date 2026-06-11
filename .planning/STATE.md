@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 02 Plan 01 complete
-last_updated: "2026-06-11T18:30:00Z"
+stopped_at: Phase 02 Plan 02 complete
+last_updated: "2026-06-11T19:05:00Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
-  percent: 56
+  completed_plans: 6
+  percent: 63
 ---
 
 # Project State: Mandy Store
@@ -26,18 +26,18 @@ progress:
 ## Current Position
 
 Phase: 02 (Product Catalog) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 - **Phase:** 2 of 6 (product catalog)
-- **Plan:** 02-01 complete; 02-02 next
+- **Plan:** 02-02 complete; 02-03 next
 - **Status:** Executing Phase 02
-- **Progress:** [##        ] 1/6 phases complete (5/8 plans)
+- **Progress:** [##        ] 1/6 phases complete (6/8 plans)
 
 ## Performance Metrics
 
 - Phases completed: 1/6
-- Plans completed: 5 (01-01, 01-02, 01-03, 01-04, 02-01 — complete 2026-06-10/11)
-- Requirements delivered: 3/27 (AUTH-01/02/03; CATA-01..04 foundation in progress)
+- Plans completed: 6 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02 — complete 2026-06-10/11)
+- Requirements delivered: 6/27 (AUTH-01/02/03; CATA-01/02/03 delivered)
 
 ## Accumulated Context
 
@@ -67,6 +67,11 @@ Plan: 2 of 4
 - Code review (01-REVIEW.md): 0 blockers, 7 warnings, 4 info — advisory, deferred. Notable for follow-up: register() partial-failure recovery (WR-02), verify-email page refresh shows "Invalid token" after success (WR-06), proxy /account matcher hardcoded vs startsWith (WR-01). Run /gsd-code-review-fix 1 to address.
 - Phase 2 Plan 01: 8 catalog tables (brands, categories, products, productImages, productOptions, optionValues, variants, variantOptionValues) pushed to Neon with Drizzle relations. variants.priceKobo (NGN integer kobo, D-04) and variants.stock (Phase 4 atomic decrement target) established at data layer. 6-product realistic seed across 3 categories (Electronics/Watches/Phones), 4 brands, 29 variants with OOS+low-stock coverage, picsum.photos images (D-05). Wave 0 test scaffold: schema.test.ts (14 tests), queries.test.ts (scaffold), variant-resolver.test.ts (scaffold). truncateCatalogTables() FK-safe helper in tests/helpers/db.ts. slugify installed; toSlug/uniqueSlug in src/lib/utils/slug.ts. 64/64 tests passing.
 - Array-return extra-config style used for Phase 2 tables in schema.ts (both styles valid in drizzle-orm 0.45.2; existing tables unchanged).
+- getCatalog uses Drizzle subquery MIN(price_kobo) per product for price sorting and filtering; cards show "From ₦X,XXX" (RESEARCH Pitfall 4).
+- cacheComponents: true + Suspense boundaries adopted for all async Server Components — catalog pages use Partial Prerender (◐). All existing auth pages retrofitted.
+- parseCatalogParams with Zod: q≤100chars, price clamped 0..1e9 kobo, sort allowlisted, page clamped 1..1000 (T-02-04..07 mitigations).
+- vitest testTimeout + hookTimeout raised to 30s for Neon serverless cold-start latency tolerance.
+- CATA-01/02/03 delivered: category pages /electronics /watches /phones, search /search?q=, filter by brand + price range, sort by Price↑/↓/Newest/Name A-Z (all URL-driven SSR per D-14).
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -94,9 +99,9 @@ Plan: 2 of 4
 
 ## Session Continuity
 
-**Last session:** 2026-06-11T18:30:00Z
-**Stopped at:** Phase 02 Plan 01 complete — catalog schema, seed, Wave 0 tests
-**Next action:** Execute Plan 02-02 — catalog listing pages (category pages, search, filter, sort)
+**Last session:** 2026-06-11T19:05:00Z
+**Stopped at:** Phase 02 Plan 02 complete — catalog query layer, listing components, storefront pages
+**Next action:** Execute Plan 02-03 — product detail page (PDP) with variant selector
 
 ---
 *State initialized: 2026-06-10*
