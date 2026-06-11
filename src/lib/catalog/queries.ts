@@ -208,7 +208,11 @@ export async function getProduct(slug: string) {
         where: (v, { eq: e }) => e(v.isActive, true),
         with: {
           optionValues: {
-            with: { optionValue: true },
+            with: {
+              optionValue: {
+                with: { option: true },
+              },
+            },
           },
         },
       },
