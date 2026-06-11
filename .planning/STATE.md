@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-06-11T03:15:00Z"
+last_updated: "2026-06-11T02:25:00Z"
 progress:
   total_phases: 6
   completed_phases: 0
@@ -24,19 +24,20 @@ progress:
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING
-Plan: 4 of 4 — NEXT (01-04-PLAN.md)
+Phase: 01 (foundation) — EXECUTING (awaiting manual checkpoint)
+Plan: 4 of 4 — EXECUTING (01-04-PLAN.md — Tasks 1-3 complete; Task 4 is manual human-verify checkpoint)
 
 - **Phase:** 1 of 6 — Foundation
-- **Plan:** 01-01 COMPLETE; 01-02 COMPLETE; 01-03 COMPLETE; next is 01-04 (proxy.ts + auth UI)
-- **Status:** EXECUTING — Plans 01-01, 01-02, 01-03 done; Plan 01-04 remaining
-- **Progress:** [###       ] 3/4 phase-1 plans complete
+- **Plan:** 01-01 COMPLETE; 01-02 COMPLETE; 01-03 COMPLETE; 01-04 PARTIAL (Tasks 1-3 done, Task 4 manual checkpoint pending)
+- **Status:** CHECKPOINT — All automated work done; awaiting manual verification of live auth journey
+- **Progress:** [####      ] 3/4 phase-1 plans complete (01-04 partial)
 
 ## Performance Metrics
 
 - Phases completed: 0/6
 - Plans completed: 3 (01-01 complete 2026-06-10 ~35 min; 01-02 complete 2026-06-10 ~67 min; 01-03 complete 2026-06-11 ~45 min)
-- Requirements delivered: 3/27 (AUTH-01/02/03 delivered; full UI delivery in Plan 01-04)
+- Plans in-progress: 1 (01-04 Tasks 1-3 done ~30 min; Task 4 manual checkpoint pending)
+- Requirements delivered: 3/27 (AUTH-01/02/03 server-side; UI wired in 01-04)
 
 ## Accumulated Context
 
@@ -57,6 +58,12 @@ Plan: 4 of 4 — NEXT (01-04-PLAN.md)
 - Admin seed script at src/scripts/seed.ts: idempotent upsert, argon2id, sets emailVerified, ADMIN_EMAILS env (D-10b).
 - 25 integration tests in tests/auth/ all green; vitest fileParallelism=false for shared Neon isolation.
 - Vitest config: next-auth inlined + next/server alias to resolve ESM in test context.
+- src/proxy.ts created (Plan 01-04): auth() wrapper, redirects unauth→/account/login, non-admin→/, already-authed→/ from login/register; matcher excludes _next/ and api/.
+- Auth UI wired (Plan 01-04): LoginForm (name="identifier", D-04), RegisterForm, verify-email page (async searchParams, Next.js 16).
+- Admin/orders stubs with in-page verifyAdminSession()/verifySession() double-auth (SC4, CLAUDE.md).
+- playwright.config.ts webServer uses npx next dev --webpack (Turbopack unavailable on darwin/arm64).
+- Playwright e2e: 2/2 redirect tests pass; non-admin case is test.skip (manual checkpoint covers it).
+- D-08 side-effect: UnsupportedStrategy error logged per proxy request; functionally harmless (proxy redirects work); accepted limitation.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -84,9 +91,9 @@ Plan: 4 of 4 — NEXT (01-04-PLAN.md)
 
 ## Session Continuity
 
-**Last session:** 2026-06-11T03:15:00Z
-**Stopped at:** Plan 01-03 fully complete (Tasks 1-3 done; auth.ts+seed.ts live; 25/25 tests pass; tsc clean)
-**Resume file:** .planning/phases/01-foundation/01-04-PLAN.md
+**Last session:** 2026-06-11T02:25:00Z
+**Stopped at:** Plan 01-04 Tasks 1-3 complete; hitting manual human-verify checkpoint (Task 4). All automated work done: proxy.ts, auth UI, e2e tests green. User must run the live auth journey manually.
+**Resume file:** .planning/phases/01-foundation/01-04-PLAN.md (Task 4 manual checkpoint)
 
 ---
 *State initialized: 2026-06-10*
