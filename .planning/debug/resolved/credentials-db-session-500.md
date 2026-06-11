@@ -1,8 +1,9 @@
 ---
-status: awaiting_human_verify
+status: resolved
 trigger: "Logging in returns HTTP 500. [auth][error] UnsupportedStrategy: Signing in with credentials only supported if JWT strategy is enabled. GET /api/auth/callback/credentials -> 500"
 created: 2026-06-11T09:16:38Z
-updated: 2026-06-11T15:35:00Z
+updated: 2026-06-11T16:00:00Z
+resolved_note: "User confirmed fixed in real workflow. Fix on main @048cec7: strategy:'jwt' + jwt.encode/decode overrides minting a real DB session row (D-06 preserved, server-side revocation proven). Tests hardened to assert strategy==='jwt' and exercise the real sign-in path."
 ---
 
 ## Current Focus

@@ -38,7 +38,7 @@ Plans:
 - [x] 01-03-PLAN.md — Auth server actions (register/login/logout/verifyEmail) + admin seed script *(COMPLETE 2026-06-11 — 4 actions in auth.ts, seed.ts idempotent, 25/25 auth tests pass; AUTH-01/02/03 delivered)*
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 01-04-PLAN.md — proxy.ts route protection, auth UI pages/forms, protected route stubs, proxy e2e tests *(Tasks 1-3 complete 2026-06-11; Task 4 = manual human-verify checkpoint pending)*
+- [x] 01-04-PLAN.md — proxy.ts route protection, auth UI pages/forms, protected route stubs, proxy e2e tests *(COMPLETE 2026-06-11 — manual auth-journey verified by user; login fixed via D-08 follow-up @048cec7)*
 
 ### Phase 2: Product Catalog
 **Goal**: Customers can discover products by browsing, searching, and filtering, and can inspect a product with live variant-aware pricing — the first publicly shippable piece of the store.
