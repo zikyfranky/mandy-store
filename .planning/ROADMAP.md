@@ -62,7 +62,7 @@ Plans:
 - [x] 02-03-PLAN.md — Product detail page (/products/<slug>): pure variant resolver + unit tests, VariantSelector (live price/stock, OOS-disable, CTA stub), ProductGallery (variant image swap), Suspense content/stock split *(COMPLETE 2026-06-11 — 24/24 variant tests pass; /products/[slug] PPR; CATA-04 delivered)*
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 02-04-PLAN.md — SEO + caching layer: cacheComponents + remotePatterns, 'use cache' on product content (stock/price stays fresh), canonical URL + Product JSON-LD (SC5)
+- [x] 02-04-PLAN.md — SEO + caching layer: cacheComponents + remotePatterns, 'use cache' on product content (stock/price stays fresh), canonical URL + Product JSON-LD (SC5) *(COMPLETE 2026-06-11 — ProductContent cached via use cache/cacheLife/cacheTag; JSON-LD in fresh block; canonical + OpenGraph via generateMetadata; SC5 all deliverables verified)*
 **UI hint**: yes
 
 ### Phase 3: Cart
@@ -119,7 +119,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
-| 2. Product Catalog | 3/4 | Executing | 02-01 complete 2026-06-11; 02-02 complete 2026-06-11; 02-03 complete 2026-06-11; 02-04 next |
+| 2. Product Catalog | 4/4 | Complete | 02-01 complete 2026-06-11; 02-02 complete 2026-06-11; 02-03 complete 2026-06-11; 02-04 complete 2026-06-11 |
 | 3. Cart | 0/0 | Not started | - |
 | 4. Checkout & Payments | 0/0 | Not started | - |
 | 5. Admin Panel | 0/0 | Not started | - |

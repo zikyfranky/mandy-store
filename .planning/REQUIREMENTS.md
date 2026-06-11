@@ -16,9 +16,9 @@
 
 ### Product Catalog
 
-- [ ] **CATA-01**: User can browse products by category (Electronics, Watches, Phones)
-- [ ] **CATA-02**: User can search products by name or description
-- [ ] **CATA-03**: User can sort by price and filter by brand/price range
+- [x] **CATA-01**: User can browse products by category (Electronics, Watches, Phones) *(delivered: Plan 02-02 — category pages /electronics /watches /phones; SC5 canonical+JSON-LD completed Plan 02-04)*
+- [x] **CATA-02**: User can search products by name or description *(delivered: Plan 02-02 — /search?q= with ILIKE on name/description)*
+- [x] **CATA-03**: User can sort by price and filter by brand/price range *(delivered: Plan 02-02 — sort Price↑/↓/Newest/Name A-Z, brand+price range facets, all URL-driven SSR)*
 - [x] **CATA-04**: User can select product variants (color, storage, etc.) with live price update
 
 ### Cart

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 02 Plan 03 complete
-last_updated: "2026-06-11T20:30:00Z"
+stopped_at: Phase 02 Plan 04 complete — Phase 02 fully done
+last_updated: "2026-06-11T19:43:00Z"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 7
-  percent: 75
+  completed_plans: 8
+  percent: 87
 ---
 
 # Project State: Mandy Store
@@ -18,26 +18,25 @@ progress:
 ## Project Reference
 
 **Core Value:** Customers can find a product, pick their variant, and complete a purchase using their preferred payment method — without friction.
-**Current Focus:** Phase 02 — Product Catalog
+**Current Focus:** Phase 03 — Cart
 **Stack:** Next.js 16 (App Router), TypeScript, Tailwind v4. Neon Postgres + Drizzle, Auth.js v5, Stripe + PayPal + manual bank transfer, Resend, Vercel Blob.
 **Currency:** NGN (Nigerian Naira)
 **Shipping:** Flat rate
 
 ## Current Position
 
-Phase: 02 (Product Catalog) — EXECUTING
-Plan: 3 of 4
+Phase: 02 (Product Catalog) — COMPLETE; Phase 03 (Cart) — NEXT
 
-- **Phase:** 2 of 6 (product catalog)
-- **Plan:** 02-03 complete; 02-04 next
-- **Status:** Executing Phase 02
-- **Progress:** [##        ] 1/6 phases complete (7/8 plans)
+- **Phase:** 2 of 6 (product catalog) — COMPLETE
+- **Plan:** 02-04 complete; Phase 02 fully done
+- **Status:** Phase 02 complete; ready for Phase 03
+- **Progress:** [####      ] 2/6 phases complete (8/8 plans in phases 1-2)
 
 ## Performance Metrics
 
-- Phases completed: 1/6
-- Plans completed: 7 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03 — complete 2026-06-10/11)
-- Requirements delivered: 7/27 (AUTH-01/02/03; CATA-01/02/03 delivered; CATA-04 delivered)
+- Phases completed: 2/6
+- Plans completed: 8 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11)
+- Requirements delivered: 8/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5 delivered)
 
 ## Accumulated Context
 
@@ -73,6 +72,7 @@ Plan: 3 of 4
 - vitest testTimeout + hookTimeout raised to 30s for Neon serverless cold-start latency tolerance.
 - CATA-01/02/03 delivered: category pages /electronics /watches /phones, search /search?q=, filter by brand + price range, sort by Price↑/↓/Newest/Name A-Z (all URL-driven SSR per D-14).
 - CATA-04 delivered (Plan 02-03): PDP at /products/[slug] with prop-driven variant resolution (resolveVariant), live price+stock via useState, OOS-disable (D-16), tiered stock labels (D-17), CTA stub (D-18), gallery variant image swap (D-19). Suspense split: ProductContent (cacheable boundary for Plan 04) + VariantStockPriceBlock (always dynamic). getProduct query extended to include optionValue.option nested join for productOption.name. Non-async default export pattern required for cacheComponents mode.
+- SC5 delivered (Plan 02-04): ProductContent cached via 'use cache' + cacheLife('hours') + cacheTag('product-<slug>'). VariantStockPriceBlock stays dynamic (no use cache). generateMetadata with alternates.canonical (/products/<slug>, relative, resolves via metadataBase). Product JSON-LD in fresh block (schema.org Product + offers with InStock/OutOfStock per current stock). XSS mitigation: .replace(/</g, "\\u003c") on JSON.stringify. cacheTag hook established for Phase 5 admin updateTag() invalidation. Build: ◐ Partial Prerender. Phase 02 fully complete.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -100,9 +100,9 @@ Plan: 3 of 4
 
 ## Session Continuity
 
-**Last session:** 2026-06-11T20:30:00Z
-**Stopped at:** Phase 02 Plan 03 complete — PDP with variant selector, gallery, Suspense split
-**Next action:** Execute Plan 02-04 — SEO + caching layer (cacheComponents, 'use cache', canonical, JSON-LD)
+**Last session:** 2026-06-11T19:43:00Z
+**Stopped at:** Phase 02 Plan 04 complete — SEO + caching layer (SC5 fully satisfied)
+**Next action:** Execute Phase 03 — Cart (CART-01, CART-02, CART-03)
 
 ---
 *State initialized: 2026-06-10*
