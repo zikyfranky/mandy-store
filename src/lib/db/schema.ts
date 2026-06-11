@@ -3,8 +3,9 @@
 
 import {
   pgTable, pgEnum, text, timestamp, integer,
-  primaryKey, unique
+  primaryKey, unique, boolean, index
 } from "drizzle-orm/pg-core"
+import { relations } from "drizzle-orm"
 import type { AdapterAccount } from "@auth/core/adapters"
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
@@ -88,4 +89,139 @@ export const processedWebhookEvents = pgTable("processed_webhook_events", {
 }, (table) => ({
   // Unique constraint on event ID — the idempotency guarantee
   eventIdUnique: unique("processed_webhook_events_id_unique").on(table.id),
+}))
+
+// ─── Phase 2: Product Catalog Tables ─────────────────────────────────────────
+// Implements the flexible per-product variant model (D-01 through D-05, D-08)
+// All IDs: text UUID (crypto.randomUUID()); timestamps: { mode: "date" }
+
+// D-02: brand as its own table
+export const brands = pgTable("brand", {
+  id:        text("id").primaryKey(),              // crypto.randomUUID()
+  name:      text("name").notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+})
+
+// D-03: seeded table (Electronics, Watches, Phones) — NOT a pgEnum
+export const categories = pgTable("category", {
+  id:        text("id").primaryKey(),
+  name:      text("name").notNull().unique(),
+  slug:      text("slug").notNull().unique(),       // "electronics", "watches", "phones"
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+})
+
+export const products = pgTable("product", {
+  id:          text("id").primaryKey(),
+  name:        text("name").notNull(),
+  slug:        text("slug").notNull().unique(),     // D-08: canonical URL key
+  description: text("description"),
+  categoryId:  text("category_id").notNull().references(() => categories.id),
+  brandId:     text("brand_id").notNull().references(() => brands.id),
+  isActive:    boolean("is_active").default(true).notNull(),
+  createdAt:   timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt:   timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+}, (table) => [
+  index("product_category_idx").on(table.categoryId),
+  index("product_brand_idx").on(table.brandId),
+  index("product_slug_idx").on(table.slug),
+])
+
+// Phase 5 will add Vercel Blob upload; now just URL strings
+export const productImages = pgTable("product_image", {
+  id:         text("id").primaryKey(),
+  productId:  text("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  url:        text("url").notNull(),               // external URL for seed; Vercel Blob in Phase 5
+  altText:    text("alt_text"),
+  position:   integer("position").default(0).notNull(), // display order
+  isPrimary:  boolean("is_primary").default(false).notNull(),
+})
+
+// D-01: each product defines its own option types ("Color", "Storage", "Strap")
+export const productOptions = pgTable("product_option", {
+  id:        text("id").primaryKey(),
+  productId: text("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  name:      text("name").notNull(),               // e.g. "Color", "Storage"
+  position:  integer("position").default(0).notNull(),
+}, (table) => [
+  unique("product_option_name_unique").on(table.productId, table.name),
+])
+
+// e.g. option "Color" has values "Black", "Silver", "Gold"
+export const optionValues = pgTable("option_value", {
+  id:              text("id").primaryKey(),
+  productOptionId: text("product_option_id").notNull().references(() => productOptions.id, { onDelete: "cascade" }),
+  value:           text("value").notNull(),          // "Black", "256GB", "Small"
+  position:        integer("position").default(0).notNull(),
+}, (table) => [
+  unique("option_value_unique").on(table.productOptionId, table.value),
+])
+
+// D-01/D-04: each variant has its own SKU, price (kobo), stock
+// The stock field here is what Phase 4 will atomically decrement
+export const variants = pgTable("variant", {
+  id:          text("id").primaryKey(),
+  productId:   text("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  sku:         text("sku").unique(),
+  priceKobo:   integer("price_kobo").notNull(),     // D-04: NGN minor units
+  stock:       integer("stock").default(0).notNull(), // Phase 4: UPDATE ... WHERE stock > 0 RETURNING
+  imageUrl:    text("image_url"),                    // optional variant-specific image (D-19)
+  isActive:    boolean("is_active").default(true).notNull(),
+  createdAt:   timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+}, (table) => [
+  index("variant_product_idx").on(table.productId),
+])
+
+// Links each variant to its option value for each option type
+// A variant must have exactly one value per option of its product
+export const variantOptionValues = pgTable(
+  "variant_option_value",
+  {
+    variantId:     text("variant_id").notNull().references(() => variants.id, { onDelete: "cascade" }),
+    optionValueId: text("option_value_id").notNull().references(() => optionValues.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.variantId, table.optionValueId] }),
+  ]
+)
+
+// ─── Phase 2: Relations ───────────────────────────────────────────────────────
+
+export const brandsRelations = relations(brands, ({ many }) => ({
+  products: many(products),
+}))
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products),
+}))
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+  category: one(categories, { fields: [products.categoryId], references: [categories.id] }),
+  brand:    one(brands,     { fields: [products.brandId],    references: [brands.id] }),
+  options:  many(productOptions),
+  variants: many(variants),
+  images:   many(productImages),
+}))
+
+export const productImagesRelations = relations(productImages, ({ one }) => ({
+  product: one(products, { fields: [productImages.productId], references: [products.id] }),
+}))
+
+export const productOptionsRelations = relations(productOptions, ({ one, many }) => ({
+  product: one(products, { fields: [productOptions.productId], references: [products.id] }),
+  values:  many(optionValues),
+}))
+
+export const optionValuesRelations = relations(optionValues, ({ one, many }) => ({
+  option:              one(productOptions, { fields: [optionValues.productOptionId], references: [productOptions.id] }),
+  variantOptionValues: many(variantOptionValues),
+}))
+
+export const variantsRelations = relations(variants, ({ one, many }) => ({
+  product:      one(products, { fields: [variants.productId], references: [products.id] }),
+  optionValues: many(variantOptionValues),
+}))
+
+export const variantOptionValuesRelations = relations(variantOptionValues, ({ one }) => ({
+  variant:     one(variants,     { fields: [variantOptionValues.variantId],     references: [variants.id] }),
+  optionValue: one(optionValues, { fields: [variantOptionValues.optionValueId], references: [optionValues.id] }),
 }))
