@@ -3,6 +3,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Phase 2 additions */
+  --surface: #f4f4f5;          /* zinc-100 — cards, sidebar, header bg */
+  --border: #e4e4e7;           /* zinc-200 — card borders, dividers */
+  --muted: #71717a;            /* zinc-500 — secondary text */
+  --accent: #2563eb;           /* blue-600 — primary CTA + active states */
+  --accent-hover: #1d4ed8;     /* blue-700 */
+  --stock-in: #16a34a;         /* green-600 */
+  --stock-low: #d97706;        /* amber-600 */
+  --stock-out: #dc2626;        /* red-600 */
 }
 
 @theme inline {
@@ -10,12 +20,24 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --surface: #18181b;        /* zinc-900 */
+    --border: #27272a;         /* zinc-800 */
+    --muted: #a1a1aa;          /* zinc-400 */
+    --accent: #3b82f6;         /* blue-500 */
+    --accent-hover: #60a5fa;   /* blue-400 */
+    --stock-in: #4ade80;       /* green-400 */
+    --stock-low: #fbbf24;      /* amber-400 */
+    --stock-out: #f87171;      /* red-400 */
   }
 }
 

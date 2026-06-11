@@ -88,7 +88,6 @@ export async function getCatalog(opts: {
     .as("min_price_sq")
 
   // Build WHERE filters (all parameterized — T-02-04)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filters: ReturnType<typeof eq>[] = [eq(products.isActive, true)]
 
   if (categoryId) {
