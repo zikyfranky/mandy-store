@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 02 Plan 02 complete
-last_updated: "2026-06-11T19:05:00Z"
+stopped_at: Phase 02 Plan 03 complete
+last_updated: "2026-06-11T20:30:00Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 8
-  completed_plans: 6
-  percent: 63
+  completed_plans: 7
+  percent: 75
 ---
 
 # Project State: Mandy Store
@@ -29,15 +29,15 @@ Phase: 02 (Product Catalog) — EXECUTING
 Plan: 3 of 4
 
 - **Phase:** 2 of 6 (product catalog)
-- **Plan:** 02-02 complete; 02-03 next
+- **Plan:** 02-03 complete; 02-04 next
 - **Status:** Executing Phase 02
-- **Progress:** [##        ] 1/6 phases complete (6/8 plans)
+- **Progress:** [##        ] 1/6 phases complete (7/8 plans)
 
 ## Performance Metrics
 
 - Phases completed: 1/6
-- Plans completed: 6 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02 — complete 2026-06-10/11)
-- Requirements delivered: 6/27 (AUTH-01/02/03; CATA-01/02/03 delivered)
+- Plans completed: 7 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03 — complete 2026-06-10/11)
+- Requirements delivered: 7/27 (AUTH-01/02/03; CATA-01/02/03 delivered; CATA-04 delivered)
 
 ## Accumulated Context
 
@@ -72,6 +72,7 @@ Plan: 3 of 4
 - parseCatalogParams with Zod: q≤100chars, price clamped 0..1e9 kobo, sort allowlisted, page clamped 1..1000 (T-02-04..07 mitigations).
 - vitest testTimeout + hookTimeout raised to 30s for Neon serverless cold-start latency tolerance.
 - CATA-01/02/03 delivered: category pages /electronics /watches /phones, search /search?q=, filter by brand + price range, sort by Price↑/↓/Newest/Name A-Z (all URL-driven SSR per D-14).
+- CATA-04 delivered (Plan 02-03): PDP at /products/[slug] with prop-driven variant resolution (resolveVariant), live price+stock via useState, OOS-disable (D-16), tiered stock labels (D-17), CTA stub (D-18), gallery variant image swap (D-19). Suspense split: ProductContent (cacheable boundary for Plan 04) + VariantStockPriceBlock (always dynamic). getProduct query extended to include optionValue.option nested join for productOption.name. Non-async default export pattern required for cacheComponents mode.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -99,9 +100,9 @@ Plan: 3 of 4
 
 ## Session Continuity
 
-**Last session:** 2026-06-11T19:05:00Z
-**Stopped at:** Phase 02 Plan 02 complete — catalog query layer, listing components, storefront pages
-**Next action:** Execute Plan 02-03 — product detail page (PDP) with variant selector
+**Last session:** 2026-06-11T20:30:00Z
+**Stopped at:** Phase 02 Plan 03 complete — PDP with variant selector, gallery, Suspense split
+**Next action:** Execute Plan 02-04 — SEO + caching layer (cacheComponents, 'use cache', canonical, JSON-LD)
 
 ---
 *State initialized: 2026-06-10*

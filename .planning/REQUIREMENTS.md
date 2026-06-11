@@ -19,7 +19,7 @@
 - [ ] **CATA-01**: User can browse products by category (Electronics, Watches, Phones)
 - [ ] **CATA-02**: User can search products by name or description
 - [ ] **CATA-03**: User can sort by price and filter by brand/price range
-- [ ] **CATA-04**: User can select product variants (color, storage, etc.) with live price update
+- [x] **CATA-04**: User can select product variants (color, storage, etc.) with live price update
 
 ### Cart
 
@@ -95,7 +95,7 @@
 | CATA-01 | Phase 2 | Pending |
 | CATA-02 | Phase 2 | Pending |
 | CATA-03 | Phase 2 | Pending |
-| CATA-04 | Phase 2 | Pending |
+| CATA-04 | Phase 2 | Complete (02-03) |
 | CART-01 | Phase 3 | Pending |
 | CART-02 | Phase 3 | Pending |
 | CART-03 | Phase 3 | Pending |
