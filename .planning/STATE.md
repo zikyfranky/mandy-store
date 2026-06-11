@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: "Plan 01-04 Tasks 1-3 complete; hitting manual human-verify checkpoint (Task 4). All automated work done: proxy.ts, auth UI, e2e tests green. User must run the live auth journey manually."
-last_updated: "2026-06-11T15:17:40.933Z"
+status: ready_to_plan
+stopped_at: "Phase 1 (foundation) COMPLETE — 4/4 plans; verifier 5/5 must-haves; user confirmed live auth journey; D-08 login bug fixed (@048cec7). Ready to plan Phase 2."
+last_updated: "2026-06-11T16:20:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 1
@@ -18,27 +18,26 @@ progress:
 ## Project Reference
 
 **Core Value:** Customers can find a product, pick their variant, and complete a purchase using their preferred payment method — without friction.
-**Current Focus:** Phase 01 — foundation
+**Current Focus:** Phase 2 — product catalog (Phase 1 complete)
 **Stack:** Next.js 16 (App Router), TypeScript, Tailwind v4. Neon Postgres + Drizzle, Auth.js v5, Stripe + PayPal + manual bank transfer, Resend, Vercel Blob.
 **Currency:** NGN (Nigerian Naira)
 **Shipping:** Flat rate
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING (awaiting manual checkpoint)
-Plan: 4 of 4 — EXECUTING (01-04-PLAN.md — Tasks 1-3 complete; Task 4 is manual human-verify checkpoint)
+Phase: 01 (foundation) — COMPLETE (2026-06-11)
+Plan: 4 of 4 complete
 
 - **Phase:** 2 of 6 (product catalog)
 - **Plan:** Not started
 - **Status:** Ready to plan
-- **Progress:** [####      ] 3/4 phase-1 plans complete (01-04 partial)
+- **Progress:** [#         ] 1/6 phases complete
 
 ## Performance Metrics
 
-- Phases completed: 0/6
-- Plans completed: 3 (01-01 complete 2026-06-10 ~35 min; 01-02 complete 2026-06-10 ~67 min; 01-03 complete 2026-06-11 ~45 min)
-- Plans in-progress: 1 (01-04 Tasks 1-3 done ~30 min; Task 4 manual checkpoint pending)
-- Requirements delivered: 3/27 (AUTH-01/02/03 server-side; UI wired in 01-04)
+- Phases completed: 1/6
+- Plans completed: 4 (01-01, 01-02, 01-03, 01-04 — all complete 2026-06-10/11)
+- Requirements delivered: 3/27 (AUTH-01/02/03)
 
 ## Accumulated Context
 
@@ -51,7 +50,7 @@ Plan: 4 of 4 — EXECUTING (01-04-PLAN.md — Tasks 1-3 complete; Task 4 is manu
 - Cart cookie stores only { variantId, quantity }; totals always recalculated server-side.
 - Node 22 pinned via .nvmrc; all deps (argon2 native addon, drizzle-orm, next-auth@beta) installed on Node 22.
 - Drizzle schema uses pgEnum for order_status (8 values) and role; processedWebhookEvents table has named unique constraint for webhook idempotency.
-- Auth.js v5 Drizzle adapter shape confirmed; D-08 workaround implemented in Plan 01-02 (manual db.insert(sessions) in jwt callback when account.provider === "credentials").
+- Auth.js v5 Drizzle adapter shape confirmed. **D-08 (corrected @048cec7):** the initial Plan 01-02 approach (session.strategy:"database" + jwt-callback db.insert) was WRONG — @auth/core forbids database strategy with Credentials (threw UnsupportedStrategy → login 500). Correct pattern: session.strategy:"jwt" + jwt.encode/decode overrides that mint/resolve a real DB session row (so sessions stay database-backed and server-side revocable per D-06). RESEARCH Pattern 1 was incorrect — note for future auth work.
 - DAL verifySession()/verifyAdminSession() implemented in src/lib/dal.ts with import "server-only" guard; 9 unit tests passing.
 - Resend email seam implemented in src/lib/email/send-verification.ts; React Email template in src/emails/VerificationEmail.tsx.
 - Auth.js route handler wired at src/app/api/auth/[...nextauth]/route.ts.
@@ -64,7 +63,8 @@ Plan: 4 of 4 — EXECUTING (01-04-PLAN.md — Tasks 1-3 complete; Task 4 is manu
 - Admin/orders stubs with in-page verifyAdminSession()/verifySession() double-auth (SC4, CLAUDE.md).
 - playwright.config.ts webServer uses npx next dev --webpack (Turbopack unavailable on darwin/arm64).
 - Playwright e2e: 2/2 redirect tests pass; non-admin case is test.skip (manual checkpoint covers it).
-- D-08 side-effect: UnsupportedStrategy error logged per proxy request; functionally harmless (proxy redirects work); accepted limitation.
+- vitest.config.ts loads .env.local (Node loadEnvFile) so `npx vitest run` passes bare (48/48); src/scripts/load-env.ts does the same for the standalone seed script.
+- Code review (01-REVIEW.md): 0 blockers, 7 warnings, 4 info — advisory, deferred. Notable for follow-up: register() partial-failure recovery (WR-02), verify-email page refresh shows "Invalid token" after success (WR-06), proxy /account matcher hardcoded vs startsWith (WR-01). Run /gsd-code-review-fix 1 to address.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -92,9 +92,9 @@ Plan: 4 of 4 — EXECUTING (01-04-PLAN.md — Tasks 1-3 complete; Task 4 is manu
 
 ## Session Continuity
 
-**Last session:** 2026-06-11T02:25:00Z
-**Stopped at:** Plan 01-04 Tasks 1-3 complete; hitting manual human-verify checkpoint (Task 4). All automated work done: proxy.ts, auth UI, e2e tests green. User must run the live auth journey manually.
-**Resume file:** .planning/phases/01-foundation/01-04-PLAN.md (Task 4 manual checkpoint)
+**Last session:** 2026-06-11
+**Stopped at:** Phase 1 (foundation) COMPLETE — discuss→plan→execute chain finished; verifier 5/5 must-haves; user confirmed live auth journey; D-08 login bug found & fixed (@048cec7); 48/48 tests + proxy e2e green.
+**Next action:** `/gsd-discuss-phase 2 --chain` (or `/gsd-plan-phase 2`) to start Phase 2 — Product Catalog.
 
 ---
 *State initialized: 2026-06-10*

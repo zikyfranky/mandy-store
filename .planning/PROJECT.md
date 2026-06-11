@@ -12,7 +12,7 @@ Customers can find a product, pick their variant, and complete a purchase using 
 
 ### Validated
 
-(None yet — ship to validate)
+- Authentication foundation (register / email-verify / login / logout, DB-backed sessions, admin role) — validated in Phase 1: Foundation (AUTH-01/02/03). Data model (order_status enum + processed_webhook_events idempotency table) and route protection (proxy.ts + in-action verifySession double-auth) committed up front.
 
 ### Active
 
@@ -74,4 +74,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-05 after initialization*
+*Last updated: 2026-06-11 after Phase 1 completion*
