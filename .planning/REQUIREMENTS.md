@@ -9,9 +9,9 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can register with email and password
-- [ ] **AUTH-02**: User can log in and session persists across browser refresh
-- [ ] **AUTH-03**: User can log out from any page
+- [x] **AUTH-01**: User can register with email and password *(delivered: Plan 01-03 — register() + verifyEmail() actions, argon2id, email verification gate)*
+- [x] **AUTH-02**: User can log in and session persists across browser refresh *(delivered: Plan 01-03 — login() via signIn("credentials"), D-08 DB session workaround)*
+- [x] **AUTH-03**: User can log out from any page *(delivered: Plan 01-03 — logout() calling signOut())*
 - [ ] **AUTH-04**: Logged-in user can view their order history
 
 ### Product Catalog

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-06-10T19:52:00Z"
+last_updated: "2026-06-11T03:15:00Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
-  percent: 8
+  completed_plans: 3
+  percent: 12
 ---
 
 # Project State: Mandy Store
@@ -25,18 +25,18 @@ progress:
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 3 of 4 — NEXT (01-03-PLAN.md)
+Plan: 4 of 4 — NEXT (01-04-PLAN.md)
 
 - **Phase:** 1 of 6 — Foundation
-- **Plan:** 01-01 COMPLETE; 01-02 COMPLETE; next is 01-03 (register/login/logout actions + admin seed)
-- **Status:** EXECUTING — Plans 01-01 and 01-02 done; Plans 01-03 and 01-04 remaining
-- **Progress:** [##        ] 2/4 phase-1 plans complete
+- **Plan:** 01-01 COMPLETE; 01-02 COMPLETE; 01-03 COMPLETE; next is 01-04 (proxy.ts + auth UI)
+- **Status:** EXECUTING — Plans 01-01, 01-02, 01-03 done; Plan 01-04 remaining
+- **Progress:** [###       ] 3/4 phase-1 plans complete
 
 ## Performance Metrics
 
 - Phases completed: 0/6
-- Plans completed: 2 (01-01 complete 2026-06-10 ~35 min; 01-02 complete 2026-06-10 ~67 min)
-- Requirements delivered: 0/27 (AUTH-02/AUTH-03 infra delivered; full delivery with UI in Plan 01-04)
+- Plans completed: 3 (01-01 complete 2026-06-10 ~35 min; 01-02 complete 2026-06-10 ~67 min; 01-03 complete 2026-06-11 ~45 min)
+- Requirements delivered: 3/27 (AUTH-01/02/03 delivered; full UI delivery in Plan 01-04)
 
 ## Accumulated Context
 
@@ -53,6 +53,10 @@ Plan: 3 of 4 — NEXT (01-03-PLAN.md)
 - DAL verifySession()/verifyAdminSession() implemented in src/lib/dal.ts with import "server-only" guard; 9 unit tests passing.
 - Resend email seam implemented in src/lib/email/send-verification.ts; React Email template in src/emails/VerificationEmail.tsx.
 - Auth.js route handler wired at src/app/api/auth/[...nextauth]/route.ts.
+- Auth Server Actions in src/lib/actions/auth.ts: register (argon2id, ADMIN_EMAILS D-10a, zod, single-use 24h tokens), verifyEmail (expiry check+delete, T-01-12), login (generic error T-01-11), logout (signOut).
+- Admin seed script at src/scripts/seed.ts: idempotent upsert, argon2id, sets emailVerified, ADMIN_EMAILS env (D-10b).
+- 25 integration tests in tests/auth/ all green; vitest fileParallelism=false for shared Neon isolation.
+- Vitest config: next-auth inlined + next/server alias to resolve ESM in test context.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -80,9 +84,9 @@ Plan: 3 of 4 — NEXT (01-03-PLAN.md)
 
 ## Session Continuity
 
-**Last session:** 2026-06-10T19:52:00Z
-**Stopped at:** Plan 01-02 fully complete (Tasks 1-3 done; auth.ts+dal.ts+send-verification.ts live; 9/9 tests pass; tsc clean)
-**Resume file:** .planning/phases/01-foundation/01-03-PLAN.md
+**Last session:** 2026-06-11T03:15:00Z
+**Stopped at:** Plan 01-03 fully complete (Tasks 1-3 done; auth.ts+seed.ts live; 25/25 tests pass; tsc clean)
+**Resume file:** .planning/phases/01-foundation/01-04-PLAN.md
 
 ---
 *State initialized: 2026-06-10*

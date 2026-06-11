@@ -35,7 +35,7 @@ Plans:
 - [x] 01-02-PLAN.md — Auth.js v5 config (Credentials + DB sessions, D-08 workaround), DAL verifySession, Resend email seam *(COMPLETE 2026-06-10 — auth.ts+dal.ts+send-verification.ts live; 9/9 DAL tests pass; tsc clean)*
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 01-03-PLAN.md — Auth server actions (register/login/logout/verifyEmail) + admin seed script
+- [x] 01-03-PLAN.md — Auth server actions (register/login/logout/verifyEmail) + admin seed script *(COMPLETE 2026-06-11 — 4 actions in auth.ts, seed.ts idempotent, 25/25 auth tests pass; AUTH-01/02/03 delivered)*
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 01-04-PLAN.md — proxy.ts route protection, auth UI pages/forms, protected route stubs, proxy e2e tests
@@ -106,7 +106,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/4 | Executing | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10 |
+| 1. Foundation | 3/4 | Executing | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11 |
 | 2. Product Catalog | 0/0 | Not started | - |
 | 3. Cart | 0/0 | Not started | - |
 | 4. Checkout & Payments | 0/0 | Not started | - |
