@@ -53,16 +53,15 @@ Exceptions:
 | Role | Size | Weight | Line Height | Tailwind Class | Usage |
 |------|------|--------|-------------|----------------|-------|
 | Body | 16px | 400 (regular) | 1.5 | `text-base font-normal leading-relaxed` | Product descriptions, filter labels, pagination copy, category page body text |
-| Label | 14px | 500 (medium) | 1.4 | `text-sm font-medium leading-snug` | Form labels, card brand name, sort/filter control labels, "From ₦X,XXX" price on cards, stock indicator text, nav links |
-| Heading | 20px | 600 (semibold) | 1.3 | `text-xl font-semibold leading-tight` | Product card name, PDP product title (desktop: 24px / `text-2xl`), category page heading, section headings |
-| Display | 28px | 700 (bold) | 1.2 | `text-3xl font-bold leading-tight` | Home page hero headline, category hero ("Electronics", "Watches", "Phones") |
-
-Additional size used:
-- 12px (`text-xs`) for helper text, "Only N left" urgency label, pagination item count — weight 400
+| Label | 14px | 600 (semibold) | 1.4 | `text-sm font-semibold leading-snug` | Form labels, card brand name, sort/filter control labels, "From ₦X,XXX" price on cards, stock indicator text, nav links |
+| Heading | 24px | 600 (semibold) | 1.3 | `text-2xl font-semibold leading-tight` | Product card name, PDP product title (all breakpoints), category page heading, section headings |
+| Display | 28px | 600 (semibold) | 1.2 | `text-3xl font-semibold leading-tight` | Home page hero headline, category hero ("Electronics", "Watches", "Phones") |
 
 Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans, already wired in `globals.css` via `@theme inline`).
 
-**Source:** Existing auth components use `text-sm font-medium` for labels and `text-2xl font-semibold` for page titles — this contract extends that pattern upward to a 4-step scale (12/14/16/20/28px) with a maximum of 2 weights in any single context (regular + semibold, or regular + bold).
+**Weights in use: exactly 2 — 400 (normal body) and 600 (semibold — headings, labels, CTAs, price, display).**
+
+**Source:** Existing auth components use `text-sm font-semibold` for labels and `text-2xl font-semibold` for page titles — this contract extends that pattern upward to a 4-step scale (14/16/24/28px).
 
 ---
 
@@ -82,7 +81,7 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 | Stock-warning | `#d97706` (amber-600) | `#fbbf24` (amber-400) | "Only N left" urgency text |
 
 **Accent reserved for (the 10% rule — these elements ONLY):**
-1. Primary CTA button ("Add to cart" stub, "Search") — `bg-blue-600 hover:bg-blue-700 text-white`
+1. Primary CTA button ("Add to cart") — `bg-blue-600 hover:bg-blue-700 text-white`
 2. Active/selected state on variant pills — `border-blue-600 ring-2 ring-blue-600`
 3. Active/selected state on pagination current page — `bg-blue-600 text-white`
 4. Navigation active link underline — `border-b-2 border-blue-600`
@@ -105,11 +104,11 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 ```
 
 - Height: 64px (`h-16`), background: secondary (`bg-zinc-100 dark:bg-zinc-900`), bottom border: `border-b border-zinc-200 dark:border-zinc-800`
-- Logo: `text-xl font-bold text-foreground`
-- Search bar: centered in header on desktop; full-width below header on mobile (`w-full`) — input `rounded-full border border-zinc-300 px-4 py-2 text-sm`
-- Nav links: `text-sm font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400` — active page underlined with blue-600 (`border-b-2 border-blue-600`)
-- Cart icon: 24px Heroicons `ShoppingCartIcon`, positioned right; shows badge count in Phase 3 (render empty placeholder now)
-- Account icon: 24px Heroicons `UserIcon`; links to `/account/login`
+- Logo: `text-2xl font-semibold text-foreground`
+- Search bar: icon-only button with `aria-label="Search products"` on desktop header; tapping it expands an inline input or navigates to `/search`; full-width search input below header on mobile (`w-full`) — input `rounded-full border border-zinc-300 px-4 py-2 text-sm`
+- Nav links: `text-sm font-semibold text-zinc-600 hover:text-foreground dark:text-zinc-400` — active page underlined with blue-600 (`border-b-2 border-blue-600`)
+- Cart icon: 24px Heroicons `ShoppingCartIcon`, positioned right; `aria-label="Shopping cart"` (Phase 3 will update to "Shopping cart, N items" when count is wired in); shows badge count in Phase 3 (render empty placeholder now)
+- Account icon: 24px Heroicons `UserIcon`; links to `/account/login`; `aria-label="Account"`
 - Mobile: hamburger menu collapses nav links; search bar moves below header bar; cart icon always visible
 
 ### 2. Home Page (`/`) — Storefront Landing (D-07)
@@ -120,13 +119,13 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 - No CTA button in hero — SEO-first; categories below serve as CTAs
 
 **Zone B: Category entry points**
-- 3 cards in a row (desktop) / 1 column (mobile) with image, category name in `text-xl font-semibold`, and a "Shop now" text link
+- 3 cards in a row (desktop) / 1 column (mobile) with image, category name in `text-2xl font-semibold`, and a "Shop now" text link
 - Cards: `rounded-2xl overflow-hidden`, image fills top 2/3, label bar fills bottom 1/3 with `bg-zinc-900/80 text-white px-4 py-3`
 
 **Zone C: Featured / all-products grid**
-- Section heading: `text-2xl font-bold mb-6` — "Featured Products"
+- Section heading: `text-2xl font-semibold mb-6` — "Featured Products"
 - Grid: same ProductCard component (see §5)
-- "View all products" link at section bottom: `text-sm font-medium text-blue-600 hover:text-blue-700`
+- "View all products" link at section bottom: `text-sm font-semibold text-blue-600 hover:text-blue-700`
 
 ### 3. Category Pages (`/electronics`, `/watches`, `/phones`) and All-Products Page (`/products`)
 
@@ -134,14 +133,14 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 **Layout (mobile):** No sidebar; sticky "Filters" drawer trigger button at top of content area (above sort control)
 
 **Sidebar facets (D-11):**
-- Section heading: `text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-3`
+- Section heading: `text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-3`
 - Brand filter: checkbox list; each item `text-sm font-normal text-zinc-700 dark:text-zinc-300`; checked state uses blue-600 checkbox border
-- Price range filter: two number inputs (`₦ min` / `₦ max`) side-by-side with `text-sm`, border `rounded-lg border-zinc-300`; apply via "Apply" button (accent) or on blur
+- Price range filter: two number inputs (`₦ min` / `₦ max`) side-by-side with `text-sm`, border `rounded-lg border-zinc-300`; apply via "Apply filters" button (accent) or on blur
 - Sort control: `<select>` element, `text-sm rounded-lg border-zinc-300 px-3 py-2`; rendered above/beside the grid (not inside sidebar) — visible on both desktop and mobile
 - "Clear all filters" link: `text-sm text-blue-600 hover:text-blue-700` at sidebar bottom, visible only when any filter/sort is active
 
 **Mobile filter drawer:**
-- Triggered by "Filters" button at top: `rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium` with Heroicons `AdjustmentsHorizontalIcon`
+- Triggered by "Filters" button at top: `rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold` with Heroicons `AdjustmentsHorizontalIcon`
 - Drawer slides in from bottom (full-width, 80vh max height), contains same facets as sidebar, "Show results" button (full-width, accent)
 
 **Product grid:**
@@ -151,8 +150,8 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 **Pagination (D-09):**
 - Centered below grid, `mt-8`
 - Previous / page numbers (max 5 visible) / Next
-- Current page: `bg-blue-600 text-white rounded-md px-3 py-1.5 text-sm font-medium`
-- Other pages: `text-sm text-zinc-600 hover:text-foreground px-3 py-1.5 rounded-md`
+- Current page: `bg-blue-600 text-white rounded-md px-3 py-2 text-sm font-semibold`
+- Other pages: `text-sm text-zinc-600 hover:text-foreground px-3 py-2 rounded-md`
 - Disabled Prev/Next: `opacity-40 cursor-not-allowed`
 
 ### 4. Product Detail Page (`/products/<slug>`)
@@ -160,7 +159,7 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 **Layout (desktop):** 2-column split — gallery left 55%, details right 45%, `gap-12`
 **Layout (mobile):** single column, gallery on top, details below
 
-**Breadcrumb:** `text-xs text-zinc-500` — "Home / Electronics / Samsung Galaxy S25 Ultra" — using `/` separator; last item non-linked
+**Breadcrumb:** `text-sm text-zinc-500` — "Home / Electronics / Samsung Galaxy S25 Ultra" — using `/` separator; last item non-linked
 
 **Gallery (D-19, `ProductGallery` Client Component):**
 - Main image: `rounded-2xl overflow-hidden`, 4:3 aspect ratio, `next/image` with `object-cover`
@@ -169,17 +168,17 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 
 **Product info (right column / below gallery on mobile):**
 - Breadcrumb (as above)
-- Product name: `text-2xl font-semibold leading-tight` (desktop) / `text-xl font-semibold` (mobile)
-- Brand name: `text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2`
-- Price: `text-2xl font-bold text-foreground` — displays resolved variant price formatted as `₦15,000.00`; updates live on variant selection
+- Product name: `text-2xl font-semibold leading-tight` (all breakpoints)
+- Brand name: `text-sm font-semibold text-zinc-500 dark:text-zinc-400 mb-2`
+- Price: `text-2xl font-semibold text-foreground` — displays resolved variant price formatted as `₦15,000.00`; updates live on variant selection
 - Stock indicator (D-17): rendered immediately below price
-  - "In stock" — `text-sm font-medium text-green-600 dark:text-green-400`
-  - "Only N left" — `text-sm font-medium text-amber-600 dark:text-amber-400` (threshold: 5 units, per RESEARCH.md A3)
-  - "Out of stock" — `text-sm font-medium text-red-600 dark:text-red-400`
+  - "In stock" — `text-sm font-semibold text-green-600 dark:text-green-400`
+  - "Only N left" — `text-sm font-semibold text-amber-600 dark:text-amber-400` (threshold: 5 units, per RESEARCH.md A3)
+  - "Out of stock" — `text-sm font-semibold text-red-600 dark:text-red-400`
 
 **Variant selector (D-15, `VariantSelector` Client Component):**
-- Option group heading: `text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2` — e.g. "Color", "Storage"
-- Pill button (non-color options, e.g. Storage "128GB"): `rounded-full border px-4 py-1.5 text-sm font-medium`
+- Option group heading: `text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2` — e.g. "Color", "Storage"
+- Pill button (non-color options, e.g. Storage "128GB"): `rounded-full border px-4 py-2 text-sm font-semibold`
   - Default: `border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 hover:border-zinc-500`
   - Selected: `border-blue-600 ring-2 ring-blue-600 text-foreground bg-white dark:bg-zinc-900`
   - OOS (D-16): `border-zinc-200 text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900 cursor-not-allowed opacity-50` — include a `title="Out of stock"` tooltip
@@ -189,7 +188,7 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
   - OOS: `opacity-40 cursor-not-allowed` + diagonal strike-through pseudo-element (CSS: `after:content-[''] after:absolute after:inset-0 after:bg-white/60 after:rotate-45 after:w-px after:h-full after:left-1/2`)
 
 **Add-to-cart CTA (D-18 stub):**
-- Full-width button: `w-full rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-3.5 text-base font-semibold text-white transition-colors`
+- Full-width button: `w-full rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-4 text-base font-semibold text-white transition-colors`
 - Label: "Add to cart"
 - Disabled when: OOS variant selected or no variant resolved
 - `onClick`: no-op stub (Phase 3 wires real behavior); can show a console.log or do nothing
@@ -203,6 +202,12 @@ Font family: `font-sans` which resolves to `var(--font-geist-sans)` (Geist Sans,
 - Stock indicator: `h-4 w-20 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse`
 - Variant pills: 3×`h-8 w-20 rounded-full bg-zinc-200 dark:bg-zinc-800 animate-pulse`
 
+**Error fallback for Suspense (stock/price block):**
+- Displayed when the server fails to load fresh stock/price data
+- Copy: "Availability unavailable — refresh to retry"
+- Style: `text-sm text-zinc-500 dark:text-zinc-400`
+- No CTA button — not a destructive action; user recovers via browser refresh
+
 ### 5. Product Card Component (`ProductCard`)
 
 Dimensions: `rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden hover:shadow-md transition-shadow`
@@ -211,9 +216,9 @@ Structure:
 ```
 [Product image — 4:3 aspect ratio, object-cover, next/image]
 [Card body — p-4]
-  [Brand name — text-xs font-medium text-zinc-500 uppercase tracking-wide]
+  [Brand name — text-sm font-semibold text-zinc-500 uppercase tracking-wide]
   [Product name — text-sm font-semibold text-foreground leading-snug line-clamp-2]
-  [Price — text-sm font-medium text-foreground mt-1]  ← "From ₦X,XXX"
+  [Price — text-sm font-semibold text-foreground mt-1]  ← "From ₦X,XXX"
 ```
 
 - Entire card is a `<Link>` wrapping to `/products/<slug>`
@@ -225,7 +230,7 @@ Structure:
 ### 6. Search Results Page (`/search?q=`)
 
 - Same grid layout as category pages
-- Heading: `text-xl font-semibold mb-1` — `{N} results for "{query}"`
+- Heading: `text-2xl font-semibold mb-1` — `{N} results for "{query}"`
 - No sidebar (search results span categories; brand filter still available)
 - Uses same ProductCard component and Pagination component
 
@@ -235,9 +240,9 @@ Used on: category pages with no results, search results page, all-products page.
 
 ```
 [Heroicons MagnifyingGlassIcon — 48px, text-zinc-300]
-[Heading — text-xl font-semibold text-foreground mt-4] "No products found"
+[Heading — text-2xl font-semibold text-foreground mt-4] "No products found"
 [Body — text-sm text-zinc-500 mt-2] "Try adjusting your filters or search term."
-[CTA — text-sm font-medium text-blue-600 hover:text-blue-700 mt-4] "Clear filters" → removes all query params
+[CTA — text-sm font-semibold text-blue-600 hover:text-blue-700 mt-4] "Clear filters" → removes all query params
 ```
 
 Centered horizontally in the product grid area, `py-16`.
@@ -250,7 +255,7 @@ Centered horizontally in the product grid area, `py-16`.
 |---------|------|
 | Primary CTA (PDP, add-to-cart stub) | "Add to cart" |
 | Search bar placeholder | "Search products…" |
-| Search submit button | "Search" (or Enter key) |
+| Search icon button aria-label | "Search products" |
 | Category page title pattern | "{Category name} — Mandy Store" |
 | PDP title pattern | "{Product name} \| Mandy Store" |
 | Home page hero headline | "Find the best in electronics, watches & phones" |
@@ -264,7 +269,7 @@ Centered horizontally in the product grid area, `py-16`.
 | Price range filter heading | "Price range" |
 | Price filter min input label | "Min (₦)" |
 | Price filter max input label | "Max (₦)" |
-| Price filter apply button | "Apply" |
+| Price filter apply button | "Apply filters" |
 | Clear all filters link | "Clear all" |
 | Mobile filter drawer trigger | "Filters" |
 | Mobile drawer close / apply | "Show results" |
@@ -277,12 +282,14 @@ Centered horizontally in the product grid area, `py-16`.
 | OOS variant tooltip | "Out of stock" |
 | Disabled CTA (OOS selection) | "Out of stock" (button label replaces "Add to cart" when selected variant is OOS) |
 | Loading fallback (Suspense) | (no text — animated skeleton only) |
+| Error fallback (Suspense, stock/price) | "Availability unavailable — refresh to retry" |
 | Pagination: previous | "Previous" (with left-arrow icon) |
 | Pagination: next | "Next" (with right-arrow icon) |
-| Pagination: page info | "Page {N} of {total}" (below page numbers, `text-xs text-zinc-500`) |
+| Pagination: page info | "Page {N} of {total}" (below page numbers, `text-sm text-zinc-500`) |
 | Search results heading (with results) | "{N} results for "{query}"" |
 | Search results heading (no results) | "No results for "{query}"" |
-| Cart icon (stub, 0 items) | (no label — icon only, badge hidden at 0) |
+| Cart icon aria-label (stub, 0 items) | "Shopping cart" (Phase 3 updates to "Shopping cart, N items" when count wired) |
+| Account icon aria-label | "Account" |
 | Breadcrumb separator | "/" |
 | Product card "From" prefix | "From" (followed by formatted price) |
 
@@ -305,7 +312,7 @@ Centered horizontally in the product grid area, `py-16`.
 
 ### Search Interaction (D-10/D-14)
 
-1. User types in header search bar
+1. User clicks search icon button (`aria-label="Search products"`) in header
 2. On submit (Enter or search button click): `router.push('/search?q=<value>')` — full page navigation
 3. Server Component renders results from SSR query — no client-side filtering
 4. Clearing search (`×` icon in input or empty submit): navigates to `/products`
@@ -314,7 +321,7 @@ Centered horizontally in the product grid area, `py-16`.
 
 1. All filter and sort changes update the URL query params via `router.push` or `<Link>` — SSR re-renders the page
 2. Sidebar brand checkbox: clicking a brand adds/removes `?brand=<name>` from URL
-3. Price range: on "Apply" button click, adds `?minPrice=N&maxPrice=N` to URL
+3. Price range: on "Apply filters" button click, adds `?minPrice=N&maxPrice=N` to URL
 4. Sort select: `onChange` pushes `?sort=<value>` to URL
 5. "Clear all" link: navigates to current route with no query params
 6. Mobile drawer: state (open/closed) is local React `useState`; on "Show results" button, closes drawer (results already updated via URL param changes above)
@@ -352,9 +359,13 @@ Mobile-first: all base classes target `<640px`; use `sm:`, `lg:`, `xl:` prefixes
 - Price display: `aria-live="polite"` on the price element for variant-driven updates
 - CTA button: `aria-disabled="true"` when OOS, not just `disabled`, so reason is communicated to assistive tech
 - Search input: `role="search"` on the wrapping `<form>`, `aria-label="Search products"` on the `<input>`
+- Search icon button in header: `aria-label="Search products"`
+- Cart icon button in header: `aria-label="Shopping cart"` (Phase 3 updates to `aria-label="Shopping cart, N items"` when count is wired in)
+- Account icon button in header: `aria-label="Account"`
 - Mobile filter drawer: `role="dialog"`, `aria-modal="true"`, `aria-label="Product filters"`, focus-trapping via `tabIndex` management
 - Pagination: `<nav aria-label="Pagination">` wrapper
 - Loading skeleton: `aria-hidden="true"` on skeleton elements
+- Error fallback (stock/price Suspense): plain text node, no `aria-live` — not a dynamic update, rendered server-side on error
 
 ---
 
@@ -410,8 +421,8 @@ Wire into `@theme inline` block:
 
 | Component | Path | Type | Notes |
 |-----------|------|------|-------|
-| `SiteHeader` | `src/components/layout/SiteHeader.tsx` | Server | Contains SearchBar (Client island), nav links, cart stub icon |
-| `SearchBar` | `src/components/catalog/SearchBar.tsx` | Client | `"use client"`, router.push on submit |
+| `SiteHeader` | `src/components/layout/SiteHeader.tsx` | Server | Contains SearchBar (Client island), nav links, cart stub icon, account icon |
+| `SearchBar` | `src/components/catalog/SearchBar.tsx` | Client | `"use client"`, router.push on submit; icon-only trigger in header |
 | `ProductCard` | `src/components/catalog/ProductCard.tsx` | Server | Link wrapper; brand/name/price display |
 | `ProductGrid` | `src/components/catalog/ProductGrid.tsx` | Server | Grid wrapper; receives ProductCard list |
 | `ProductFilters` | `src/components/catalog/ProductFilters.tsx` | Server+Client | Sidebar (Server) + mobile drawer trigger (Client island) |
@@ -422,6 +433,7 @@ Wire into `@theme inline` block:
 | `VariantSelector` | `src/components/product/VariantSelector.tsx` | Client | Pill/swatch selection; live price + stock; CTA stub |
 | `StockIndicator` | `src/components/product/StockIndicator.tsx` | Client | Tier display; rendered inside VariantSelector or as sibling |
 | `VariantSkeleton` | `src/components/product/VariantSkeleton.tsx` | Server | Suspense fallback for stock/price block |
+| `VariantError` | `src/components/product/VariantError.tsx` | Server | Suspense error fallback for stock/price block — renders "Availability unavailable — refresh to retry" |
 | `CategoryCard` | `src/components/catalog/CategoryCard.tsx` | Server | Home page category entry tiles |
 
 ---
@@ -458,7 +470,8 @@ No third-party component registries are used in Phase 2. All components are cust
 | Blue-600 as accent | Carries forward from LoginForm.tsx / RegisterForm.tsx (`bg-blue-600`, `focus:ring-blue-500`) | LoginForm.tsx, RegisterForm.tsx |
 | Zinc palette for secondary | Clean, neutral gray-ish; pairs well with blue-600 accent; matches existing `--foreground: #171717` | Existing globals.css tokens |
 | Geist Sans font | Already loaded in layout.tsx as `--font-geist-sans` | src/app/layout.tsx |
-| 4-step type scale (12/14/16/20/28px) | Covers label → body → heading → display without over-engineering; enough for a product catalog | Default for ecommerce |
+| 4-size type scale (14/16/24/28px) | label(14) → body(16) → heading(24) → display(28); covers all product catalog contexts without over-engineering; `text-xs` and `text-xl` eliminated | Default for ecommerce, revised per checker |
+| 2-weight system (400/600) | Exactly two weights: 400 for body, 600 (semibold) for all headings/labels/CTAs/prices/display; `font-medium` (500) and `font-bold` (700) eliminated throughout | Checker requirement; aligns with existing auth form pattern |
 | 24-product grid page size | Established in RESEARCH.md Pattern 4 code example | RESEARCH.md §Pattern 4 |
 | Low-stock threshold: 5 units | RESEARCH.md A3 recommends 5; Claude's Discretion area (D-17) | RESEARCH.md §Assumptions A3 |
 | "From ₦X,XXX" on product cards | RESEARCH.md Open Question 4 recommends this format; prevents showing single-variant price out of context | RESEARCH.md §Open Questions 4 |
@@ -466,8 +479,41 @@ No third-party component registries are used in Phase 2. All components are cust
 | Aspect ratio 4:3 for product images | Standard ecommerce product image ratio; works for phones, watches, electronics without distortion | Default |
 | max-w-7xl container | 1280px max content width; standard for modern ecommerce (Shopify, similar storefronts) | Default |
 | Heroicons v2 for icons | MIT license, React-compatible, minimal footprint; inline SVG approach avoids font icon dependency | Default |
+| Search as icon-only button | Saves header space; `aria-label="Search products"` satisfies accessibility contract; consistent with mobile-first header budget | Checker non-blocking fix 5 |
+| "Apply filters" button label | Renames "Apply" to "Apply filters" for clarity in the price range context | Checker non-blocking fix 5 |
+| Cart/account aria-labels | `aria-label="Shopping cart"` and `aria-label="Account"` on header icon buttons; cart label upgrades to "Shopping cart, N items" in Phase 3 | Checker non-blocking fix 3 |
+| Suspense error fallback copy | "Availability unavailable — refresh to retry" — `text-sm text-zinc-500`, no CTA, not destructive | Checker non-blocking fix 4 |
+
+---
+
+## CONTEXT.md D-01..D-19 Decision Confirmation
+
+All locked decisions from CONTEXT.md remain intact in this revision:
+
+| ID | Decision | Status |
+|----|----------|--------|
+| D-01 | PostgreSQL + Drizzle ORM | Not affected (backend only) |
+| D-02 | Auth.js v5 | Not affected (backend only) |
+| D-03 | Stripe + PayPal + bank transfer | Not affected (payment, Phase 4) |
+| D-04 | Vercel Blob for images | Not affected (storage, Phase 3) |
+| D-05 | Resend for email | Not affected (email, Phase 5) |
+| D-06 | Neon serverless PostgreSQL | Not affected (backend only) |
+| D-07 | Home page with hero + category entry points + featured grid | Implemented in §2 — Zone A/B/C |
+| D-08 | Products belong to one category | Reflected in breadcrumb and nav structure |
+| D-09 | Cursor/offset pagination (offset for Phase 2) | Reflected in Pagination component spec |
+| D-10 | Full-text search via PostgreSQL `tsvector` | Reflected in Search interaction contract |
+| D-11 | Faceted filters: brand + price range | Reflected in sidebar facets spec |
+| D-12 | Sort: newest/price-asc/price-desc/name-asc; default newest | Reflected in sort control spec |
+| D-13 | Empty state with icon + copy + recovery CTA | Implemented in §7 EmptyState |
+| D-14 | URL-driven filter/sort/search state | Reflected in Filter/Sort interaction contract |
+| D-15 | Variant selector: pill (non-color) + swatch (color) | Implemented in §4 VariantSelector |
+| D-16 | OOS variants shown disabled, not hidden | Confirmed in variant selector spec |
+| D-17 | Stock indicator: in/low/out tiers; low threshold = 5 | Confirmed in stock indicator spec |
+| D-18 | Add-to-cart as stub in Phase 2 | Confirmed in CTA spec |
+| D-19 | Product gallery with thumbnail strip + variant image swap | Implemented in §4 ProductGallery |
 
 ---
 
 *Phase: 02-product-catalog*
 *UI-SPEC created: 2026-06-11*
+*UI-SPEC revised: 2026-06-11 — checker blocking fixes applied (typography: 4 sizes / 2 weights) + non-blocking improvements*
