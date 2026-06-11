@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-06-11T17:09:36.862Z"
+stopped_at: Phase 02 Plan 01 complete
+last_updated: "2026-06-11T18:30:00Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 8
-  completed_plans: 4
-  percent: 50
+  completed_plans: 5
+  percent: 56
 ---
 
 # Project State: Mandy Store
@@ -18,26 +18,26 @@ progress:
 ## Project Reference
 
 **Core Value:** Customers can find a product, pick their variant, and complete a purchase using their preferred payment method — without friction.
-**Current Focus:** Phase 2 — product catalog (Phase 1 complete)
+**Current Focus:** Phase 02 — Product Catalog
 **Stack:** Next.js 16 (App Router), TypeScript, Tailwind v4. Neon Postgres + Drizzle, Auth.js v5, Stripe + PayPal + manual bank transfer, Resend, Vercel Blob.
 **Currency:** NGN (Nigerian Naira)
 **Shipping:** Flat rate
 
 ## Current Position
 
-Phase: 01 (foundation) — COMPLETE (2026-06-11)
-Plan: 4 of 4 complete
+Phase: 02 (Product Catalog) — EXECUTING
+Plan: 2 of 4
 
 - **Phase:** 2 of 6 (product catalog)
-- **Plan:** Not started
-- **Status:** Ready to execute
-- **Progress:** [#         ] 1/6 phases complete
+- **Plan:** 02-01 complete; 02-02 next
+- **Status:** Executing Phase 02
+- **Progress:** [##        ] 1/6 phases complete (5/8 plans)
 
 ## Performance Metrics
 
 - Phases completed: 1/6
-- Plans completed: 4 (01-01, 01-02, 01-03, 01-04 — all complete 2026-06-10/11)
-- Requirements delivered: 3/27 (AUTH-01/02/03)
+- Plans completed: 5 (01-01, 01-02, 01-03, 01-04, 02-01 — complete 2026-06-10/11)
+- Requirements delivered: 3/27 (AUTH-01/02/03; CATA-01..04 foundation in progress)
 
 ## Accumulated Context
 
@@ -65,6 +65,8 @@ Plan: 4 of 4 complete
 - Playwright e2e: 2/2 redirect tests pass; non-admin case is test.skip (manual checkpoint covers it).
 - vitest.config.ts loads .env.local (Node loadEnvFile) so `npx vitest run` passes bare (48/48); src/scripts/load-env.ts does the same for the standalone seed script.
 - Code review (01-REVIEW.md): 0 blockers, 7 warnings, 4 info — advisory, deferred. Notable for follow-up: register() partial-failure recovery (WR-02), verify-email page refresh shows "Invalid token" after success (WR-06), proxy /account matcher hardcoded vs startsWith (WR-01). Run /gsd-code-review-fix 1 to address.
+- Phase 2 Plan 01: 8 catalog tables (brands, categories, products, productImages, productOptions, optionValues, variants, variantOptionValues) pushed to Neon with Drizzle relations. variants.priceKobo (NGN integer kobo, D-04) and variants.stock (Phase 4 atomic decrement target) established at data layer. 6-product realistic seed across 3 categories (Electronics/Watches/Phones), 4 brands, 29 variants with OOS+low-stock coverage, picsum.photos images (D-05). Wave 0 test scaffold: schema.test.ts (14 tests), queries.test.ts (scaffold), variant-resolver.test.ts (scaffold). truncateCatalogTables() FK-safe helper in tests/helpers/db.ts. slugify installed; toSlug/uniqueSlug in src/lib/utils/slug.ts. 64/64 tests passing.
+- Array-return extra-config style used for Phase 2 tables in schema.ts (both styles valid in drizzle-orm 0.45.2; existing tables unchanged).
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -81,7 +83,7 @@ Plan: 4 of 4 complete
 
 ### Blockers
 
-- None (Plan 01-01 fully complete; 01-02 ready to start)
+- None
 
 ### Open Questions (from research, resolve before/at relevant phase)
 
@@ -92,9 +94,9 @@ Plan: 4 of 4 complete
 
 ## Session Continuity
 
-**Last session:** 2026-06-11T16:23:54.605Z
-**Stopped at:** Phase 2 UI-SPEC approved
-**Next action:** `/gsd-discuss-phase 2 --chain` (or `/gsd-plan-phase 2`) to start Phase 2 — Product Catalog.
+**Last session:** 2026-06-11T18:30:00Z
+**Stopped at:** Phase 02 Plan 01 complete — catalog schema, seed, Wave 0 tests
+**Next action:** Execute Plan 02-02 — catalog listing pages (category pages, search, filter, sort)
 
 ---
 *State initialized: 2026-06-10*
