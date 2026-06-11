@@ -15,3 +15,9 @@ declare module "next-auth" {
     role?: "customer" | "admin"
   }
 }
+
+// NOTE: the Auth.js JWT type extends Record<string, unknown>, so custom token fields
+// (id, role, sessionToken) are already permitted without a module augmentation. The
+// token is the bridge between credentials sign-in (jwt callback stashes id/role) and
+// the DB-backed session (decode() returns the opaque sessionToken + id/role;
+// encode()/events.signOut read sessionToken).

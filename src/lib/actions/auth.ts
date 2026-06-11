@@ -5,7 +5,7 @@
 // Threat model: T-01-10 (zod validation), T-01-11 (login enumeration), T-01-12 (token), T-01-13 (ADMIN_EMAILS), T-01-14 (argon2id)
 
 import { db } from "@/lib/db/client"
-import { users, verificationTokens, sessions } from "@/lib/db/schema"
+import { users, verificationTokens } from "@/lib/db/schema"
 import { sendVerificationEmail } from "@/lib/email/send-verification"
 import { signIn, signOut } from "@/lib/auth"
 import * as argon2 from "argon2"
@@ -196,9 +196,9 @@ export async function login(
 // ─── logout() ─────────────────────────────────────────────────────────────────
 
 /**
- * Signs the user out. Auth.js deletes the DB session row for the database strategy.
- * (D-08 workaround: session was manually inserted in jwt callback; signOut removes it
- * because the adapter's deleteSession() is called by Auth.js on sign-out.)
+ * Signs the user out. Under the jwt strategy, Auth.js's signOut clears the cookie and
+ * emits the `signOut` event; our events.signOut handler (src/lib/auth.ts) deletes the
+ * DB session row via adapter.deleteSession() so the session is truly revoked (D-06, D-08).
  */
 export async function logout(): Promise<void> {
   await signOut({ redirectTo: "/account/login" })

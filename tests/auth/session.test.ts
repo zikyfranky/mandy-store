@@ -1,168 +1,284 @@
 // tests/auth/session.test.ts
-// Covers: AUTH-02 — Session DB row exists after credentials login (D-08 workaround)
-// Tests that the D-08 workaround (manual db.insert(sessions) in jwt callback) works.
-// Because signIn() requires a live Next.js HTTP context, we test the jwt callback
-// side-effect directly: after a successful authorize(), a session row must exist.
+// Covers: AUTH-02 — DB-backed, server-side-revocable sessions for the Credentials
+// provider (D-06, D-07, D-08).
+//
+// REGRESSION GUARD (the bug these tests now catch):
+// The original config used `session.strategy: "database"` with a Credentials provider.
+// @auth/core's assertConfig REJECTS that combination (UnsupportedStrategy → HTTP 500 on
+// /api/auth/callback/credentials) BEFORE authorize() runs. The previous version of this
+// test mocked @/lib/auth entirely and asserted on a hand-written db.insert(sessions) —
+// so it passed even though real login was 100% broken.
+//
+// These tests instead import the REAL authConfig and:
+//   1. Assert session.strategy === "jwt" (the only value that lets Credentials run).
+//      The contradictory database+credentials state can no longer pass silently.
+//   2. Exercise the real jwt.encode/decode session bridge against the live DB, which is
+//      exactly the code path Auth.js invokes on sign-in and on every session read:
+//        - encode() on sign-in creates ONE DB session row (D-06)
+//        - encode() on refresh REUSES the same row (no leak)
+//        - decode() resolves the opaque token → user + role
+//        - a deleted/expired row decodes to null (server-side revocability — D-06)
+//
+// NOTE: The full HTTP signIn → cookie → auth() round trip (and proxy redirects) is
+// verified by the Playwright e2e (tests/e2e/proxy.spec.ts) and was manually verified
+// against the live dev server during the D-08 fix. Vitest cannot spin up the Next.js
+// HTTP/cookie context, so the encode/decode bridge is tested directly here.
 
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { hasDatabase, truncateAuthTables, getDb } from "../helpers/db"
 
+// @/lib/auth transitively pulls a module guarded by `import "server-only"`; stub it
+// so the real config can be imported under the node test environment.
+vi.mock("server-only", () => ({}))
+
+// Don't send real verification emails during register-based seeding.
 vi.mock("@/lib/email/send-verification", () => ({
   sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock("@/lib/auth", () => ({
-  signIn:   vi.fn(),
-  signOut:  vi.fn(),
-  auth:     vi.fn(),
-  handlers: {},
-}))
-
-vi.mock("server-only", () => ({}))
-
 const skip = !hasDatabase
 
-describe("database session persistence (D-08)", () => {
+// Helper: seed a verified user and return its id.
+async function seedVerifiedUser(opts: {
+  email: string
+  username: string
+  password: string
+  name: string
+}): Promise<string> {
+  const { register, verifyEmail } = await import("@/lib/actions/auth")
+  const db = await getDb()
+  const { users, verificationTokens } = await import("@/lib/db/schema")
+  const { eq } = await import("drizzle-orm")
+
+  const fd = new FormData()
+  fd.set("email", opts.email)
+  fd.set("password", opts.password)
+  fd.set("name", opts.name)
+  fd.set("username", opts.username)
+  await register(fd)
+
+  const tokenRow = await db.query.verificationTokens.findFirst({
+    where: eq(verificationTokens.identifier, opts.email),
+  })
+  await verifyEmail(tokenRow!.token, opts.email)
+
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, opts.email),
+  })
+  return user!.id
+}
+
+describe("auth config — credentials/session-strategy contract (D-08 regression guard)", () => {
+  it("session.strategy MUST be 'jwt' (database+credentials throws UnsupportedStrategy)", async () => {
+    const { authConfig } = await import("@/lib/auth")
+    // This is the single assertion that would have caught the 500 at build/test time.
+    expect(authConfig.session.strategy).toBe("jwt")
+  })
+
+  it("declares a Credentials provider with an authorize() handler", async () => {
+    const { authConfig } = await import("@/lib/auth")
+    const provider = authConfig.providers[0] as { type?: string; authorize?: unknown }
+    // @auth/core also requires authorize() to exist for credentials.
+    expect(typeof provider.authorize).toBe("function")
+  })
+
+  it("declares jwt.encode and jwt.decode overrides (the DB-session bridge)", async () => {
+    const { authConfig } = await import("@/lib/auth")
+    expect(typeof authConfig.jwt?.encode).toBe("function")
+    expect(typeof authConfig.jwt?.decode).toBe("function")
+  })
+
+  it("session maxAge is 30 days (D-07)", async () => {
+    const { authConfig } = await import("@/lib/auth")
+    expect(authConfig.session.maxAge).toBe(30 * 24 * 60 * 60)
+  })
+})
+
+describe("database session bridge — encode/decode against live DB (D-06)", () => {
   beforeEach(async () => {
     if (!hasDatabase) return
     await truncateAuthTables()
-    vi.clearAllMocks()
   })
 
   it.skipIf(skip)(
-    "creates a session DB row after successful credentials login (D-08 workaround)",
+    "jwt.encode creates exactly ONE DB session row on sign-in (D-06)",
     async () => {
-      // Seed a verified user
-      const { register, verifyEmail } = await import("@/lib/actions/auth")
+      const userId = await seedVerifiedUser({
+        email: "encode@example.com",
+        username: "encodeuser",
+        password: "password123",
+        name: "Encode User",
+      })
+
+      const { authConfig } = await import("@/lib/auth")
       const db = await getDb()
-      const { users, verificationTokens, sessions } = await import("@/lib/db/schema")
-      const { eq } = await import("drizzle-orm")
+      const { sessions } = await import("@/lib/db/schema")
 
-      const formData = new FormData()
-      formData.set("email", "session@example.com")
-      formData.set("password", "password123")
-      formData.set("name", "Session User")
-      formData.set("username", "sessionuser")
-      await register(formData)
-
-      const tokenRow = await db.query.verificationTokens.findFirst({
-        where: eq(verificationTokens.identifier, "session@example.com"),
-      })
-      await verifyEmail(tokenRow!.token, "session@example.com")
-
-      // Confirm user is set up correctly
-      const user = await db.query.users.findFirst({
-        where: eq(users.email, "session@example.com"),
-      })
-      expect(user).toBeDefined()
-      expect(user!.emailVerified).not.toBeNull()
-      expect(user!.passwordHash).toBeTruthy()
-
-      // Simulate what D-08 jwt callback does: manually insert a session row
-      // (The jwt callback in auth.ts does this when account.provider === "credentials")
-      const sessionToken = crypto.randomUUID()
-      const expires      = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      await db.insert(sessions).values({
-        sessionToken,
-        userId: user!.id,
-        expires,
+      // Simulate sign-in: jwt callback stashed id/role; encode mints the row.
+      const cookieValue = await authConfig.jwt!.encode!({
+        token: { id: userId, sub: userId, role: "customer" },
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
       })
 
-      // Verify the session row exists
-      const sessionRow = await db.query.sessions.findFirst({
-        where: eq(sessions.sessionToken, sessionToken),
-      })
-      expect(sessionRow).toBeDefined()
-      expect(sessionRow!.userId).toBe(user!.id)
+      // Cookie value is an opaque UUID (DB session token), NOT a signed JWT.
+      expect(cookieValue).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      )
+
+      const rows = await db.select().from(sessions)
+      expect(rows).toHaveLength(1)
+      expect(rows[0].sessionToken).toBe(cookieValue)
+      expect(rows[0].userId).toBe(userId)
+      // D-07: ~30 days out
+      const diff = rows[0].expires.getTime() - Date.now()
+      expect(diff).toBeGreaterThan(29 * 24 * 60 * 60 * 1000)
+      expect(diff).toBeLessThanOrEqual(30 * 24 * 60 * 60 * 1000 + 5000)
     },
   )
 
   it.skipIf(skip)(
-    "session row has correct userId and expires timestamp",
+    "jwt.encode REUSES the existing sessionToken on refresh (no row leak)",
     async () => {
-      const { register, verifyEmail } = await import("@/lib/actions/auth")
+      const userId = await seedVerifiedUser({
+        email: "reuse@example.com",
+        username: "reuseuser",
+        password: "password123",
+        name: "Reuse User",
+      })
+
+      const { authConfig } = await import("@/lib/auth")
       const db = await getDb()
-      const { users, verificationTokens, sessions } = await import("@/lib/db/schema")
-      const { eq } = await import("drizzle-orm")
+      const { sessions } = await import("@/lib/db/schema")
 
-      const formData = new FormData()
-      formData.set("email", "sessioncheck@example.com")
-      formData.set("password", "password123")
-      formData.set("name", "Session Check")
-      formData.set("username", "sessioncheck")
-      await register(formData)
-
-      const tokenRow = await db.query.verificationTokens.findFirst({
-        where: eq(verificationTokens.identifier, "sessioncheck@example.com"),
-      })
-      await verifyEmail(tokenRow!.token, "sessioncheck@example.com")
-
-      const user = await db.query.users.findFirst({
-        where: eq(users.email, "sessioncheck@example.com"),
+      // Sign-in
+      const first = await authConfig.jwt!.encode!({
+        token: { id: userId, sub: userId, role: "customer" },
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
       })
 
-      const sessionToken = crypto.randomUUID()
-      const expectedExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      await db.insert(sessions).values({
-        sessionToken,
-        userId:  user!.id,
-        expires: expectedExpiry,
+      // Read-refresh: token now carries sessionToken (as decode() would return).
+      const refreshed = await authConfig.jwt!.encode!({
+        token: { id: userId, sub: userId, role: "customer", sessionToken: first },
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
       })
 
-      const sessionRow = await db.query.sessions.findFirst({
-        where: eq(sessions.sessionToken, sessionToken),
-      })
-
-      expect(sessionRow!.userId).toBe(user!.id)
-      // Expires should be approximately 30 days from now (within 5 seconds)
-      const diffMs = sessionRow!.expires.getTime() - Date.now()
-      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
-      expect(diffMs).toBeGreaterThan(thirtyDaysMs - 5000)
-      expect(diffMs).toBeLessThanOrEqual(thirtyDaysMs)
+      expect(refreshed).toBe(first) // same opaque token
+      const rows = await db.select().from(sessions)
+      expect(rows).toHaveLength(1) // NOT 2 — no leak
     },
   )
 
   it.skipIf(skip)(
-    "session persists across simulated page refresh (cookie + DB row)",
+    "jwt.decode resolves the opaque token to the user + role",
     async () => {
-      // This verifies that the DB row is the source of truth for session lookup.
-      // A page refresh re-queries the sessions table via auth().
-      const { register, verifyEmail } = await import("@/lib/actions/auth")
+      const userId = await seedVerifiedUser({
+        email: "decode@example.com",
+        username: "decodeuser",
+        password: "password123",
+        name: "Decode User",
+      })
+
+      const { authConfig } = await import("@/lib/auth")
+      const cookieValue = await authConfig.jwt!.encode!({
+        token: { id: userId, sub: userId, role: "customer" },
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
+      })
+
+      const payload = await authConfig.jwt!.decode!({
+        token: cookieValue as string,
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
+      })
+
+      expect(payload).not.toBeNull()
+      expect(payload!.id).toBe(userId)
+      expect(payload!.sessionToken).toBe(cookieValue)
+      expect(payload!.role).toBe("customer")
+
+      // Confirm the session callback would expose id + role.
+      const session = await authConfig.callbacks!.session!({
+        // @ts-expect-error partial session object for the callback under test
+        session: { user: {} },
+        token: payload!,
+      })
+      expect(session.user.id).toBe(userId)
+      expect(session.user.role).toBe("customer")
+    },
+  )
+
+  it.skipIf(skip)(
+    "jwt.decode returns null for a revoked (deleted) session row (D-06 revocability)",
+    async () => {
+      const userId = await seedVerifiedUser({
+        email: "revoke@example.com",
+        username: "revokeuser",
+        password: "password123",
+        name: "Revoke User",
+      })
+
+      const { authConfig } = await import("@/lib/auth")
       const db = await getDb()
-      const { users, verificationTokens, sessions } = await import("@/lib/db/schema")
+      const { sessions } = await import("@/lib/db/schema")
       const { eq } = await import("drizzle-orm")
 
-      const formData = new FormData()
-      formData.set("email", "refresh@example.com")
-      formData.set("password", "password123")
-      formData.set("name", "Refresh User")
-      formData.set("username", "refreshuser")
-      await register(formData)
+      const cookieValue = (await authConfig.jwt!.encode!({
+        token: { id: userId, sub: userId, role: "customer" },
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
+      })) as string
 
-      const tokenRow = await db.query.verificationTokens.findFirst({
-        where: eq(verificationTokens.identifier, "refresh@example.com"),
+      // Server-side revocation: delete the row while the cookie is still "valid".
+      await db.delete(sessions).where(eq(sessions.sessionToken, cookieValue))
+
+      const payload = await authConfig.jwt!.decode!({
+        token: cookieValue,
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
       })
-      await verifyEmail(tokenRow!.token, "refresh@example.com")
+      // No DB row → no session. This is the entire point of DB-backed sessions.
+      expect(payload).toBeNull()
+    },
+  )
 
-      const user = await db.query.users.findFirst({
-        where: eq(users.email, "refresh@example.com"),
+  it.skipIf(skip)(
+    "jwt.decode returns null and cleans up an expired session row",
+    async () => {
+      const userId = await seedVerifiedUser({
+        email: "expired@example.com",
+        username: "expireduser",
+        password: "password123",
+        name: "Expired User",
       })
 
-      // Create session row (simulating D-08 jwt callback)
+      const { authConfig } = await import("@/lib/auth")
+      const db = await getDb()
+      const { sessions } = await import("@/lib/db/schema")
+      const { eq } = await import("drizzle-orm")
+
+      // Insert an already-expired row directly.
       const sessionToken = crypto.randomUUID()
       await db.insert(sessions).values({
         sessionToken,
-        userId:  user!.id,
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        userId,
+        expires: new Date(Date.now() - 1000),
       })
 
-      // Simulate "page refresh": re-query the session from DB (auth() lookup path)
-      const sessionRow = await db.query.sessions.findFirst({
+      const payload = await authConfig.jwt!.decode!({
+        token: sessionToken,
+        salt: "authjs.session-token",
+        secret: process.env.AUTH_SECRET!,
+      })
+      expect(payload).toBeNull()
+
+      // Expired row is cleaned up.
+      const row = await db.query.sessions.findFirst({
         where: eq(sessions.sessionToken, sessionToken),
       })
-      expect(sessionRow).toBeDefined()
-      expect(sessionRow!.userId).toBe(user!.id)
-      expect(sessionRow!.expires.getTime()).toBeGreaterThan(Date.now())
+      expect(row).toBeUndefined()
     },
   )
 })

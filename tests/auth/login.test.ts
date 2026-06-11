@@ -1,6 +1,9 @@
 // tests/auth/login.test.ts
 // Covers: AUTH-02 — User can log in; login accepts email OR username; wrong password fails
-// Integration tests: calls auth.ts authorize() directly (bypassing Next.js HTTP layer).
+// The login() action suite below mocks @/lib/auth (it tests the action's error mapping).
+// The "real authorize()" suite at the bottom imports the ACTUAL Credentials provider via
+// vi.importActual and runs its authorize() against the live DB — the path that exercises
+// the D-02 (verified) and D-04 (email-or-username) gates for real.
 
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { hasDatabase, truncateAuthTables, getDb } from "../helpers/db"
@@ -213,4 +216,98 @@ describe("login / authorize()", () => {
       expect(result).toMatchObject({ error: "Invalid credentials" })
     },
   )
+})
+
+// ---------------------------------------------------------------------------
+// REAL authorize() — imports the actual Credentials provider (NOT the mock).
+// This exercises the real resolver: email-OR-username (D-04) + emailVerified gate (D-02).
+// ---------------------------------------------------------------------------
+
+async function getRealAuthorize() {
+  // Bypass the module-level vi.mock("@/lib/auth") above and load the real config.
+  const real = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth")
+  // NOTE: @auth/core's Credentials() wraps the user authorize() at provider.authorize
+  // (expecting (credentials, request)); the ORIGINAL user function is preserved at
+  // provider.options.authorize. We invoke that to test the resolver in isolation.
+  const provider = real.authConfig.providers[0] as unknown as {
+    options: {
+      authorize: (
+        creds: Record<string, unknown>,
+      ) => Promise<{ id: string; role?: string } | null>
+    }
+  }
+  return provider.options.authorize
+}
+
+describe("real Credentials.authorize() against live DB (D-02, D-04)", () => {
+  beforeEach(async () => {
+    if (!hasDatabase) return
+    await truncateAuthTables()
+    vi.clearAllMocks()
+  })
+
+  it.skipIf(skip)("returns the user for valid email + password", async () => {
+    await seedVerifiedUser({
+      email: "real-login@example.com",
+      username: "realloginuser",
+      password: "password123",
+      name: "Real Login",
+    })
+    const authorize = await getRealAuthorize()
+    const user = await authorize({
+      identifier: "real-login@example.com",
+      password: "password123",
+    })
+    expect(user).not.toBeNull()
+    expect(user!.role).toBe("customer")
+  })
+
+  it.skipIf(skip)("accepts username as the identifier (D-04)", async () => {
+    await seedVerifiedUser({
+      email: "real-byuser@example.com",
+      username: "realbyuser",
+      password: "password123",
+      name: "Real ByUser",
+    })
+    const authorize = await getRealAuthorize()
+    const user = await authorize({
+      identifier: "realbyuser",
+      password: "password123",
+    })
+    expect(user).not.toBeNull()
+  })
+
+  it.skipIf(skip)("returns null for wrong password", async () => {
+    await seedVerifiedUser({
+      email: "real-wrongpw@example.com",
+      username: "realwrongpw",
+      password: "correct-horse",
+      name: "Real WrongPW",
+    })
+    const authorize = await getRealAuthorize()
+    const user = await authorize({
+      identifier: "real-wrongpw@example.com",
+      password: "wrong",
+    })
+    expect(user).toBeNull()
+  })
+
+  it.skipIf(skip)("returns null for an UNVERIFIED user (D-02 gate)", async () => {
+    // Register without verifying.
+    const { register } = await import("@/lib/actions/auth")
+    const fd = new FormData()
+    fd.set("email", "real-unverified@example.com")
+    fd.set("password", "password123")
+    fd.set("name", "Real Unverified")
+    fd.set("username", "realunverified")
+    await register(fd)
+
+    const authorize = await getRealAuthorize()
+    const user = await authorize({
+      identifier: "real-unverified@example.com",
+      password: "password123",
+    })
+    // D-02: unverified email cannot log in.
+    expect(user).toBeNull()
+  })
 })
