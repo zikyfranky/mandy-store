@@ -5,97 +5,80 @@
 import Link from "next/link"
 import { SearchBar } from "@/components/catalog/SearchBar"
 
+const NAV = [
+  { href: "/electronics", label: "Electronics" },
+  { href: "/watches", label: "Watches" },
+  { href: "/phones", label: "Phones" },
+  { href: "/products", label: "All Products" },
+]
+
 export function SiteHeader() {
   return (
-    <header className="h-16 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center gap-4">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          Mandy Store
+    <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#0c0c16]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-sm">
+      <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center gap-4">
+        {/* Logo + brand mark */}
+        <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap group shrink-0">
+          <span className="brand-gradient inline-flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md shadow-indigo-500/30 transition-transform group-hover:scale-105">
+            {/* Bolt / spark mark */}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" aria-hidden="true">
+              <path d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" />
+            </svg>
+          </span>
+          <span className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Mandy<span className="text-indigo-600 dark:text-indigo-400">Store</span>
+          </span>
         </Link>
 
         {/* Search bar — takes available space */}
-        <div className="flex-1 hidden sm:flex justify-center">
+        <div className="flex-1 hidden sm:flex justify-center max-w-xl mx-auto">
           <SearchBar />
         </div>
 
         {/* Nav links — desktop only */}
-        <nav className="hidden lg:flex items-center gap-4">
-          <Link
-            href="/electronics"
-            className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap transition-colors"
-          >
-            Electronics
-          </Link>
-          <Link
-            href="/watches"
-            className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap transition-colors"
-          >
-            Watches
-          </Link>
-          <Link
-            href="/phones"
-            className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap transition-colors"
-          >
-            Phones
-          </Link>
-          <Link
-            href="/products"
-            className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 whitespace-nowrap transition-colors"
-          >
-            All Products
-          </Link>
+        <nav className="hidden lg:flex items-center gap-1">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="relative px-3 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 whitespace-nowrap transition-colors after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:scale-x-0 after:bg-indigo-600 dark:after:bg-indigo-400 after:transition-transform hover:after:scale-x-100"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Right icon group */}
-        <div className="flex items-center gap-2 ml-auto lg:ml-0">
+        <div className="flex items-center gap-1 ml-auto lg:ml-2">
           {/* Cart icon — stub (Phase 3 wires count) */}
           <button
             type="button"
             aria-label="Shopping cart"
-            className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="relative min-h-11 min-w-11 flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
           >
-            {/* Heroicons ShoppingCartIcon (24px, inline SVG) */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6 text-zinc-600 dark:text-zinc-400"
-              aria-hidden="true"
-            >
-              <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
             </svg>
+            {/* Count bubble (stub — 0 items until Phase 3) */}
+            <span className="absolute top-1 right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+              0
+            </span>
           </button>
 
           {/* Account icon — links to /account/login */}
           <Link
             href="/account/login"
             aria-label="Account"
-            className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="min-h-11 min-w-11 flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
           >
-            {/* Heroicons UserIcon (24px, inline SVG) */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6 text-zinc-600 dark:text-zinc-400"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
-                clipRule="evenodd"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
             </svg>
           </Link>
         </div>
       </div>
 
       {/* Mobile search bar — below header bar */}
-      <div className="sm:hidden px-4 pb-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="sm:hidden px-4 pb-3 pt-1">
         <SearchBar />
       </div>
     </header>

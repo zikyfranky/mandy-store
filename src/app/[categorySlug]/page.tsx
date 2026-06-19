@@ -6,6 +6,7 @@
 
 import type { Metadata } from "next"
 import { Suspense } from "react"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCatalog, getBrandsForCategory } from "@/lib/catalog/queries"
 import { parseCatalogParams } from "@/lib/validation/catalog-params"
@@ -83,7 +84,12 @@ async function CategoryContent({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-      <h1 className="text-3xl font-semibold text-zinc-900 dark:text-zinc-100 mb-8">
+      <nav className="mb-3 text-sm text-zinc-500 dark:text-zinc-400">
+        <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400">Home</Link>
+        <span className="px-1.5" aria-hidden="true">/</span>
+        <span className="text-zinc-700 dark:text-zinc-300">{categoryName}</span>
+      </nav>
+      <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 mb-8">
         {categoryName}
       </h1>
 

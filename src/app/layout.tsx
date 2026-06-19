@@ -30,6 +30,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Announcement / promo bar */}
+        <div className="brand-gradient text-white text-center text-xs sm:text-sm font-medium px-4 py-2">
+          <span className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+            <span>🚚 Free delivery on orders over ₦50,000</span>
+            <span aria-hidden="true" className="opacity-50">•</span>
+            <span>Pay with Stripe, PayPal or bank transfer</span>
+          </span>
+        </div>
         <SiteHeader />
         {children}
       </body>
