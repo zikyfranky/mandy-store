@@ -648,19 +648,22 @@ This phase requires exactly one schema push at Wave 1 (immediately after schema 
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Cart merge conflict resolution (D-10) for same variant**
+   - RESOLVED: `Math.min(guestQty + dbQty, stock)` (additive, clamped to stock). Implemented in Plan 03-02 (mergeGuestCartOnLogin).
    - What we know: Additive merge, clamped to stock
    - What's unclear: If guest has 2 of variant A, logged-in DB cart already has 3 of variant A, stock is 4 — result is min(2+3, 4) = 4. This is the correct behavior but should be confirmed with user.
    - Recommendation: Implement as `Math.min(guestQty + dbQty, stock)`, document in code comments.
 
 2. **Drawer animation library**
+   - RESOLVED: Pure CSS `transition-transform duration-300 translate-x` (no new animation dep). Plan 03-03 Task 2.
    - What we know: Tailwind CSS v4 `transition` utilities are available; no Framer Motion installed.
    - What's unclear: Whether a pure CSS `translate-x` transition on the drawer panel is sufficient or Framer Motion is wanted.
    - Recommendation: Pure CSS `transition-transform duration-300` — avoids a new dep; Claude's Discretion.
 
 3. **`useOptimistic` vs `useTransition` for stepper**
+   - RESOLVED: `useTransition` + `isPending` disable during flight (simpler, no rollback complexity). Plan 03-02 Task 4 / 03-03.
    - What we know: React 19 is installed (19.2.4), which includes stable `useOptimistic`.
    - What's unclear: Whether the user wants optimistic UI (instant visual update before server confirms) or await-on-server (spinner, then update).
    - Recommendation: `useTransition` + `isPending` disable stepper during flight (simpler, avoids rollback complexity); `useOptimistic` for snappier feel. Claude's Discretion.
