@@ -83,7 +83,7 @@ Plans:
 - [x] 03-02-PLAN.md — Server cart layer: cookie helpers + server-only getCart/getCartCount, addToCart/updateCartItem/removeCartItem actions (stock-clamped, IDOR-safe), login-merge (D-10), wire VariantSelector add + SiteHeader live badge (rebrand to indigo) *(COMPLETE 2026-06-19 — 151/151 tests pass; npx next build --webpack succeeds; CART-01/02/03 delivered)*
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 03-03-PLAN.md — Cart UI: focus-trapped CartDrawer + CartLineItem/CartStepper/CartEmptyState, /cart page with order summary, drawer mounted in layout; human-verify checkpoint
+- [x] 03-03-PLAN.md — Cart UI: focus-trapped CartDrawer + CartLineItem/CartStepper/CartEmptyState, /cart page with order summary, drawer mounted in layout; human-verify checkpoint *(Tasks 1+2 complete 2026-06-19; Task 3 human-verify checkpoint pending)*
 **UI hint**: yes
 
 ### Phase 4: Checkout & Payments
@@ -129,7 +129,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
 | 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
-| 3. Cart | 2/3 | Executing | 03-01 complete 2026-06-19; 03-02 complete 2026-06-19 |
+| 3. Cart | 3/3 | Checkpoint pending | 03-01/02/03 built 2026-06-19; 03-03 human-verify pending |
 | 4. Checkout & Payments | 0/0 | Not started | - |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
