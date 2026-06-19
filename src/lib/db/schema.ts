@@ -184,6 +184,35 @@ export const variantOptionValues = pgTable(
   ]
 )
 
+// ─── Phase 3: Cart Tables ─────────────────────────────────────────────────────
+// D-08/D-09: cart and cart_item store only variantId+quantity — NO price columns.
+// Prices always joined from variants.priceKobo at query time (CLAUDE.md: never trust client prices).
+
+// DB cart for logged-in users (guests use a cookie — see src/lib/cart/logic.ts)
+export const cart = pgTable("cart", {
+  id:        text("id").primaryKey(),             // crypto.randomUUID()
+  userId:    text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+}, (table) => [
+  index("cart_user_idx").on(table.userId),
+  unique("cart_user_unique").on(table.userId),    // one cart per user; upsert on first add
+])
+
+// One row per variant per cart — quantity updated on re-add (ON CONFLICT DO UPDATE)
+// NO priceKobo column — prices always read from variants.priceKobo (D-09, CLAUDE.md)
+export const cartItems = pgTable("cart_item", {
+  id:        text("id").primaryKey(),
+  cartId:    text("cart_id").notNull().references(() => cart.id, { onDelete: "cascade" }),
+  variantId: text("variant_id").notNull().references(() => variants.id, { onDelete: "cascade" }),
+  quantity:  integer("quantity").notNull().default(1),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+}, (table) => [
+  unique("cart_item_variant_unique").on(table.cartId, table.variantId),  // no duplicate variant rows
+  index("cart_item_cart_idx").on(table.cartId),
+])
+
 // ─── Phase 2: Relations ───────────────────────────────────────────────────────
 
 export const brandsRelations = relations(brands, ({ many }) => ({
@@ -224,4 +253,16 @@ export const variantsRelations = relations(variants, ({ one, many }) => ({
 export const variantOptionValuesRelations = relations(variantOptionValues, ({ one }) => ({
   variant:     one(variants,     { fields: [variantOptionValues.variantId],     references: [variants.id] }),
   optionValue: one(optionValues, { fields: [variantOptionValues.optionValueId], references: [optionValues.id] }),
+}))
+
+// ─── Phase 3: Cart Relations ──────────────────────────────────────────────────
+
+export const cartRelations = relations(cart, ({ one, many }) => ({
+  user:  one(users,     { fields: [cart.userId],   references: [users.id] }),
+  items: many(cartItems),
+}))
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+  cart:    one(cart,     { fields: [cartItems.cartId],    references: [cart.id] }),
+  variant: one(variants, { fields: [cartItems.variantId], references: [variants.id] }),
 }))
