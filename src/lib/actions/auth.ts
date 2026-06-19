@@ -7,11 +7,13 @@
 import { db } from "@/lib/db/client"
 import { users, verificationTokens } from "@/lib/db/schema"
 import { sendVerificationEmail } from "@/lib/email/send-verification"
-import { signIn, signOut } from "@/lib/auth"
+import { signIn, signOut, auth } from "@/lib/auth"
 import * as argon2 from "argon2"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
 import { AuthError } from "next-auth"
+import { redirect } from "next/navigation"
+import { mergeGuestCartOnLogin } from "@/lib/cart/merge"
 
 // ─── Validation Schemas ───────────────────────────────────────────────────────
 
@@ -166,6 +168,15 @@ export async function verifyEmail(
  * which calls authorize() in src/lib/auth.ts (already enforces emailVerified gate
  * and email-OR-username resolution — D-02, D-04).
  *
+ * D-10: After successful authentication, the guest cookie cart is merged additively
+ * (clamped to stock) into the user's DB cart, then the cookie is cleared.
+ * The merge runs BEFORE the redirect so it executes within the Server Action scope
+ * and has access to cookies() (Research Pitfall 4 — Auth.js events cannot write cookies).
+ *
+ * Implementation note: signIn() with redirectTo throws NEXT_REDIRECT immediately,
+ * preventing the merge from running. Solution: use redirect: false, merge guest cart,
+ * then redirect manually (Research Pattern 6).
+ *
  * Security:
  * - T-01-11: Returns a single generic error regardless of whether user doesn't exist
  *   or password is wrong — prevents user enumeration
@@ -177,20 +188,28 @@ export async function login(
   const password   = formData.get("password") as string
 
   try {
-    await signIn("credentials", { identifier, password, redirectTo: "/" })
+    // Use redirect: false so signIn() does NOT throw NEXT_REDIRECT on success.
+    // Without this, any code after signIn() (including the merge) would never run.
+    await signIn("credentials", { identifier, password, redirect: false })
   } catch (error) {
-    // Auth.js throws a NEXT_REDIRECT for successful logins; re-throw it
-    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
-      throw error
-    }
     // Auth.js v5 throws AuthError subclasses on failure
     if (error instanceof AuthError) {
       // T-01-11: Generic message — never leak whether user exists or password is wrong
       return { error: "Invalid credentials" }
     }
-    // Unknown errors — re-throw
+    // Unknown errors — re-throw (including NEXT_REDIRECT from any other signIn call)
     throw error
   }
+
+  // D-10: merge guest cart into DB cart before redirect (Research Pattern 6)
+  // auth() reflects the just-authenticated session (signIn with redirect:false sets the cookie)
+  const session = await auth()
+  if (session?.user?.id) {
+    await mergeGuestCartOnLogin(session.user.id)
+  }
+
+  // Explicit redirect — throws NEXT_REDIRECT (re-thrown automatically by Next.js)
+  redirect("/")
 }
 
 // ─── logout() ─────────────────────────────────────────────────────────────────

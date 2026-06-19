@@ -417,3 +417,120 @@ describe("cart DB tables", () => {
 
   // Plan 02 extends: mergeGuestCartOnLogin (below in its own describe)
 })
+
+// ─── mergeGuestCartOnLogin integration tests ─────────────────────────────────
+
+describe("mergeGuestCartOnLogin (D-10)", () => {
+  it.skipIf(skip)(
+    "merges guest items additively into DB cart, clamps to stock, and clears the cookie",
+    async () => {
+      const { db } = await import("@/lib/db/client")
+      const schema = await import("@/lib/db/schema")
+
+      // Seed a user
+      const userId = crypto.randomUUID()
+      createdUserIds.push(userId)
+      await db.insert(schema.users).values({
+        id: userId,
+        email: `merge-${userId.slice(0, 8)}@example.com`,
+        name: "Merge User",
+        role: "customer",
+      })
+
+      // Seed catalog
+      const categoryId = crypto.randomUUID()
+      createdCategoryIds.push(categoryId)
+      await db.insert(schema.categories).values({
+        id: categoryId,
+        name: `MergeCat-${categoryId.slice(0, 8)}`,
+        slug: `mergecat-${categoryId.slice(0, 8)}`,
+      })
+      const brandId = crypto.randomUUID()
+      createdBrandIds.push(brandId)
+      await db.insert(schema.brands).values({ id: brandId, name: `MergeBrand-${brandId.slice(0, 8)}` })
+      const productId = crypto.randomUUID()
+      createdProductIds.push(productId)
+      await db.insert(schema.products).values({
+        id: productId,
+        name: "Merge Product",
+        slug: `merge-product-${productId.slice(0, 8)}`,
+        categoryId,
+        brandId,
+        isActive: true,
+      })
+
+      // Variant A: stock=4; guest has 2, DB has 1 → merged min(2+1, 4)=3
+      const variantAId = crypto.randomUUID()
+      createdVariantIds.push(variantAId)
+      await db.insert(schema.variants).values({
+        id: variantAId,
+        productId,
+        priceKobo: 2_000_000,
+        stock: 4,
+        isActive: true,
+      })
+
+      // Variant B: stock=2; guest has 3 only → merged min(3+0, 2)=2 (clamped)
+      const variantBId = crypto.randomUUID()
+      createdVariantIds.push(variantBId)
+      await db.insert(schema.variants).values({
+        id: variantBId,
+        productId,
+        priceKobo: 1_500_000,
+        stock: 2,
+        isActive: true,
+      })
+
+      // Seed DB cart with variant A (qty 1)
+      const cartId = crypto.randomUUID()
+      await db.insert(schema.cart).values({ id: cartId, userId })
+      await db.insert(schema.cartItems).values({
+        id: crypto.randomUUID(),
+        cartId,
+        variantId: variantAId,
+        quantity: 1,
+      })
+
+      // Set up a mock cookie store containing the guest cart
+      const { cookies } = await import("next/headers")
+      const mockSet = vi.fn()
+      const mockCookieStore = {
+        get: vi.fn().mockReturnValue({
+          value: JSON.stringify([
+            { variantId: variantAId, quantity: 2 }, // additive: 2+1=3, clamped to 4 → 3
+            { variantId: variantBId, quantity: 3 }, // guest only: 3, clamped to 2 → 2
+          ]),
+        }),
+        set: mockSet,
+        delete: vi.fn(),
+        has: vi.fn(),
+        getAll: vi.fn(),
+      }
+      vi.mocked(cookies).mockResolvedValue(
+        mockCookieStore as unknown as Awaited<ReturnType<typeof cookies>>
+      )
+
+      const { mergeGuestCartOnLogin } = await import("@/lib/cart/merge")
+      await mergeGuestCartOnLogin(userId)
+
+      // Verify merged quantities in DB
+      const userCart = await db.query.cart.findFirst({
+        where: (c, { eq }) => eq(c.userId, userId),
+        with: { items: true },
+      })
+
+      const itemA = userCart?.items.find((i) => i.variantId === variantAId)
+      const itemB = userCart?.items.find((i) => i.variantId === variantBId)
+
+      expect(itemA?.quantity).toBe(3) // additive+clamped: min(2+1, 4)=3
+      expect(itemB?.quantity).toBe(2) // clamped to stock: min(3+0, 2)=2
+
+      // Verify cookie was cleared (maxAge: 0)
+      expect(mockSet).toHaveBeenCalledWith(
+        "ms_cart",
+        expect.any(String),
+        expect.objectContaining({ maxAge: 0 })
+      )
+    }
+  )
+})
