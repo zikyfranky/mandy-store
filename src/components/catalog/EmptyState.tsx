@@ -34,9 +34,10 @@ export function EmptyState({ hasFilters = false, basePath = "/products" }: Empty
         Try adjusting your filters or search term.
       </p>
 
+      {/* D-03: rebranded link from blue to brand (indigo) token */}
       <Link
         href={basePath}
-        className="mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+        className="mt-4 text-sm font-semibold text-brand hover:text-brand-strong dark:text-brand dark:hover:text-brand-strong focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         {hasFilters ? "Clear filters" : "Browse all products"}
       </Link>

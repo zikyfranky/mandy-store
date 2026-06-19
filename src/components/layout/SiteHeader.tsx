@@ -1,9 +1,11 @@
 // src/components/layout/SiteHeader.tsx
 // Global site header — Server Component.
-// Contains SearchBar (Client island), nav links, cart stub icon, account icon.
+// Contains SearchBar (Client island), nav links, CartIconButton (Client island), account icon.
+// D-03 / D-13: cart icon badge wired to live count via CartIconButton + CartProvider.
 
 import Link from "next/link"
 import { SearchBar } from "@/components/catalog/SearchBar"
+import { CartIconButton } from "@/components/layout/CartIconButton"
 
 const NAV = [
   { href: "/electronics", label: "Electronics" },
@@ -12,7 +14,13 @@ const NAV = [
   { href: "/products", label: "All Products" },
 ]
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  /** Server-read cart count — passed through to CartIconButton via CartProvider (D-13) */
+  initialCount?: number
+}
+
+export function SiteHeader({ initialCount = 0 }: SiteHeaderProps) {
+  void initialCount // CartIconButton reads optimisticCount from CartProvider (seeded by layout)
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#0c0c16]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-sm">
       <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center gap-4">
@@ -49,20 +57,8 @@ export function SiteHeader() {
 
         {/* Right icon group */}
         <div className="flex items-center gap-1 ml-auto lg:ml-2">
-          {/* Cart icon — stub (Phase 3 wires count) */}
-          <button
-            type="button"
-            aria-label="Shopping cart"
-            className="relative min-h-11 min-w-11 flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-            </svg>
-            {/* Count bubble (stub — 0 items until Phase 3) */}
-            <span className="absolute top-1 right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
-              0
-            </span>
-          </button>
+          {/* Cart icon — wired to live count via CartIconButton + CartProvider (D-03/D-13) */}
+          <CartIconButton />
 
           {/* Account icon — links to /account/login */}
           <Link

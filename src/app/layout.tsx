@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { CartProvider } from "@/components/cart/CartProvider";
+import { getCartCount } from "@/lib/cart/queries";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +22,27 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "https://mandy-store.vercel.app"),
 };
 
-export default function RootLayout({
+/**
+ * Server component that reads cart count and provides it to CartProvider.
+ * Isolated here (instead of in RootLayout) so the Suspense boundary in RootLayout
+ * can prerender the static shell while getCartCount() reads cookies/DB (Research Pitfall 6).
+ */
+async function CartShell({ children }: { children: React.ReactNode }) {
+  const count = await getCartCount();
+  return (
+    <CartProvider initialCount={count}>
+      {children}
+    </CartProvider>
+  );
+}
+
+/**
+ * Root layout — async to accommodate the async CartShell child.
+ * getCartCount() is called inside <CartShell> which is wrapped in <Suspense>,
+ * satisfying cacheComponents (PPR) requirements for dynamic cookie-based reads.
+ * (Research Pitfall 6: layout becoming dynamic is expected; use Suspense for PPR compat.)
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -38,8 +61,25 @@ export default function RootLayout({
             <span>Pay with Stripe, PayPal or bank transfer</span>
           </span>
         </div>
-        <SiteHeader />
-        {children}
+        {/*
+          CartShell reads cookies via getCartCount() — wrap in Suspense for PPR compatibility.
+          The static shell (promo bar above) renders immediately; CartShell fills in
+          the count when the dynamic cookie/DB read resolves (Research Pitfall 6).
+        */}
+        <Suspense
+          fallback={
+            <CartProvider initialCount={0}>
+              <SiteHeader />
+              {children}
+            </CartProvider>
+          }
+        >
+          <CartShell>
+            <SiteHeader />
+            {/* Plan 03-03: <CartDrawer /> */}
+            {children}
+          </CartShell>
+        </Suspense>
       </body>
     </html>
   );

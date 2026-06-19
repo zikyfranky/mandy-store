@@ -3,8 +3,10 @@
 // Interactive variant selection client component (D-15/D-16/D-17/D-18).
 // Props are passed from the Server Component — no server round-trips on selection.
 // Price comes from server-provided variant.priceKobo — client NEVER computes price (CLAUDE.md).
+// D-18: Add-to-cart wired to addToCart server action (Plan 03-02).
+// D-03: Rebranded CTA + swatch/pill from blue to brand (indigo) per UI-SPEC §Surfaces 7.
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useTransition } from "react"
 import { formatNGN } from "@/lib/catalog/format"
 import {
   resolveVariant,
@@ -12,6 +14,8 @@ import {
   type VariantForSelector,
 } from "@/lib/catalog/variant"
 import { StockIndicator } from "@/components/product/StockIndicator"
+import { addToCart } from "@/lib/actions/cart"
+import { useCart } from "@/components/cart/CartProvider"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,12 +72,29 @@ export function VariantSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedVariant?.id])
 
+  // D-18: Add-to-cart wiring — useTransition for pending state during server action
+  const [isPending, startTransition] = useTransition()
+  const { open, setOptimisticCount } = useCart()
+
   function handleOptionSelect(optionName: string, valueId: string) {
     setSelected((prev) => ({ ...prev, [optionName]: valueId }))
   }
 
+  function handleAddToCart() {
+    if (!resolvedVariant || isOOS || isPending) return
+    startTransition(async () => {
+      const result = await addToCart(resolvedVariant.id, 1)
+      if (result.success) {
+        // Optimistic count update — updates badge immediately without waiting for revalidation
+        setOptimisticCount(result.count)
+        // Open the cart drawer (Plan 03-03 mounts CartDrawer — provider open() state)
+        open()
+      }
+    })
+  }
+
   const isOOS = !resolvedVariant || resolvedVariant.stock === 0
-  const ctaLabel = isOOS ? "Out of stock" : "Add to cart"
+  const ctaLabel = isOOS ? "Out of stock" : isPending ? "Adding…" : "Add to cart"
 
   return (
     <div className="space-y-6">
@@ -119,6 +140,7 @@ export function VariantSelector({
 
                   if (isColor) {
                     // Swatch button (D-15 / UI-SPEC)
+                    // D-03: rebranded ring/border from blue-600 to brand token
                     return (
                       <button
                         key={val.id}
@@ -131,9 +153,9 @@ export function VariantSelector({
                         aria-label={`${val.value}${!available ? " — Out of stock" : ""}`}
                         className={[
                           "relative w-8 h-8 rounded-full border-2 transition-all",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
                           isSelected
-                            ? "border-blue-600 ring-2 ring-blue-600 ring-offset-2"
+                            ? "border-brand ring-2 ring-brand ring-offset-2"
                             : "border-transparent hover:border-zinc-400",
                           !available ? "opacity-40 cursor-not-allowed" : "",
                         ]
@@ -145,6 +167,7 @@ export function VariantSelector({
                   }
 
                   // Pill button (D-15 / UI-SPEC)
+                  // D-03: rebranded ring/border from blue-600 to brand token
                   return (
                     <button
                       key={val.id}
@@ -156,9 +179,9 @@ export function VariantSelector({
                       title={!available ? "Out of stock" : undefined}
                       className={[
                         "rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
                         isSelected
-                          ? "border-blue-600 ring-2 ring-blue-600 text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900"
+                          ? "border-brand ring-2 ring-brand text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900"
                           : "border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 hover:border-zinc-500",
                         !available
                           ? "border-zinc-200 text-zinc-400 dark:text-zinc-600 bg-zinc-50 dark:bg-zinc-900 cursor-not-allowed opacity-50"
@@ -177,17 +200,14 @@ export function VariantSelector({
         })}
       </div>
 
-      {/* Add-to-cart CTA (D-18 stub) */}
-      {/* Phase 3 wires cart — onClick is a no-op stub this phase */}
+      {/* Add-to-cart CTA (D-18) — wired to addToCart Server Action */}
+      {/* D-03: rebranded from blue to brand (indigo) token */}
       <button
         type="button"
-        disabled={isOOS}
-        aria-disabled={isOOS}
-        onClick={() => {
-          // Phase 3 wires cart — this is a no-op stub (D-18)
-          // console.debug("add-to-cart stub: variant", resolvedVariant?.id)
-        }}
-        className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-4 text-base font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+        disabled={isOOS || isPending}
+        aria-disabled={isOOS || isPending}
+        onClick={handleAddToCart}
+        className="w-full rounded-xl bg-brand hover:bg-brand-strong disabled:opacity-50 disabled:cursor-not-allowed px-6 py-4 text-base font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         {ctaLabel}
       </button>
