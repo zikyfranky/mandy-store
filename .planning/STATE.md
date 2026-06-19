@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-06-19T17:03:25.182Z"
+last_updated: "2026-06-19T17:03:45.906Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 11
-  completed_plans: 8
-  percent: 73
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State: Mandy Store
@@ -25,18 +25,19 @@ progress:
 
 ## Current Position
 
-Phase: 02 (Product Catalog) — COMPLETE; Phase 03 (Cart) — NEXT
+Phase: 03 (Cart) — EXECUTING
+Plan: 1 of 3
 
 - **Phase:** 3 of 6 (cart)
-- **Plan:** Not started
-- **Status:** Ready to execute
-- **Progress:** [####      ] 2/6 phases complete (8/8 plans in phases 1-2)
+- **Plan:** Plan 1 complete; Plan 2 not started
+- **Status:** Executing Phase 03
+- **Progress:** [####      ] 2/6 phases complete (9/11 plans; 1/3 plans in phase 3)
 
 ## Performance Metrics
 
 - Phases completed: 2/6
-- Plans completed: 8 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11)
-- Requirements delivered: 8/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5 delivered)
+- Plans completed: 9 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01 — complete 2026-06-19)
+- Requirements delivered: 9/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5 delivered; CART-01 schema delivered)
 
 ## Accumulated Context
 
@@ -47,6 +48,9 @@ Phase: 02 (Product Catalog) — COMPLETE; Phase 03 (Cart) — NEXT
 - Payment method feature flags are server-only env vars (no NEXT_PUBLIC_ prefix), enforced in Server Actions / Route Handlers.
 - Guest checkout is non-negotiable; accounts (Phase 6) are off the critical path to first sale.
 - Cart cookie stores only { variantId, quantity }; totals always recalculated server-side.
+- cart/cart_item tables live in Neon (Plan 03-01); CART_COOKIE='ms_cart', MAX_AGE=30d; hydrateCart computes all prices from variants.priceKobo only (SC4).
+- drizzle-kit push requires TTY for some constraint prompts — use direct SQL via @neondatabase/serverless for non-interactive schema operations (see 03-01-SUMMARY.md).
+- cart-db tests use afterEach + tracked-ID cleanup (not bulk truncateCatalogTables) to avoid contaminating schema.test.ts in sequential full-suite runs.
 - Node 22 pinned via .nvmrc; all deps (argon2 native addon, drizzle-orm, next-auth@beta) installed on Node 22.
 - Drizzle schema uses pgEnum for order_status (8 values) and role; processedWebhookEvents table has named unique constraint for webhook idempotency.
 - Auth.js v5 Drizzle adapter shape confirmed. **D-08 (corrected @048cec7):** the initial Plan 01-02 approach (session.strategy:"database" + jwt-callback db.insert) was WRONG — @auth/core forbids database strategy with Credentials (threw UnsupportedStrategy → login 500). Correct pattern: session.strategy:"jwt" + jwt.encode/decode overrides that mint/resolve a real DB session row (so sessions stay database-backed and server-side revocable per D-06). RESEARCH Pattern 1 was incorrect — note for future auth work.
@@ -100,9 +104,9 @@ Phase: 02 (Product Catalog) — COMPLETE; Phase 03 (Cart) — NEXT
 
 ## Session Continuity
 
-**Last session:** 2026-06-19T16:39:30.892Z
-**Stopped at:** Phase 3 UI-SPEC approved
-**Next action:** Execute Phase 03 — Cart (CART-01, CART-02, CART-03)
+**Last session:** 2026-06-19T18:25:00Z
+**Stopped at:** Phase 3 Plan 01 complete
+**Next action:** Execute Phase 03 Plan 02 — Server cart layer (cookie helpers, getCart/getCartCount, addToCart/updateCartItem/removeCartItem, login merge D-10, VariantSelector wire + badge)
 
 ---
 *State initialized: 2026-06-10*
