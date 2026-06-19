@@ -31,7 +31,7 @@ export function SortSelect({ currentSort }: SortSelectProps) {
         id="sort-select"
         onChange={handleChange}
         defaultValue={currentSort}
-        className="text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus-visible:ring-offset-2"
+        className="text-sm rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus-visible:ring-offset-2"
       >
         <option value="newest">Newest</option>
         <option value="price_asc">Price: Low to High</option>

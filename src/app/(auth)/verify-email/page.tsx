@@ -31,7 +31,7 @@ async function VerificationContent({
         </p>
         <Link
           href="/account/login"
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
         >
           Back to sign in
         </Link>
@@ -50,7 +50,7 @@ async function VerificationContent({
         <p className="text-sm text-red-600 dark:text-red-400 mb-6">{result.error}</p>
         <Link
           href="/account/register"
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
         >
           Register again
         </Link>
@@ -69,7 +69,7 @@ async function VerificationContent({
       </p>
       <Link
         href="/account/login"
-        className="inline-block rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
+        className="inline-block rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
       >
         Sign in
       </Link>

@@ -74,8 +74,8 @@ export function ProductGallery({ images, variantImageUrl }: ProductGalleryProps)
                 onClick={() => setSelectedThumbnailUrl(img.url)}
                 className={[
                   "relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800 transition-all",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
-                  isActive ? "ring-2 ring-blue-600" : "hover:ring-2 hover:ring-zinc-400",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+                  isActive ? "ring-2 ring-indigo-600" : "hover:ring-2 hover:ring-zinc-400",
                 ]
                   .filter(Boolean)
                   .join(" ")}

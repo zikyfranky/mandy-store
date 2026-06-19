@@ -34,7 +34,7 @@ export default function RegisterForm() {
         </p>
         <Link
           href="/account/login"
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
         >
           Back to sign in
         </Link>
@@ -62,7 +62,7 @@ export default function RegisterForm() {
             type="text"
             required
             autoComplete="name"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="Jane Smith"
           />
         </div>
@@ -83,7 +83,7 @@ export default function RegisterForm() {
             minLength={3}
             maxLength={30}
             pattern="^[a-zA-Z0-9_]+$"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="jane_smith"
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -104,7 +104,7 @@ export default function RegisterForm() {
             type="email"
             required
             autoComplete="email"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="you@example.com"
           />
         </div>
@@ -123,7 +123,7 @@ export default function RegisterForm() {
             required
             autoComplete="new-password"
             minLength={8}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="Min. 8 characters"
           />
         </div>
@@ -137,7 +137,7 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 px-4 py-2 text-sm font-semibold text-white transition-colors"
+          className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 px-4 py-2 text-sm font-semibold text-white transition-colors"
         >
           {isPending ? "Creating account…" : "Create account"}
         </button>
@@ -147,7 +147,7 @@ export default function RegisterForm() {
         Already have an account?{" "}
         <Link
           href="/account/login"
-          className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
         >
           Sign in
         </Link>

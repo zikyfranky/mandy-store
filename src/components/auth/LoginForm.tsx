@@ -43,7 +43,7 @@ export default function LoginForm() {
             type="text"
             required
             autoComplete="username"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="you@example.com or your_username"
           />
         </div>
@@ -61,7 +61,7 @@ export default function LoginForm() {
             type="password"
             required
             autoComplete="current-password"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="••••••••"
           />
         </div>
@@ -75,7 +75,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 px-4 py-2 text-sm font-semibold text-white transition-colors"
+          className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 px-4 py-2 text-sm font-semibold text-white transition-colors"
         >
           {isPending ? "Signing in…" : "Sign in"}
         </button>
@@ -85,7 +85,7 @@ export default function LoginForm() {
         Don&apos;t have an account?{" "}
         <Link
           href="/account/register"
-          className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+          className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
         >
           Create one
         </Link>
