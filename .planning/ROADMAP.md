@@ -80,7 +80,7 @@ Plans:
 - [x] 03-01-PLAN.md — cart/cart_item Drizzle tables (no price columns) + [BLOCKING] db:push, pure cart-logic module (parse/merge/hydrate/clamp/subtotal), Wave 0 cart tests + truncateCartTables helper *(COMPLETE 2026-06-19 — cart+cart_item live in Neon; 43 cart tests pass + 3 todo; 143/143 full suite green; tsc clean)*
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 03-02-PLAN.md — Server cart layer: cookie helpers + server-only getCart/getCartCount, addToCart/updateCartItem/removeCartItem actions (stock-clamped, IDOR-safe), login-merge (D-10), wire VariantSelector add + SiteHeader live badge (rebrand to indigo)
+- [x] 03-02-PLAN.md — Server cart layer: cookie helpers + server-only getCart/getCartCount, addToCart/updateCartItem/removeCartItem actions (stock-clamped, IDOR-safe), login-merge (D-10), wire VariantSelector add + SiteHeader live badge (rebrand to indigo) *(COMPLETE 2026-06-19 — 151/151 tests pass; npx next build --webpack succeeds; CART-01/02/03 delivered)*
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 03-03-PLAN.md — Cart UI: focus-trapped CartDrawer + CartLineItem/CartStepper/CartEmptyState, /cart page with order summary, drawer mounted in layout; human-verify checkpoint
@@ -129,7 +129,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
 | 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
-| 3. Cart | 1/3 | Executing | 03-01 complete 2026-06-19 |
+| 3. Cart | 2/3 | Executing | 03-01 complete 2026-06-19; 03-02 complete 2026-06-19 |
 | 4. Checkout & Payments | 0/0 | Not started | - |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |

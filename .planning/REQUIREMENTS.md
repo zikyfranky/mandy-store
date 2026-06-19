@@ -23,9 +23,9 @@
 
 ### Cart
 
-- [ ] **CART-01**: User can add a product variant to cart
-- [ ] **CART-02**: User can update quantity or remove items from cart
-- [ ] **CART-03**: Cart persists across page visits (guest session via cookie)
+- [x] **CART-01**: User can add a product variant to cart *(delivered: Plan 03-02 — addToCart Server Action, guest cookie + authed DB, stock-clamped)*
+- [x] **CART-02**: User can update quantity or remove items from cart *(delivered: Plan 03-02 — updateCartItem/removeCartItem Server Actions, qty=0 removes)*
+- [x] **CART-03**: Cart persists across page visits (guest session via cookie) *(delivered: Plan 03-02 — ms_cart cookie httpOnly/lax/30d; getCart() reads on every request)*
 
 ### Checkout
 
@@ -96,9 +96,9 @@
 | CATA-02 | Phase 2 | Pending |
 | CATA-03 | Phase 2 | Pending |
 | CATA-04 | Phase 2 | Complete (02-03) |
-| CART-01 | Phase 3 | Pending |
-| CART-02 | Phase 3 | Pending |
-| CART-03 | Phase 3 | Pending |
+| CART-01 | Phase 3 | Complete (03-02) |
+| CART-02 | Phase 3 | Complete (03-02) |
+| CART-03 | Phase 3 | Complete (03-02) |
 | CHKT-01 | Phase 4 | Pending |
 | CHKT-02 | Phase 4 | Pending |
 | CHKT-03 | Phase 4 | Pending |

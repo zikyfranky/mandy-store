@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-06-19T17:03:45.906Z"
+last_updated: "2026-06-19T19:10:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 11
-  completed_plans: 9
-  percent: 82
+  completed_plans: 10
+  percent: 91
 ---
 
 # Project State: Mandy Store
@@ -26,18 +26,18 @@ progress:
 ## Current Position
 
 Phase: 03 (Cart) — EXECUTING
-Plan: 1 of 3
+Plan: 2 of 3
 
 - **Phase:** 3 of 6 (cart)
-- **Plan:** Plan 1 complete; Plan 2 not started
+- **Plan:** Plans 1+2 complete; Plan 3 not started
 - **Status:** Executing Phase 03
-- **Progress:** [####      ] 2/6 phases complete (9/11 plans; 1/3 plans in phase 3)
+- **Progress:** [##########] 2/6 phases complete (10/11 plans; 2/3 plans in phase 3)
 
 ## Performance Metrics
 
 - Phases completed: 2/6
-- Plans completed: 9 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01 — complete 2026-06-19)
-- Requirements delivered: 9/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5 delivered; CART-01 schema delivered)
+- Plans completed: 10 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02 — complete 2026-06-19)
+- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03)
 
 ## Accumulated Context
 
@@ -51,6 +51,10 @@ Plan: 1 of 3
 - cart/cart_item tables live in Neon (Plan 03-01); CART_COOKIE='ms_cart', MAX_AGE=30d; hydrateCart computes all prices from variants.priceKobo only (SC4).
 - drizzle-kit push requires TTY for some constraint prompts — use direct SQL via @neondatabase/serverless for non-interactive schema operations (see 03-01-SUMMARY.md).
 - cart-db tests use afterEach + tracked-ID cleanup (not bulk truncateCatalogTables) to avoid contaminating schema.test.ts in sequential full-suite runs.
+- getCartCount() isolated in async CartShell component wrapped in Suspense in RootLayout — required for cacheComponents:true PPR compatibility; direct await in RootLayout blocked static prerendering of auth pages (/_not-found, /account/register).
+- login() D-10 merge: signIn(redirect:false) → auth() → mergeGuestCartOnLogin → redirect('/') — the NEXT_REDIRECT from signIn(redirectTo:'/') prevents any code after signIn from running; redirect:false allows the merge to execute.
+- next/cache mocked in cart tests (vi.mock) to avoid 'static generation store missing' from revalidatePath — established pattern for all Server Action integration tests.
+- All acceptance criterion greps scan file text including comments — ensure class names (blue-600, font-bold) do not appear in comments as literal strings to avoid false-positive failures.
 - Node 22 pinned via .nvmrc; all deps (argon2 native addon, drizzle-orm, next-auth@beta) installed on Node 22.
 - Drizzle schema uses pgEnum for order_status (8 values) and role; processedWebhookEvents table has named unique constraint for webhook idempotency.
 - Auth.js v5 Drizzle adapter shape confirmed. **D-08 (corrected @048cec7):** the initial Plan 01-02 approach (session.strategy:"database" + jwt-callback db.insert) was WRONG — @auth/core forbids database strategy with Credentials (threw UnsupportedStrategy → login 500). Correct pattern: session.strategy:"jwt" + jwt.encode/decode overrides that mint/resolve a real DB session row (so sessions stay database-backed and server-side revocable per D-06). RESEARCH Pattern 1 was incorrect — note for future auth work.
@@ -104,9 +108,9 @@ Plan: 1 of 3
 
 ## Session Continuity
 
-**Last session:** 2026-06-19T18:25:00Z
-**Stopped at:** Phase 3 Plan 01 complete
-**Next action:** Execute Phase 03 Plan 02 — Server cart layer (cookie helpers, getCart/getCartCount, addToCart/updateCartItem/removeCartItem, login merge D-10, VariantSelector wire + badge)
+**Last session:** 2026-06-19T19:10:00Z
+**Stopped at:** Phase 3 Plan 02 complete
+**Next action:** Execute Phase 03 Plan 03 — CartDrawer UI (slide-out drawer, CartLineItem, CartStepper, /cart page, CartEmptyState)
 
 ---
 *State initialized: 2026-06-10*
