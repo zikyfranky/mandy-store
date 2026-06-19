@@ -82,6 +82,15 @@ html {
   background-image: linear-gradient(120deg, #4f46e5 0%, #7c3aed 45%, #c026d3 100%);
 }
 
+/* Hide scrollbar on horizontal product rails (still scrollable / swipeable) */
+.no-scrollbar {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;                /* WebKit */
+}
+
 /* Rich radial glow used behind hero content */
 .hero-glow {
   background:

@@ -1,26 +1,27 @@
 // src/app/page.tsx
 // Storefront landing — replaces Next.js scaffold (D-07).
 // Server Component; no searchParams (no query-param filtering on landing page).
-// Zones: A (hero) | B (category entry points) | C (featured products grid)
-// cacheComponents: getCatalog call wrapped in Suspense-based inner component.
+// Zones: A (hero) | B (value props) | C (per-category product rails)
+// cacheComponents: getCatalog calls wrapped in a Suspense-based inner component.
 
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import Link from "next/link"
 import { getCatalog } from "@/lib/catalog/queries"
 import { ProductCard } from "@/components/catalog/ProductCard"
-import { CategoryCard } from "@/components/catalog/CategoryCard"
+import type { CatalogCard } from "@/lib/catalog/queries"
 
 export const metadata: Metadata = {
   title: "Mandy Store — Electronics, Watches & Phones",
   description: "Shop the best electronics, watches, and phones in Nigeria. Free delivery on orders over ₦50,000.",
 }
 
-const CATEGORIES = [
-  { name: "Electronics", slug: "electronics", blurb: "Audio, gadgets & gear" },
-  { name: "Watches", slug: "watches", blurb: "Smart & classic timepieces" },
-  { name: "Phones", slug: "phones", blurb: "Latest flagships & more" },
-]
+// Rails shown on the landing page, in order.
+const RAILS = [
+  { title: "Latest Phones", slug: "phones" },
+  { title: "Top Watches", slug: "watches" },
+  { title: "New in Electronics", slug: "electronics" },
+] as const
 
 const VALUE_PROPS = [
   {
@@ -45,23 +46,79 @@ const VALUE_PROPS = [
   },
 ]
 
-async function FeaturedProducts() {
-  const featured = await getCatalog({ sort: "newest", page: 1 })
-  const featuredProducts = featured.products.slice(0, 8)
+function ProductRail({ title, slug, products }: { title: string; slug: string; products: CatalogCard[] }) {
+  if (products.length === 0) return null
+  return (
+    <section aria-label={title} className="py-7 sm:py-9">
+      <div className="flex items-end justify-between mb-5">
+        <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+          {title}
+        </h2>
+        <Link
+          href={`/${slug}`}
+          className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors whitespace-nowrap"
+        >
+          View all
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
+            <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
+          </svg>
+        </Link>
+      </div>
 
-  if (featuredProducts.length === 0) {
+      {/* Horizontal, swipeable rail */}
+      <div className="no-scrollbar flex gap-4 sm:gap-5 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+        {products.map((product) => (
+          <div key={product.id} className="snap-start shrink-0 w-40 sm:w-52">
+            <ProductCard product={product} />
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+async function CategoryRails() {
+  const results = await Promise.all(
+    RAILS.map((rail) => getCatalog({ categorySlug: rail.slug, sort: "newest", page: 1 }))
+  )
+
+  const rails = RAILS.map((rail, i) => ({
+    ...rail,
+    products: results[i].products.slice(0, 8),
+  }))
+
+  if (rails.every((r) => r.products.length === 0)) {
     return (
-      <div className="text-center py-16 text-zinc-500 dark:text-zinc-400">
+      <div className="py-16 text-center text-zinc-500 dark:text-zinc-400">
         <p className="text-base">No products available yet. Check back soon!</p>
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-      {featuredProducts.map((product) => (
-        <ProductCard key={product.id} product={product} />
+    <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+      {rails.map((rail) => (
+        <ProductRail key={rail.slug} title={rail.title} slug={rail.slug} products={rail.products} />
       ))}
+    </div>
+  )
+}
+
+function RailSkeleton() {
+  return (
+    <div className="py-7 sm:py-9">
+      <div className="mb-5 h-7 w-44 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+      <div className="flex gap-4 sm:gap-5 overflow-hidden">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="shrink-0 w-40 sm:w-52 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#131320] overflow-hidden" aria-hidden="true">
+            <div className="aspect-square bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+            <div className="p-4 space-y-2">
+              <div className="h-4 w-full rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+              <div className="h-5 w-20 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -125,72 +182,30 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Zone B: Category entry points */}
-        <section className="py-12 sm:py-16" aria-label="Shop by category">
-          <div className="flex items-end justify-between mb-7">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-                Shop by category
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Pick a lane and start exploring.</p>
+      {/* Zone C: Per-category product rails */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        <Suspense
+          fallback={
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              <RailSkeleton />
+              <RailSkeleton />
             </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
-            {CATEGORIES.map((cat) => (
-              <CategoryCard key={cat.slug} name={cat.name} slug={cat.slug} blurb={cat.blurb} />
-            ))}
-          </div>
-        </section>
+          }
+        >
+          <CategoryRails />
+        </Suspense>
 
-        {/* Zone C: Featured products */}
-        <section className="pb-16 sm:pb-24" aria-label="Featured products">
-          <div className="flex items-end justify-between mb-7">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-                Fresh arrivals
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Hand-picked, just added to the store.</p>
-            </div>
-            <Link
-              href="/products"
-              className="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
-            >
-              View all
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
-                <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
-              </svg>
-            </Link>
-          </div>
-
-          <Suspense
-            fallback={
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#131320] overflow-hidden" aria-hidden="true">
-                    <div className="aspect-square bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
-                    <div className="p-4 space-y-2">
-                      <div className="h-3 w-16 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
-                      <div className="h-4 w-full rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
-                      <div className="h-5 w-24 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            }
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/products"
+            className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3.5 text-sm sm:text-base font-bold text-white shadow-lg shadow-indigo-600/25 transition-transform hover:scale-[1.03] active:scale-95"
           >
-            <FeaturedProducts />
-          </Suspense>
-
-          <div className="mt-8 text-center sm:hidden">
-            <Link
-              href="/products"
-              className="inline-flex items-center justify-center rounded-full border border-indigo-600 px-6 py-3 text-sm font-bold text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-            >
-              View all products
-            </Link>
-          </div>
-        </section>
+            Browse all products
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
+              <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </main>
   )
