@@ -1,11 +1,12 @@
 "use client"
 // src/components/cart/CartProvider.tsx
-// React Context provider for cart drawer open/close state and optimistic count.
-// Plan 03-02 (this plan): minimal provider — isOpen/open/close/optimisticCount/setOptimisticCount
-// Plan 03-03: extends with CartDrawer consuming isOpen, CartLineItem, CartStepper
+// React Context provider for cart drawer open/close state, optimistic count, and cart data.
+// Plan 03-02: minimal provider — isOpen/open/close/optimisticCount/setOptimisticCount
+// Plan 03-03: extended to hold cart: CartResult seeded from initialCart server prop
 // RESEARCH Pattern 4 / D-01 / D-03 / D-13
 
 import { createContext, useContext, useState, type ReactNode } from "react"
+import type { CartResult } from "@/lib/cart/logic"
 
 // ─── Context value type ───────────────────────────────────────────────────────
 
@@ -24,6 +25,11 @@ type CartContextValue = {
   optimisticCount: number
   /** Update the optimistic count — called by VariantSelector after addToCart */
   setOptimisticCount: (n: number) => void
+  /**
+   * Full hydrated cart — seeded from server initialCart on first render.
+   * Refreshed automatically when revalidatePath triggers layout re-render.
+   */
+  cart: CartResult
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -34,11 +40,14 @@ interface CartProviderProps {
   children: ReactNode
   /** Server-read cart count seeded into the provider on first render (SSR hydration) */
   initialCount: number
+  /** Server-read full cart seeded into the provider on first render */
+  initialCart: CartResult
 }
 
-export function CartProvider({ children, initialCount }: CartProviderProps) {
+export function CartProvider({ children, initialCount, initialCart }: CartProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [optimisticCount, setOptimisticCount] = useState(initialCount)
+  const [cart] = useState<CartResult>(initialCart)
 
   return (
     <CartContext.Provider
@@ -48,10 +57,10 @@ export function CartProvider({ children, initialCount }: CartProviderProps) {
         close: () => setIsOpen(false),
         optimisticCount,
         setOptimisticCount,
+        cart,
       }}
     >
       {children}
-      {/* Plan 03-03: <CartDrawer /> will be mounted here */}
     </CartContext.Provider>
   )
 }

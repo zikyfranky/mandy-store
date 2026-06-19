@@ -4,7 +4,8 @@ import { Suspense } from "react";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { CartProvider } from "@/components/cart/CartProvider";
-import { getCartCount } from "@/lib/cart/queries";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { getCartCount, getCart } from "@/lib/cart/queries";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,22 +24,26 @@ export const metadata: Metadata = {
 };
 
 /**
- * Server component that reads cart count and provides it to CartProvider.
+ * Server component that reads cart count + full cart and provides them to CartProvider.
  * Isolated here (instead of in RootLayout) so the Suspense boundary in RootLayout
- * can prerender the static shell while getCartCount() reads cookies/DB (Research Pitfall 6).
+ * can prerender the static shell while getCart() reads cookies/DB (Research Pitfall 6).
  */
 async function CartShell({ children }: { children: React.ReactNode }) {
-  const count = await getCartCount();
+  const [count, initialCart] = await Promise.all([
+    getCartCount(),
+    getCart(),
+  ]);
   return (
-    <CartProvider initialCount={count}>
+    <CartProvider initialCount={count} initialCart={initialCart}>
       {children}
+      <CartDrawer />
     </CartProvider>
   );
 }
 
 /**
  * Root layout — async to accommodate the async CartShell child.
- * getCartCount() is called inside <CartShell> which is wrapped in <Suspense>,
+ * getCartCount() and getCart() are called inside <CartShell> which is wrapped in <Suspense>,
  * satisfying cacheComponents (PPR) requirements for dynamic cookie-based reads.
  * (Research Pitfall 6: layout becoming dynamic is expected; use Suspense for PPR compat.)
  */
@@ -62,13 +67,16 @@ export default async function RootLayout({
           </span>
         </div>
         {/*
-          CartShell reads cookies via getCartCount() — wrap in Suspense for PPR compatibility.
+          CartShell reads cookies via getCart() + getCartCount() — wrap in Suspense for PPR compatibility.
           The static shell (promo bar above) renders immediately; CartShell fills in
-          the count when the dynamic cookie/DB read resolves (Research Pitfall 6).
+          the cart when the dynamic cookie/DB read resolves (Research Pitfall 6).
         */}
         <Suspense
           fallback={
-            <CartProvider initialCount={0}>
+            <CartProvider
+              initialCount={0}
+              initialCart={{ items: [], subtotalKobo: 0, totalQty: 0, hasOOS: false }}
+            >
               <SiteHeader />
               {children}
             </CartProvider>
@@ -76,7 +84,6 @@ export default async function RootLayout({
         >
           <CartShell>
             <SiteHeader />
-            {/* Plan 03-03: <CartDrawer /> */}
             {children}
           </CartShell>
         </Suspense>
