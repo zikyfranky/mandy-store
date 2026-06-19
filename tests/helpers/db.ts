@@ -42,6 +42,25 @@ export async function truncateAuthTables() {
 }
 
 /**
+ * Truncate cart tables in FK-safe order: cart_item (child) before cart (parent).
+ * Call in `beforeEach` for test isolation in cart DB integration tests.
+ *
+ * FK-safe order (03-VALIDATION.md): cartItems → cart
+ */
+export async function truncateCartTables() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not set — cannot truncate tables")
+  }
+
+  const { db } = await import("@/lib/db/client")
+  const schema = await import("@/lib/db/schema")
+
+  // FK-safe order: cartItems (child) before cart (parent)
+  await db.delete(schema.cartItems)
+  await db.delete(schema.cart)
+}
+
+/**
  * Truncate all catalog tables in the correct FK-safe order.
  * RESEARCH.md §Validation Architecture: variantOptionValues → variants → optionValues
  *   → productOptions → productImages → products → brands → categories
