@@ -68,8 +68,8 @@ INHERITED from Phase 2 — 4-size scale, 2 weights, no additions:
 **Weights in use: exactly 2 — 400 (regular) and 600 (semibold). No font-medium (500) or font-bold (700).**
 
 Special cases within the 4-step scale:
-- Subtotal amount (drawer footer + `/cart` order summary): `text-xl font-semibold` (20px, 600) — one step above label, still within the existing Tailwind scale; uses `text-xl` which maps between label and heading
-- Badge count inside the rose bubble: `text-[10px] font-bold` — matches the existing stub in `SiteHeader.tsx` exactly; do not change
+- Subtotal amount (drawer footer + `/cart` order summary): `text-2xl font-semibold` (24px, 600) — uses the existing Heading tier so the key number reads prominently without adding a new size to the Phase 2 scale (14/16/24/28).
+- Badge count inside the rose bubble: `text-[10px] font-semibold` — documented micro-numeral exception (count bubble only; same role as a spacing touch-target exception). Weight is 600 to honor the 2-weight rule; update the existing `SiteHeader.tsx` stub from `font-bold` to `font-semibold` when wiring the live count.
 
 ---
 
@@ -129,7 +129,7 @@ INHERITED from Phase 2 — indigo brand system from `globals.css`:
     [footer: px-5 py-4 border-t border-border bg-surface space-y-4]
       [subtotal row: flex justify-between items-baseline]
         [label: text-sm font-semibold text-muted]  "Subtotal"
-        [amount: text-xl font-semibold text-foreground]  "₦XX,XXX.XX"
+        [amount: text-2xl font-semibold text-foreground]  "₦XX,XXX.XX"
       [shipping note: text-sm text-muted text-center]  "Shipping calculated at checkout"
       [Checkout button: w-full rounded-xl bg-brand hover:bg-brand-strong text-white
                         px-6 py-4 text-base font-semibold transition-colors]
@@ -227,7 +227,7 @@ Wire the existing stub in `SiteHeader.tsx`. The cart icon button becomes a clien
 
   [count bubble: absolute top-1 right-1 inline-flex h-4 min-w-4 items-center
                  justify-center rounded-full bg-rose-600 dark:bg-rose-500
-                 px-1 text-[10px] font-bold text-white]
+                 px-1 text-[10px] font-semibold text-white]
 
 States:
   — count > 0:    show bubble, display total quantity (sum of all line quantities)
@@ -263,7 +263,7 @@ Route: `src/app/cart/page.tsx` — Server Component (async, reads `getCart()` se
 
     [order summary: col-span-1]
       [card: rounded-2xl bg-surface border border-border p-6 space-y-4 sticky top-24]
-        [heading: text-xl font-semibold]  "Order summary"
+        [heading: text-2xl font-semibold]  "Order summary"
         [divider: border-t border-border]
         [subtotal row: flex justify-between text-sm font-semibold]
           [label: text-muted]  "Subtotal ({N} items)"
