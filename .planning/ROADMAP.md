@@ -74,7 +74,16 @@ Plans:
   2. A customer can change the quantity of, or remove, any item in the cart
   3. A guest customer's cart persists across page visits and a browser refresh (server-side cookie, not localStorage alone)
   4. The cart stores only variant IDs and quantities — prices and totals are recalculated from the database, never trusted from the client
-**Plans**: TBD
+**Plans**: 3 plans (3 waves)
+Plans:
+**Wave 1**
+- [ ] 03-01-PLAN.md — cart/cart_item Drizzle tables (no price columns) + [BLOCKING] db:push, pure cart-logic module (parse/merge/hydrate/clamp/subtotal), Wave 0 cart tests + truncateCartTables helper
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 03-02-PLAN.md — Server cart layer: cookie helpers + server-only getCart/getCartCount, addToCart/updateCartItem/removeCartItem actions (stock-clamped, IDOR-safe), login-merge (D-10), wire VariantSelector add + SiteHeader live badge (rebrand to indigo)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 03-03-PLAN.md — Cart UI: focus-trapped CartDrawer + CartLineItem/CartStepper/CartEmptyState, /cart page with order summary, drawer mounted in layout; human-verify checkpoint
 **UI hint**: yes
 
 ### Phase 4: Checkout & Payments
@@ -120,7 +129,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
 | 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
-| 3. Cart | 0/0 | Not started | - |
+| 3. Cart | 0/3 | Planned | - |
 | 4. Checkout & Payments | 0/0 | Not started | - |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
