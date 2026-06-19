@@ -9,6 +9,25 @@ import { hasDatabase, truncateCartTables } from "../helpers/db"
 // server-only is a no-op in Node test environment (queries.ts uses it)
 vi.mock("server-only", () => ({}))
 
+// Mock next/headers so cookie helpers don't fail in test (authed path doesn't write cookies)
+vi.mock("next/headers", () => ({
+  cookies: vi.fn(),
+}))
+
+// Mock next/cache so revalidatePath doesn't throw "static generation store missing" in tests
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag:  vi.fn(),
+}))
+
+// Mock @/lib/auth — individual tests override auth() to return a fixed session
+vi.mock("@/lib/auth", () => ({
+  signIn:   vi.fn(),
+  signOut:  vi.fn(),
+  auth:     vi.fn().mockResolvedValue(null),
+  handlers: {},
+}))
+
 const skip = !hasDatabase
 
 // ─── Tracked IDs for cleanup ──────────────────────────────────────────────────
@@ -212,5 +231,189 @@ describe("cart DB tables", () => {
     }
   )
 
-  // Plan 02 extends: addToCart round-trip, mergeGuestCartOnLogin
+  // ─── Plan 02 additions: addToCart authed round-trip ─────────────────────────
+
+  it.skipIf(skip)(
+    "addToCart() authed path: writes cart_item with clamped quantity, no price stored (CART-01, D-09)",
+    async () => {
+      const { variantId, userId, cartId } = await seedCartFixture()
+
+      // Override auth() to return this test's user
+      const { auth } = await import("@/lib/auth")
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: userId, email: "test@example.com", name: "Test" },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as unknown as Awaited<ReturnType<typeof auth>>)
+
+      const { addToCart } = await import("@/lib/actions/cart")
+      // The seedCartFixture already inserted a cart_item with qty 2.
+      // addToCart should upsert: 2 (existing) + 1 (requested) = 3 (clamped to stock=10)
+      const result = await addToCart(variantId, 1)
+
+      expect(result.success).toBe(true)
+      expect(result.count).toBeGreaterThan(0)
+
+      const { db } = await import("@/lib/db/client")
+      const { cartItems: cartItemsSchema } = await import("@/lib/db/schema")
+      const { and, eq } = await import("drizzle-orm")
+
+      const [item] = await db
+        .select()
+        .from(cartItemsSchema)
+        .where(
+          and(
+            eq(cartItemsSchema.cartId, cartId),
+            eq(cartItemsSchema.variantId, variantId)
+          )
+        )
+
+      expect(item).toBeDefined()
+      // Additive: was 2, added 1 → should be 3
+      expect(item.quantity).toBe(3)
+      // No price stored (D-09, T-03-01)
+      expect("priceKobo" in item).toBe(false)
+      expect("price_kobo" in item).toBe(false)
+    }
+  )
+
+  it.skipIf(skip)(
+    "addToCart() re-add is additive+clamped to stock (D-06/D-12)",
+    async () => {
+      const { db } = await import("@/lib/db/client")
+      const schema = await import("@/lib/db/schema")
+
+      // Create a user + variant with stock=2
+      const userId = crypto.randomUUID()
+      createdUserIds.push(userId)
+      await db.insert(schema.users).values({
+        id: userId,
+        email: `stockclamp-${userId.slice(0, 8)}@example.com`,
+        name: "Clamp User",
+        role: "customer",
+      })
+
+      const categoryId = crypto.randomUUID()
+      createdCategoryIds.push(categoryId)
+      await db.insert(schema.categories).values({
+        id: categoryId,
+        name: `ClampCat-${categoryId.slice(0, 8)}`,
+        slug: `clampcat-${categoryId.slice(0, 8)}`,
+      })
+      const brandId = crypto.randomUUID()
+      createdBrandIds.push(brandId)
+      await db.insert(schema.brands).values({ id: brandId, name: `ClampBrand-${brandId.slice(0, 8)}` })
+
+      const productId = crypto.randomUUID()
+      createdProductIds.push(productId)
+      await db.insert(schema.products).values({
+        id: productId,
+        name: "Clamp Product",
+        slug: `clamp-product-${productId.slice(0, 8)}`,
+        categoryId,
+        brandId,
+        isActive: true,
+      })
+
+      const variantId = crypto.randomUUID()
+      createdVariantIds.push(variantId)
+      await db.insert(schema.variants).values({
+        id: variantId,
+        productId,
+        priceKobo: 1_000_000,
+        stock: 2, // stock=2 → clamp to 2 even if we request 5
+        isActive: true,
+      })
+
+      const { auth } = await import("@/lib/auth")
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: userId, email: "test@example.com", name: "Test" },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as unknown as Awaited<ReturnType<typeof auth>>)
+
+      const { addToCart } = await import("@/lib/actions/cart")
+
+      // Add 2 (exactly at stock limit)
+      const r1 = await addToCart(variantId, 2)
+      expect(r1.success).toBe(true)
+
+      // Try to add 5 more — should be clamped: min(2+5, 2) = 2 (no increase)
+      const r2 = await addToCart(variantId, 5)
+      expect(r2.success).toBe(true)
+
+      const userCart = await db.query.cart.findFirst({
+        where: (c, { eq }) => eq(c.userId, userId),
+        with: { items: true },
+      })
+      const item = userCart?.items.find((i) => i.variantId === variantId)
+      expect(item?.quantity).toBe(2) // clamped to stock
+    }
+  )
+
+  it.skipIf(skip)(
+    "updateCartItem() with qty=0 removes the line (D-07)",
+    async () => {
+      const { variantId, userId, cartId } = await seedCartFixture()
+
+      const { auth } = await import("@/lib/auth")
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: userId, email: "test@example.com", name: "Test" },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as unknown as Awaited<ReturnType<typeof auth>>)
+
+      const { updateCartItem } = await import("@/lib/actions/cart")
+      const result = await updateCartItem(variantId, 0)
+      expect(result.success).toBe(true)
+
+      const { db } = await import("@/lib/db/client")
+      const { cartItems: cartItemsSchema } = await import("@/lib/db/schema")
+      const { and, eq } = await import("drizzle-orm")
+
+      const items = await db
+        .select()
+        .from(cartItemsSchema)
+        .where(
+          and(
+            eq(cartItemsSchema.cartId, cartId),
+            eq(cartItemsSchema.variantId, variantId)
+          )
+        )
+      expect(items).toHaveLength(0) // removed
+    }
+  )
+
+  it.skipIf(skip)(
+    "removeCartItem() deletes only the caller's row — no IDOR (T-03-07)",
+    async () => {
+      // Seed two separate users with carts
+      const { variantId, userId, cartId } = await seedCartFixture()
+
+      const { auth } = await import("@/lib/auth")
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: userId, email: "test@example.com", name: "Test" },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as unknown as Awaited<ReturnType<typeof auth>>)
+
+      const { removeCartItem } = await import("@/lib/actions/cart")
+      const result = await removeCartItem(variantId)
+      expect(result.success).toBe(true)
+
+      const { db } = await import("@/lib/db/client")
+      const { cartItems: cartItemsSchema } = await import("@/lib/db/schema")
+      const { and, eq } = await import("drizzle-orm")
+
+      // Row should be gone from caller's cart
+      const items = await db
+        .select()
+        .from(cartItemsSchema)
+        .where(
+          and(
+            eq(cartItemsSchema.cartId, cartId),
+            eq(cartItemsSchema.variantId, variantId)
+          )
+        )
+      expect(items).toHaveLength(0)
+    }
+  )
+
+  // Plan 02 extends: mergeGuestCartOnLogin (below in its own describe)
 })
