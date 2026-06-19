@@ -8,7 +8,7 @@
 ## Phases
 
 - [ ] **Phase 1: Foundation** - Database schema, auth, and route protection in place so everything else can be built safely
-- [ ] **Phase 2: Product Catalog** - A browsable, searchable, filterable storefront with variant selection
+- [x] **Phase 2: Product Catalog** - A browsable, searchable, filterable storefront with variant selection (completed 2026-06-19)
 - [ ] **Phase 3: Cart** - A cart that survives navigation and refresh for guests and logged-in users
 - [ ] **Phase 4: Checkout & Payments** - End-to-end purchase via Stripe, PayPal, or bank transfer with order confirmation
 - [ ] **Phase 5: Admin Panel** - Store owner manages products, variants, stock, and order fulfillment
@@ -119,7 +119,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
-| 2. Product Catalog | 4/4 | Complete | 02-01 complete 2026-06-11; 02-02 complete 2026-06-11; 02-03 complete 2026-06-11; 02-04 complete 2026-06-11 |
+| 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
 | 3. Cart | 0/0 | Not started | - |
 | 4. Checkout & Payments | 0/0 | Not started | - |
 | 5. Admin Panel | 0/0 | Not started | - |
