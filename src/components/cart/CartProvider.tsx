@@ -47,7 +47,12 @@ interface CartProviderProps {
 export function CartProvider({ children, initialCount, initialCart }: CartProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [optimisticCount, setOptimisticCount] = useState(initialCount)
-  const [cart] = useState<CartResult>(initialCart)
+  // `cart` is server-owned truth: read the prop directly (do NOT freeze it in useState).
+  // After a mutation, addToCart/updateCartItem call revalidatePath('/', 'layout'), which
+  // re-renders CartShell with a fresh getCart() and passes a new initialCart down — the
+  // drawer must reflect that. useState(initialCart) pinned the value at first mount, leaving
+  // the drawer permanently stale/empty while the badge + /cart page stayed correct.
+  const cart = initialCart
 
   return (
     <CartContext.Provider
