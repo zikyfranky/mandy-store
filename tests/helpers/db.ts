@@ -1,39 +1,50 @@
 // tests/helpers/db.ts
-// Database test helper — provides db instance and truncation utility for test isolation.
-// Used by: tests/db/schema.test.ts, tests/auth/*.test.ts (once implemented in Plans 02/03)
+// Database test helper — provides db instance and truncation utilities for test isolation.
+//
+// SAFETY: DB-backed integration tests TRUNCATE tables. They run ONLY against a
+// separate test database supplied via TEST_DATABASE_URL (see vitest.config.ts,
+// which repoints the db client at it). If TEST_DATABASE_URL is not set:
+//   - `hasDatabase` is false, so integration tests skip (`it.skipIf(!hasDatabase)`)
+//   - the truncate helpers throw, so the dev database can never be wiped
+// Pure unit tests (cart logic, variant resolver) don't use this helper and always run.
 
 /**
- * Guard: if DATABASE_URL is not set, integration tests are skipped automatically.
- * Unit tests (static schema checks) run regardless of DB availability.
+ * True only when a dedicated TEST_DATABASE_URL is configured. Integration tests
+ * gate on this so they never run destructive truncation against the dev database.
  */
-export const hasDatabase = !!process.env.DATABASE_URL
+export const hasDatabase = !!process.env.TEST_DATABASE_URL
+
+/** Hard guard: refuse any destructive DB operation unless a separate test DB is configured. */
+function assertTestDatabase(): void {
+  if (!process.env.TEST_DATABASE_URL) {
+    throw new Error(
+      "Refusing to run DB integration tests: TEST_DATABASE_URL is not set. " +
+        "Truncation would wipe your dev catalog/users. Point TEST_DATABASE_URL at a " +
+        "separate Neon branch (see CLAUDE.md › Testing). Pure unit tests run without it.",
+    )
+  }
+}
 
 /**
- * Get the Drizzle db instance.
- * Will throw if DATABASE_URL is unset — guard with `hasDatabase` for integration tests.
+ * Get the Drizzle db instance (connected to TEST_DATABASE_URL when running tests).
+ * Guard call sites with `hasDatabase` for integration tests.
  */
 export async function getDb() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set — cannot run integration tests")
-  }
+  assertTestDatabase()
   // Lazy import to avoid DB connection at module load time
   const { db } = await import("@/lib/db/client")
   return db
 }
 
 /**
- * Truncate all auth tables in the correct order (FK-safe).
- * Call in `beforeEach` or `afterEach` for test isolation.
+ * Truncate all auth tables in FK-safe order (child tables first).
+ * Call in `beforeEach` / `afterEach` for test isolation.
  */
 export async function truncateAuthTables() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set — cannot truncate tables")
-  }
-
+  assertTestDatabase()
   const { db } = await import("@/lib/db/client")
   const schema = await import("@/lib/db/schema")
 
-  // Delete in FK-safe order: child tables first
   await db.delete(schema.sessions)
   await db.delete(schema.accounts)
   await db.delete(schema.verificationTokens)
@@ -43,38 +54,27 @@ export async function truncateAuthTables() {
 
 /**
  * Truncate cart tables in FK-safe order: cart_item (child) before cart (parent).
- * Call in `beforeEach` for test isolation in cart DB integration tests.
- *
- * FK-safe order (03-VALIDATION.md): cartItems → cart
+ * (03-VALIDATION.md: cartItems → cart)
  */
 export async function truncateCartTables() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set — cannot truncate tables")
-  }
-
+  assertTestDatabase()
   const { db } = await import("@/lib/db/client")
   const schema = await import("@/lib/db/schema")
 
-  // FK-safe order: cartItems (child) before cart (parent)
   await db.delete(schema.cartItems)
   await db.delete(schema.cart)
 }
 
 /**
- * Truncate all catalog tables in the correct FK-safe order.
- * RESEARCH.md §Validation Architecture: variantOptionValues → variants → optionValues
- *   → productOptions → productImages → products → brands → categories
- * Call in `beforeEach` or `afterEach` for test isolation.
+ * Truncate all catalog tables in FK-safe order.
+ * (variantOptionValues → variants → optionValues → productOptions → productImages
+ *   → products → brands → categories)
  */
 export async function truncateCatalogTables() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set — cannot truncate tables")
-  }
-
+  assertTestDatabase()
   const { db } = await import("@/lib/db/client")
   const schema = await import("@/lib/db/schema")
 
-  // Delete in FK-safe order: junction table first, then leaves, then roots
   await db.delete(schema.variantOptionValues)
   await db.delete(schema.variants)
   await db.delete(schema.optionValues)

@@ -43,3 +43,21 @@ npm run dev              # dev server
 npx next build --webpack # production build (Turbopack native bindings unavailable on this machine)
 npm run lint             # eslint
 ```
+
+## Testing
+
+```bash
+npm test                 # vitest (unit tests always run; DB integration tests skip unless TEST_DATABASE_URL is set)
+npm run seed:catalog     # repopulate the dev catalog
+```
+
+**DB test isolation — do not skip.** Integration tests TRUNCATE tables for isolation, so they must NEVER run against the dev `DATABASE_URL` (it would wipe the seeded catalog/users). They run only when `TEST_DATABASE_URL` points at a **separate** database:
+
+- **Unset (default):** DB integration tests skip; pure unit tests run. The dev database is protected (the truncate helpers hard-refuse without `TEST_DATABASE_URL`). This is why `npm test` shows skipped tests.
+- **To run the full integration suite:** create a separate Neon branch (Neon dashboard → Branches → "New branch" from `main`, or `neonctl branches create`), then add its connection string to `.env.local`:
+  ```bash
+  TEST_DATABASE_URL=postgres://…@…-test-branch.neon.tech/dbname?sslmode=require
+  ```
+  `vitest.config.ts` repoints the db client at it; the dev DB is never touched. `TEST_DATABASE_URL` must differ from `DATABASE_URL` (vitest hard-fails if they match). The test branch needs the schema — branching from `main` inherits it, or run `DATABASE_URL=$TEST_DATABASE_URL npm run db:push`.
+
+Set `TEST_DATABASE_URL` before phase verification (esp. Phase 4 payments) so integration coverage actually runs.
