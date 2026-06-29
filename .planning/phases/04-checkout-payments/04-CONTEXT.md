@@ -258,6 +258,7 @@ into a real `/checkout` flow, and **creates the net-new order schema** deferred 
   confirmation instead. Revisit only if overselling-on-last-unit refunds become common.
 
 ### Reviewed Todos (not folded)
+
 None — no pending todos matched this phase.
 
 </deferred>
