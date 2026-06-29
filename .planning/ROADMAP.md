@@ -96,7 +96,18 @@ Plans:
   3. A customer can choose bank transfer and receive an email with NGN bank account details; the order is created as awaiting_bank_transfer (not marked paid)
   4. Each payment method can be turned on or off via server-only config, and a disabled method is rejected at the Server Action / Route Handler level, not only hidden in the UI
   5. Concurrent checkouts cannot oversell stock (atomic decrement) and duplicate webhook deliveries or double-submits cannot create duplicate orders (idempotency enforced)
-**Plans**: TBD
+**Plans**: 6 plans (4 waves)
+Plans:
+**Wave 1**
+- [ ] 04-01-PLAN.md — Order schema (orders + order_item) + [BLOCKING] db:push, flat-shipping total helper, Wave 0 test infra (truncateOrderTables, schema/totals tests), Phase 4 env vars
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 04-02-PLAN.md — Payment/order primitives: isPaymentMethodEnabled toggle, Stripe singleton, order-reference + guest-token, order queries, order-confirmation + bank-transfer emails (ORD-01/ORD-02)
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 04-03-PLAN.md — Checkout Server Actions: createBankTransferOrder (awaiting_bank_transfer) + createStripePaymentIntent (server-recomputed kobo total), guest checkout, address validation, toggle enforcement
+- [ ] 04-04-PLAN.md — Stripe webhook (raw-body verify, idempotency, atomic stock decrement, last-unit-race refund — D-09) + order-status polling endpoint (CHKT-05/D-07)
+**Wave 4** *(blocked on Wave 3)*
+- [ ] 04-05-PLAN.md — /checkout single-page UI: contact + NG address form, payment selector (Stripe + bank only), embedded Stripe Payment Element, sticky order summary; human-verify checkpoint
+- [ ] 04-06-PLAN.md — /order/[token] confirmation page (confirmed / awaiting-transfer / processing-poll states), bank details + copyable reference, post-purchase account offer, cart Checkout → /checkout rewire
 **UI hint**: yes
 
 ### Phase 5: Admin Panel
@@ -130,7 +141,7 @@ Plans:
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
 | 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
 | 3. Cart | 3/3 | Complete    | 2026-06-25 |
-| 4. Checkout & Payments | 0/0 | Not started | - |
+| 4. Checkout & Payments | 0/6 | Planned | - |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
 
