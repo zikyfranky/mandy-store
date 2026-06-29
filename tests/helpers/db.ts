@@ -66,6 +66,20 @@ export async function truncateCartTables() {
 }
 
 /**
+ * Truncate order tables in FK-safe order: order_item (child) → order (parent),
+ * then processed_webhook_events (no FK to orders; safe either side).
+ */
+export async function truncateOrderTables() {
+  assertTestDatabase()
+  const { db } = await import("@/lib/db/client")
+  const schema = await import("@/lib/db/schema")
+
+  await db.delete(schema.orderItems)
+  await db.delete(schema.orders)
+  await db.delete(schema.processedWebhookEvents)
+}
+
+/**
  * Truncate all catalog tables in FK-safe order.
  * (variantOptionValues → variants → optionValues → productOptions → productImages
  *   → products → brands → categories)
