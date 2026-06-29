@@ -46,9 +46,16 @@ into a real `/checkout` flow, and **creates the net-new order schema** deferred 
   landmark/delivery notes. **No postal code** requirement (rarely used in NG).
 
 ### Card / PayPal payment experience (PAY-01, PAY-02)
-- **D-05:** **Embedded on-site payment** — **Stripe Payment Element** (card fields) and **PayPal JS
-  buttons** render directly on `/checkout`; the customer **never leaves the site**. Card data is
-  tokenized client-side by Stripe so PCI scope stays light (SAQ-A). No hosted-redirect flow.
+- **D-05:** **Embedded on-site payment** — **Stripe Payment Element** (card fields) renders directly
+  on `/checkout`; the customer **never leaves the site**. Card data is tokenized client-side by
+  Stripe so PCI scope stays light (SAQ-A). No hosted-redirect flow.
+- **D-05a (RESOLVED post-research — BLOCKER):** **PayPal does NOT support NGN** (verified against
+  PayPal's REST currency list — `createOrder` with `NGN` returns `CURRENCY_NOT_SUPPORTED`).
+  **Decision: ship WITHOUT PayPal at launch** — only **Stripe (cards) + bank transfer** are wired.
+  **PAY-02 (PayPal) is DEFERRED to backlog** (revisit if a USD/multi-currency account is opened).
+  The PayPal **toggle still exists** (server-only, default OFF) so PAY-04 is fully delivered; the UI
+  simply never offers PayPal while the toggle is off / unimplemented. Do **not** write PayPal
+  integration tasks this phase.
 - **D-06:** **Webhook is the sole authority** for flipping an order to `payment_confirmed`. The
   client redirect/confirmation is **never trusted** to mark an order paid. Webhook handling is
   **idempotent** via the existing `processed_webhook_events` unique constraint, and the order is
@@ -96,7 +103,14 @@ into a real `/checkout` flow, and **creates the net-new order schema** deferred 
 - **D-13:** Each of Stripe / PayPal / bank transfer is **independently enable/disable-able via
   server-only config**, and a **disabled method is rejected at the Server Action / Route Handler
   level** (re-checked server-side), not merely hidden in the UI (ROADMAP SC4, CLAUDE.md). The
-  checkout UI only *offers* methods that are enabled.
+  checkout UI only *offers* methods that are enabled. **PayPal's toggle exists and defaults OFF**
+  (no integration this phase — D-05a); Stripe and bank transfer are the launch methods.
+
+### Shipping fee (CHKT-03)
+- **D-15 (RESOLVED post-research):** The flat-rate shipping fee is **configurable via a server-only
+  env var `FLAT_SHIPPING_KOBO`**, **default 200000 kobo (₦2,000)**. It is added to every order total,
+  recomputed **server-side** (never trusted from the client) and shown in the order summary before
+  payment. Stored/applied in kobo to match `variants.priceKobo`.
 
 ### Emails (ORD-01, ORD-02)
 - **D-14:** Reuse the existing **Resend email seam** (`src/lib/email/`, React Email templates in
@@ -236,6 +250,8 @@ into a real `/checkout` flow, and **creates the net-new order schema** deferred 
   order page is built here.
 - **Status-change emails (shipped/delivered)** → Phase 5 (ORD-03). This phase sends confirmation +
   bank-transfer-instructions emails only.
+- **PayPal payment (PAY-02)** → **deferred to backlog** (D-05a): PayPal does not support NGN.
+  Revisit only if a USD/multi-currency PayPal account is opened. The toggle ships (default OFF).
 - **Discount codes / promotions at checkout** → v2 (PROMO-01/02, out of scope).
 - **Address validation API / saved addresses** → out of scope (PROJECT.md / REQUIREMENTS.md).
 - **Inventory hold + timeout-release for abandoned/unpaid orders** → not built; D-09 decrements on
