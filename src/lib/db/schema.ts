@@ -266,3 +266,57 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
   cart:    one(cart,     { fields: [cartItems.cartId],    references: [cart.id] }),
   variant: one(variants, { fields: [cartItems.variantId], references: [variants.id] }),
 }))
+
+// ─── Phase 4: Order Tables ───────────────────────────────────────────────────
+// orders: one row per checkout attempt. Address is a denormalized snapshot (immutable
+// order record). Price snapshot lives on order_item (Phase 6 SC2 — total as captured).
+export const orders = pgTable("order", {
+  id:            text("id").primaryKey(),                         // crypto.randomUUID()
+  reference:     text("reference").notNull().unique(),            // MS-XXXXXX (shown to customer)
+  guestToken:    text("guest_token").notNull().unique(),         // 64-char hex (guest access URL, IDOR-safe)
+  status:        orderStatusEnum("status").notNull().default("pending_payment"),
+  userId:        text("user_id").references(() => users.id),      // NULL for guests (CHKT-01)
+  customerEmail: text("customer_email").notNull(),
+  subtotalKobo:  integer("subtotal_kobo").notNull(),
+  shippingKobo:  integer("shipping_kobo").notNull(),
+  totalKobo:     integer("total_kobo").notNull(),                 // server-computed; never client (CHKT-03/04)
+  shippingName:     text("shipping_name").notNull(),
+  shippingPhone:    text("shipping_phone").notNull(),
+  shippingStreet:   text("shipping_street").notNull(),
+  shippingCity:     text("shipping_city").notNull(),
+  shippingState:    text("shipping_state").notNull(),             // one of 36 states + FCT (D-04)
+  shippingLandmark: text("shipping_landmark"),                    // optional
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  paypalOrderId:         text("paypal_order_id"),                 // reserved (PAY-02 deferred)
+  refundReason:  text("refund_reason"),                           // set on last-unit-race refund (D-09)
+  createdAt:     timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  paidAt:        timestamp("paid_at", { mode: "date" }),          // set when payment_confirmed
+}, (table) => [
+  index("order_user_idx").on(table.userId),
+  index("order_guest_token_idx").on(table.guestToken),
+  index("order_stripe_pi_idx").on(table.stripePaymentIntentId),
+])
+
+// order_item: one row per line, with price + label snapshot at purchase time
+export const orderItems = pgTable("order_item", {
+  id:            text("id").primaryKey(),
+  orderId:       text("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  variantId:     text("variant_id").notNull().references(() => variants.id),
+  quantity:      integer("quantity").notNull(),
+  priceKobo:     integer("price_kobo").notNull(),                 // snapshot of variants.priceKobo
+  productName:   text("product_name").notNull(),                 // snapshot
+  variantLabel:  text("variant_label").notNull(),                // snapshot e.g. "Black / 128GB"
+  lineTotalKobo: integer("line_total_kobo").notNull(),           // priceKobo * quantity
+}, (table) => [
+  index("order_item_order_idx").on(table.orderId),
+])
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user:  one(users, { fields: [orders.userId], references: [users.id] }),
+  items: many(orderItems),
+}))
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order:   one(orders,   { fields: [orderItems.orderId],   references: [orders.id] }),
+  variant: one(variants, { fields: [orderItems.variantId], references: [variants.id] }),
+}))
