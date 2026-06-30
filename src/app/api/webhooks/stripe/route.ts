@@ -10,7 +10,9 @@
 //   - Last-unit-race (D-09): if any decrement returns 0 rows → refund + payment_failed + notify customer
 //   - Never returns non-200 for valid webhook events; Stripe retries on non-200 (except signature failure)
 
-export const runtime = "nodejs"
+// runtime = "nodejs" is the default for Route Handlers in Next.js 16 + cacheComponents mode.
+// Explicit "nodejs" export is incompatible with cacheComponents:true — Node.js is the default
+// and stripe.webhooks.constructEvent uses Node.js crypto (HMAC timing-safe) automatically.
 
 import { NextRequest, NextResponse } from "next/server"
 import type Stripe from "stripe"

@@ -88,7 +88,7 @@ async function CartContent() {
 
             <hr className="border-t border-border" />
 
-            {/* Checkout CTA — disabled when OOS (D-11); Phase 4 placeholder */}
+            {/* Checkout CTA — routes to /checkout (Phase 4) */}
             {cart.hasOOS ? (
               <button
                 type="button"
@@ -100,12 +100,12 @@ async function CartContent() {
                 Proceed to checkout
               </button>
             ) : (
-              <button
-                type="button"
-                className="w-full rounded-xl bg-brand hover:bg-brand-strong text-white px-6 py-4 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+              <Link
+                href="/checkout"
+                className="w-full text-center block rounded-xl bg-brand hover:bg-brand-strong text-white px-6 py-4 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               >
                 Proceed to checkout
-              </button>
+              </Link>
             )}
 
             {/* Continue shopping */}
