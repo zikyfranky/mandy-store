@@ -103,13 +103,13 @@
 | CHKT-02 | Phase 4 | Pending |
 | CHKT-03 | Phase 4 | Pending |
 | CHKT-04 | Phase 4 | Pending |
-| CHKT-05 | Phase 4 | Complete (04-04) |
+| CHKT-05 | Phase 4 | Complete (04-04 status endpoint + 04-06 confirmation page UI) |
 | PAY-01 | Phase 4 | Complete (04-03+04-04) |
-| PAY-02 | Phase 4 | Pending |
-| PAY-03 | Phase 4 | Pending |
-| PAY-04 | Phase 4 | Partial (04-02: toggle primitive; full enforcement in 04-03/04) |
+| PAY-02 | Phase 4 | Pending (deferred — PayPal NGN blocker D-05a) |
+| PAY-03 | Phase 4 | Complete (04-03 bank transfer action + 04-06 bank details confirmation UI) |
+| PAY-04 | Phase 4 | Complete (04-02 toggle + 04-03/04 enforcement) |
 | ORD-01 | Phase 4 | Complete (04-02+04-04) |
-| ORD-02 | Phase 4 | Partial (04-02: email sender; full send in 04-03 bank-transfer action) |
+| ORD-02 | Phase 4 | Complete (04-02+04-03 bank transfer email + 04-06 bank details UI) |
 | ORD-03 | Phase 5 | Pending |
 | ADMN-01 | Phase 5 | Pending |
 | ADMN-02 | Phase 5 | Pending |

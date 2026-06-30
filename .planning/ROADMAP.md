@@ -10,7 +10,7 @@
 - [ ] **Phase 1: Foundation** - Database schema, auth, and route protection in place so everything else can be built safely
 - [x] **Phase 2: Product Catalog** - A browsable, searchable, filterable storefront with variant selection (completed 2026-06-19)
 - [x] **Phase 3: Cart** - A cart that survives navigation and refresh for guests and logged-in users (completed 2026-06-25)
-- [ ] **Phase 4: Checkout & Payments** - End-to-end purchase via Stripe, PayPal, or bank transfer with order confirmation
+- [x] **Phase 4: Checkout & Payments** - End-to-end purchase via Stripe or bank transfer with order confirmation (completed 2026-06-30)
 - [ ] **Phase 5: Admin Panel** - Store owner manages products, variants, stock, and order fulfillment
 - [ ] **Phase 6: Customer Accounts** - Repeat buyers can view their order history
 
@@ -107,7 +107,7 @@ Plans:
 - [x] 04-04-PLAN.md — Stripe webhook (raw-body verify, idempotency, atomic stock decrement, last-unit-race refund — D-09) + order-status polling endpoint (CHKT-05/D-07) *(COMPLETE 2026-06-30 — 6/6 tests pass; PAY-01/ORD-01/CHKT-05 delivered)*
 **Wave 4** *(blocked on Wave 3)*
 - [x] 04-05-PLAN.md — /checkout single-page UI: contact + NG address form, payment selector (Stripe + bank only), embedded Stripe Payment Element, sticky order summary; human-verify checkpoint *(COMPLETE 2026-06-30 — CHKT-01/02/04 + PAY-01/03/04 delivered in UI; build passes)*
-- [ ] 04-06-PLAN.md — /order/[token] confirmation page (confirmed / awaiting-transfer / processing-poll states), bank details + copyable reference, post-purchase account offer, cart Checkout → /checkout rewire
+- [x] 04-06-PLAN.md — /order/[token] confirmation page (confirmed / awaiting-transfer / processing-poll states), bank details + copyable reference, post-purchase account offer, cart Checkout → /checkout rewire *(COMPLETE 2026-06-30 — 3 order states + CopyButton + PostPurchaseAccountOffer; bank env server-only; build passes; CHKT-05 + PAY-03 + ORD-02 delivered; Phase 4 COMPLETE)*
 **UI hint**: yes
 
 ### Phase 5: Admin Panel
@@ -141,7 +141,7 @@ Plans:
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
 | 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
 | 3. Cart | 3/3 | Complete    | 2026-06-25 |
-| 4. Checkout & Payments | 5/6 | In Progress|  |
+| 4. Checkout & Payments | 6/6 | Complete | 2026-06-30 |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
 
