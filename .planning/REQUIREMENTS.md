@@ -107,9 +107,9 @@
 | PAY-01 | Phase 4 | Pending |
 | PAY-02 | Phase 4 | Pending |
 | PAY-03 | Phase 4 | Pending |
-| PAY-04 | Phase 4 | Pending |
-| ORD-01 | Phase 4 | Pending |
-| ORD-02 | Phase 4 | Pending |
+| PAY-04 | Phase 4 | Partial (04-02: toggle primitive; full enforcement in 04-03/04) |
+| ORD-01 | Phase 4 | Partial (04-02: email sender; full send in 04-04 webhook) |
+| ORD-02 | Phase 4 | Partial (04-02: email sender; full send in 04-03 bank-transfer action) |
 | ORD-03 | Phase 5 | Pending |
 | ADMN-01 | Phase 5 | Pending |
 | ADMN-02 | Phase 5 | Pending |

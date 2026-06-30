@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 01 complete
-last_updated: "2026-06-30T07:14:37Z"
+stopped_at: Phase 4 Plan 02 complete
+last_updated: "2026-06-30T07:47:27Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 17
-  completed_plans: 12
-  percent: 71
+  completed_plans: 13
+  percent: 76
 ---
 
 # Project State: Mandy Store
@@ -29,15 +29,15 @@ Phase: 4 (Checkout & Payments) — EXECUTING
 Plan: 2 of 6
 
 - **Phase:** 4 of 6 (checkout & payments)
-- **Plan:** Plan 01 complete (order schema + shipping foundation)
+- **Plan:** Plan 02 complete (payment config + email primitives)
 - **Status:** Executing Phase 4
-- **Progress:** [###########] 3/6 phases complete partial (12/17 plans complete)
+- **Progress:** [###########] 3/6 phases complete partial (13/17 plans complete)
 
 ## Performance Metrics
 
 - Phases completed: 3 (partial — Phase 4 in progress)
-- Plans completed: 12 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19; 04-01 — complete 2026-06-30)
-- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03) + CHKT-03 foundation (04-01)
+- Plans completed: 13 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19; 04-01, 04-02 — complete 2026-06-30)
+- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03) + CHKT-03 foundation (04-01) + PAY-04 toggle primitive + ORD-01/ORD-02 email senders (04-02)
 
 ## Accumulated Context
 
@@ -85,6 +85,7 @@ Plan: 2 of 6
 - CATA-04 delivered (Plan 02-03): PDP at /products/[slug] with prop-driven variant resolution (resolveVariant), live price+stock via useState, OOS-disable (D-16), tiered stock labels (D-17), CTA stub (D-18), gallery variant image swap (D-19). Suspense split: ProductContent (cacheable boundary for Plan 04) + VariantStockPriceBlock (always dynamic). getProduct query extended to include optionValue.option nested join for productOption.name. Non-async default export pattern required for cacheComponents mode.
 - SC5 delivered (Plan 02-04): ProductContent cached via 'use cache' + cacheLife('hours') + cacheTag('product-<slug>'). VariantStockPriceBlock stays dynamic (no use cache). generateMetadata with alternates.canonical (/products/<slug>, relative, resolves via metadataBase). Product JSON-LD in fresh block (schema.org Product + offers with InStock/OutOfStock per current stock). XSS mitigation: .replace(/</g, "\\u003c") on JSON.stringify. cacheTag hook established for Phase 5 admin updateTag() invalidation. Build: ◐ Partial Prerender. Phase 02 fully complete.
 - Plan 04-01 complete: orders + order_item tables in Neon (dev + test databases). FLAT_SHIPPING_KOBO=200000 (default) server-only constant in src/lib/orders/shipping.ts. truncateOrderTables() helper in tests/helpers/db.ts. Schema applied via direct SQL (@neondatabase/serverless fallback — TTY prompt blocked drizzle-kit push). Schema must be applied to both DATABASE_URL and TEST_DATABASE_URL separately. JavaScript sort() is lexicographic — use .sort((a,b)=>a-b) for numeric ordering in tests. 159/159 tests pass.
+- Plan 04-02 complete: isPaymentMethodEnabled (PAY-04, D-13) server-only toggle in src/lib/payments/config.ts; Stripe singleton in src/lib/payments/stripe.ts (no pinned apiVersion — stripe@22.x pins its own); generateOrderRef/generateUniqueOrderRef/generateGuestToken in src/lib/orders/reference.ts (crypto.getRandomValues only, never Math.random); getOrderByToken/getOrderByStripePaymentIntentId/getOrderStatusByToken in src/lib/orders/queries.ts. OrderConfirmationEmail + BankTransferInstructionsEmail React Email templates in src/emails/. sendOrderConfirmationEmail + sendBankTransferInstructionsEmail Resend senders in src/lib/email/; bank details read from BANK_* env (server-only, no NEXT_PUBLIC_). vi.mock Resend constructor requires regular function (not arrow) + vi.hoisted() for shared spy reference. 30 new unit tests pass (14 toggle + 16 email). PayPal NOT installed (@paypal/react-paypal-js — D-05a).
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -112,9 +113,9 @@ Plan: 2 of 6
 
 ## Session Continuity
 
-**Last session:** 2026-06-30T07:14:37Z
-**Stopped at:** Phase 4 Plan 01 complete (order schema + shipping foundation)
-**Next action:** Execute Phase 4 Plan 02 (payment config + Stripe lib)
+**Last session:** 2026-06-30T07:47:27Z
+**Stopped at:** Phase 4 Plan 02 complete (payment config + email primitives)
+**Next action:** Execute Phase 4 Plan 03 (checkout Server Action)
 
 ---
 *State initialized: 2026-06-10*
