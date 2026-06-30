@@ -33,7 +33,7 @@
 - [x] **CHKT-02**: User enters shipping address at checkout *(delivered: Plan 04-03 — Zod AddressSchema: 36 NG states + FCT, required phone, street, city, fullName; landmark optional)*
 - [x] **CHKT-03**: Flat-rate shipping fee is applied to the order total *(delivered: Plans 04-01+04-03 — FLAT_SHIPPING_KOBO added server-side via computeOrderTotal; never trusted from client)*
 - [x] **CHKT-04**: User sees full order summary before confirming payment *(delivered: Plan 04-03 — server-recomputed subtotal+shipping+total stored on order; never from client)*
-- [ ] **CHKT-05**: User sees order confirmation page after successful payment
+- [x] **CHKT-05**: User sees order confirmation page after successful payment *(delivered: Plan 04-04 — GET /api/order/status/[token] returns {status} for confirmation page polling; D-07 reconciliation endpoint)*
 
 ### Payments
 
@@ -44,7 +44,7 @@
 
 ### Orders & Notifications
 
-- [ ] **ORD-01**: Customer receives order confirmation email after successful payment
+- [x] **ORD-01**: Customer receives order confirmation email after successful payment *(delivered: Plan 04-04 — sendOrderConfirmationEmail called non-blocking in webhook on payment_confirmed)*
 - [x] **ORD-02**: Customer receives bank transfer instructions email when that method is chosen *(delivered: Plan 04-03 — sendBankTransferInstructionsEmail called synchronously in createBankTransferOrder)*
 - [ ] **ORD-03**: Customer receives email when fulfillment status changes (e.g. shipped, delivered)
 
@@ -103,12 +103,12 @@
 | CHKT-02 | Phase 4 | Pending |
 | CHKT-03 | Phase 4 | Pending |
 | CHKT-04 | Phase 4 | Pending |
-| CHKT-05 | Phase 4 | Pending |
-| PAY-01 | Phase 4 | Pending |
+| CHKT-05 | Phase 4 | Complete (04-04) |
+| PAY-01 | Phase 4 | Complete (04-03+04-04) |
 | PAY-02 | Phase 4 | Pending |
 | PAY-03 | Phase 4 | Pending |
 | PAY-04 | Phase 4 | Partial (04-02: toggle primitive; full enforcement in 04-03/04) |
-| ORD-01 | Phase 4 | Partial (04-02: email sender; full send in 04-04 webhook) |
+| ORD-01 | Phase 4 | Complete (04-02+04-04) |
 | ORD-02 | Phase 4 | Partial (04-02: email sender; full send in 04-03 bank-transfer action) |
 | ORD-03 | Phase 5 | Pending |
 | ADMN-01 | Phase 5 | Pending |
