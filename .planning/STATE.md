@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 04 complete
-last_updated: "2026-06-30T08:38:17Z"
+stopped_at: Phase 4 Plan 05 complete
+last_updated: "2026-06-30T10:30:00Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 17
-  completed_plans: 15
-  percent: 88
+  completed_plans: 16
+  percent: 94
 ---
 
 # Project State: Mandy Store
@@ -26,18 +26,18 @@ progress:
 ## Current Position
 
 Phase: 4 (Checkout & Payments) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 
 - **Phase:** 4 of 6 (checkout & payments)
-- **Plan:** Plan 04 complete (Stripe webhook + order-status route)
+- **Plan:** Plan 05 complete (/checkout UI + payment panels)
 - **Status:** Executing Phase 4
-- **Progress:** [#############] 3/6 phases complete partial (15/17 plans complete)
+- **Progress:** [##############] 3/6 phases complete partial (16/17 plans complete)
 
 ## Performance Metrics
 
 - Phases completed: 3 (partial — Phase 4 in progress)
-- Plans completed: 15 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19; 04-01, 04-02 — complete 2026-06-30; 04-03, 04-04 — complete 2026-06-30)
-- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03) + CHKT-01/02/03/04/05 + PAY-01/03 + PAY-04 + ORD-01/ORD-02
+- Plans completed: 16 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19; 04-01, 04-02 — complete 2026-06-30; 04-03, 04-04, 04-05 — complete 2026-06-30)
+- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03) + CHKT-01/02/03/04/05 + PAY-01/03/04 + ORD-01/ORD-02
 
 ## Accumulated Context
 
@@ -88,6 +88,7 @@ Plan: 4 of 6
 - Plan 04-02 complete: isPaymentMethodEnabled (PAY-04, D-13) server-only toggle in src/lib/payments/config.ts; Stripe singleton in src/lib/payments/stripe.ts (no pinned apiVersion — stripe@22.x pins its own); generateOrderRef/generateUniqueOrderRef/generateGuestToken in src/lib/orders/reference.ts (crypto.getRandomValues only, never Math.random); getOrderByToken/getOrderByStripePaymentIntentId/getOrderStatusByToken in src/lib/orders/queries.ts. OrderConfirmationEmail + BankTransferInstructionsEmail React Email templates in src/emails/. sendOrderConfirmationEmail + sendBankTransferInstructionsEmail Resend senders in src/lib/email/; bank details read from BANK_* env (server-only, no NEXT_PUBLIC_). vi.mock Resend constructor requires regular function (not arrow) + vi.hoisted() for shared spy reference. 30 new unit tests pass (14 toggle + 16 email). PayPal NOT installed (@paypal/react-paypal-js — D-05a).
 - Plan 04-03 complete: createBankTransferOrder + createStripePaymentIntent Server Actions in src/lib/actions/checkout.ts. Server-side total recompute (getCart() + computeOrderTotal — never trust client price). isPaymentMethodEnabled first statement in each action (PAY-04, T-04-11). Bank transfer: status "awaiting_bank_transfer" hardcoded (D-11, Pitfall 8), bank instructions email sent synchronously, NO stock decrement (D-09). Stripe: pending_payment order, PaymentIntent with amount=totalKobo currency="ngn" (A1). Zod CheckoutSchema: 36 NG states + FCT enum, email, required address fields (CHKT-02). Guest: userId=null (CHKT-01); logged-in: userId+email from auth() session (D-02). db.batch for atomic insert. vi.mock at top-level + vi.mocked() override per test (vi.doMock inside test body has no effect on cached modules). 15 tests pass.
 - Plan 04-04 complete: Stripe webhook Route Handler (src/app/api/webhooks/stripe/route.ts) — nodejs runtime, req.text() raw body first, constructEvent HMAC verify, idempotency via INSERT INTO processed_webhook_events ON CONFLICT DO NOTHING (rowCount===0 short-circuits), atomic db.batch with UPDATE variant SET stock = stock - qty WHERE id=? AND stock >= qty RETURNING id, last-unit-race recovery (D-09): rows.length===0 → stripe.refunds.create + payment_failed + refundReason, sendOrderConfirmationEmail non-blocking on success. Order-status route (src/app/api/order/status/[token]/route.ts) — getOrderStatusByToken → {status} or 404, no order data exposed, async params (Next.js 16). 6/6 tests pass (1 always-runs + 5 DB-gated). CHKT-05/D-07 delivered. PAY-01 (Stripe webhook), ORD-01 (confirmation email) delivered end-to-end.
+- Plan 04-05 complete: /checkout single-page UI. CheckoutForm (react-hook-form+Zod, contact prefill D-02, NG address 36+FCT D-04, bank submit path). CheckoutOrderSummary (sticky desktop + mobile collapsible). OOSWarningBanner. PaymentMethodSelector (role=radiogroup, PayPal never rendered D-05a). StripePaymentPanel (loadStripe singleton, createStripePaymentIntent → Elements → confirmPayment, Appearance API branding, D-08 inline error, T-04-26 disabled-on-submit). BankTransferPanel (informational, no bank secrets D-10). Fixed pre-existing build failures: export const runtime removed from webhook route; Stripe singleton made lazy Proxy. Checkout CTA in cart upgraded stub → Link /checkout. Build passes. CHKT-01/02/04 + PAY-01/03/04 delivered in UI.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -115,9 +116,9 @@ Plan: 4 of 6
 
 ## Session Continuity
 
-**Last session:** 2026-06-30T08:38:17Z
-**Stopped at:** Phase 4 Plan 04 complete (Stripe webhook + order-status route)
-**Next action:** Execute Phase 4 Plan 05 (/checkout single-page UI)
+**Last session:** 2026-06-30T10:30:00Z
+**Stopped at:** Phase 4 Plan 05 complete (/checkout single-page UI + payment panels)
+**Next action:** Execute Phase 4 Plan 06 (/order/[token] confirmation page)
 
 ---
 *State initialized: 2026-06-10*

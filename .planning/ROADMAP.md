@@ -106,7 +106,7 @@ Plans:
 - [x] 04-03-PLAN.md — Checkout Server Actions: createBankTransferOrder (awaiting_bank_transfer) + createStripePaymentIntent (server-recomputed kobo total), guest checkout, address validation, toggle enforcement *(COMPLETE 2026-06-30 — 15/15 tests pass; CHKT-01/02/03/04 + PAY-01/03 + ORD-02 delivered; no stock decrement D-09)*
 - [x] 04-04-PLAN.md — Stripe webhook (raw-body verify, idempotency, atomic stock decrement, last-unit-race refund — D-09) + order-status polling endpoint (CHKT-05/D-07) *(COMPLETE 2026-06-30 — 6/6 tests pass; PAY-01/ORD-01/CHKT-05 delivered)*
 **Wave 4** *(blocked on Wave 3)*
-- [ ] 04-05-PLAN.md — /checkout single-page UI: contact + NG address form, payment selector (Stripe + bank only), embedded Stripe Payment Element, sticky order summary; human-verify checkpoint
+- [x] 04-05-PLAN.md — /checkout single-page UI: contact + NG address form, payment selector (Stripe + bank only), embedded Stripe Payment Element, sticky order summary; human-verify checkpoint *(COMPLETE 2026-06-30 — CHKT-01/02/04 + PAY-01/03/04 delivered in UI; build passes)*
 - [ ] 04-06-PLAN.md — /order/[token] confirmation page (confirmed / awaiting-transfer / processing-poll states), bank details + copyable reference, post-purchase account offer, cart Checkout → /checkout rewire
 **UI hint**: yes
 
@@ -141,7 +141,7 @@ Plans:
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
 | 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
 | 3. Cart | 3/3 | Complete    | 2026-06-25 |
-| 4. Checkout & Payments | 4/6 | In Progress|  |
+| 4. Checkout & Payments | 5/6 | In Progress|  |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
 
