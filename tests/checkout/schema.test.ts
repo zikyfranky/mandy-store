@@ -106,7 +106,7 @@ describe("orders + order_item schema (DB-gated)", () => {
     expect(found!.status).toBe("pending_payment")   // default status
     expect(found!.totalKobo).toBe(380000)           // persisted correctly
     expect(found!.items).toHaveLength(2)
-    expect(found!.items.map((i) => i.lineTotalKobo).sort()).toEqual([80000, 100000])
+    expect(found!.items.map((i) => i.lineTotalKobo).sort((a, b) => a - b)).toEqual([80000, 100000])
   })
 
   it.skipIf(skip)("order.status defaults to pending_payment on insert", async () => {
