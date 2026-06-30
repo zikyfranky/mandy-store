@@ -9,6 +9,7 @@ import { describe, it, expect, afterEach, beforeEach, vi } from "vitest"
 import { hasDatabase, truncateOrderTables, truncateCartTables, truncateCatalogTables } from "../helpers/db"
 
 // ─── Module mocks (must be at top-level, hoisted before imports) ──────────────
+// Pattern 14: always mock in this order (04-PATTERNS.md Shared Patterns 14)
 
 vi.mock("server-only", () => ({}))
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
@@ -32,8 +33,20 @@ vi.mock("@/lib/payments/stripe", () => ({
     },
   },
 }))
+// Mock getCart at the module level — individual tests override via vi.mocked(getCart)
+vi.mock("@/lib/cart/queries", () => ({
+  getCart: vi.fn(),
+}))
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Lazy imports after mocks ─────────────────────────────────────────────────
+// Import after vi.mock so the mocked versions are used
+
+import { getCart } from "@/lib/cart/queries"
+import { auth } from "@/lib/auth"
+import { sendBankTransferInstructionsEmail } from "@/lib/email/send-bank-transfer-instructions"
+import { stripe } from "@/lib/payments/stripe"
+
+// ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 const VALID_INPUT = {
   email: "customer@example.com",
@@ -47,11 +60,11 @@ const VALID_INPUT = {
   },
 }
 
-// A single in-stock cart line. subtotalKobo = 100_000_00 (₦100,000).
-const MOCK_CART = {
+// A single in-stock cart line. subtotalKobo = 10_000_000 (₦100,000).
+const MOCK_CART_BASE = {
   items: [
     {
-      variantId: "variant-uuid-placeholder",
+      variantId: "00000000-0000-0000-0000-000000000001",
       quantity: 1,
       stock: 10,
       priceKobo: 10_000_000,
@@ -79,6 +92,12 @@ beforeEach(() => {
   process.env.ENABLE_STRIPE = "true"
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder"
   process.env.FLAT_SHIPPING_KOBO = "200000"
+
+  // Reset auth to guest (null) by default
+  vi.mocked(auth).mockResolvedValue(null as unknown as Awaited<ReturnType<typeof auth>>)
+
+  // Default cart mock: one in-stock item
+  vi.mocked(getCart).mockResolvedValue(MOCK_CART_BASE)
 })
 
 afterEach(async () => {
@@ -86,19 +105,19 @@ afterEach(async () => {
     await truncateOrderTables()
     await truncateCartTables()
     await truncateCatalogTables()
+    // Also clean up any user rows seeded by tests (not covered by above truncations)
+    const { db } = await import("@/lib/db/client")
+    const schema = await import("@/lib/db/schema")
+    await db.delete(schema.users).catch(() => { /* ignore if already empty */ })
   }
   vi.clearAllMocks()
+  vi.unstubAllEnvs()
 })
 
 // ─── Pure unit tests (always run — no DB required) ────────────────────────────
 
 describe("createBankTransferOrder — pure unit tests", () => {
-  it("returns { error } when ENABLE_BANK_TRANSFER is not enabled", async () => {
-    // Override cart mock to a valid cart for this test
-    vi.mock("@/lib/cart/queries", () => ({
-      getCart: vi.fn().mockResolvedValue(MOCK_CART),
-    }))
-
+  it("returns { error } when bank_transfer toggle is disabled", async () => {
     process.env.ENABLE_BANK_TRANSFER = ""
     const { createBankTransferOrder } = await import("@/lib/actions/checkout")
     const result = await createBankTransferOrder(VALID_INPUT)
@@ -106,11 +125,14 @@ describe("createBankTransferOrder — pure unit tests", () => {
     expect((result as { error: string }).error).toMatch(/not available/i)
   })
 
-  it("returns { error } when address state is invalid", async () => {
-    vi.mock("@/lib/cart/queries", () => ({
-      getCart: vi.fn().mockResolvedValue(MOCK_CART),
-    }))
+  it("returns { error } when BANK_NAME env var is missing (toggle requires credentials)", async () => {
+    process.env.BANK_NAME = ""
+    const { createBankTransferOrder } = await import("@/lib/actions/checkout")
+    const result = await createBankTransferOrder(VALID_INPUT)
+    expect(result).toHaveProperty("error")
+  })
 
+  it("returns { error } when address state is invalid (Zod validation)", async () => {
     const { createBankTransferOrder } = await import("@/lib/actions/checkout")
     const result = await createBankTransferOrder({
       ...VALID_INPUT,
@@ -119,26 +141,42 @@ describe("createBankTransferOrder — pure unit tests", () => {
     expect(result).toHaveProperty("error")
   })
 
-  it("returns { error } when email is missing", async () => {
-    vi.mock("@/lib/cart/queries", () => ({
-      getCart: vi.fn().mockResolvedValue(MOCK_CART),
-    }))
-
+  it("returns { error } when email is malformed (Zod validation)", async () => {
     const { createBankTransferOrder } = await import("@/lib/actions/checkout")
     const result = await createBankTransferOrder({
+      ...VALID_INPUT,
       email: "not-an-email",
-      address: VALID_INPUT.address,
     })
     expect(result).toHaveProperty("error")
+  })
+
+  it("returns { error: 'Cart is empty' } when cart has no items", async () => {
+    vi.mocked(getCart).mockResolvedValue({
+      items: [],
+      subtotalKobo: 0,
+      totalQty: 0,
+      hasOOS: false,
+    })
+    const { createBankTransferOrder } = await import("@/lib/actions/checkout")
+    const result = await createBankTransferOrder(VALID_INPUT)
+    expect(result).toHaveProperty("error")
+    expect((result as { error: string }).error).toMatch(/empty/i)
+  })
+
+  it("returns { error } when cart has OOS items", async () => {
+    vi.mocked(getCart).mockResolvedValue({
+      ...MOCK_CART_BASE,
+      hasOOS: true,
+    })
+    const { createBankTransferOrder } = await import("@/lib/actions/checkout")
+    const result = await createBankTransferOrder(VALID_INPUT)
+    expect(result).toHaveProperty("error")
+    expect((result as { error: string }).error).toMatch(/out-of-stock/i)
   })
 })
 
 describe("createStripePaymentIntent — pure unit tests", () => {
-  it("returns { error } when ENABLE_STRIPE is not enabled", async () => {
-    vi.mock("@/lib/cart/queries", () => ({
-      getCart: vi.fn().mockResolvedValue(MOCK_CART),
-    }))
-
+  it("returns { error } when stripe toggle is disabled", async () => {
     process.env.ENABLE_STRIPE = ""
     const { createStripePaymentIntent } = await import("@/lib/actions/checkout")
     const result = await createStripePaymentIntent(VALID_INPUT)
@@ -146,17 +184,33 @@ describe("createStripePaymentIntent — pure unit tests", () => {
     expect((result as { error: string }).error).toMatch(/not available/i)
   })
 
-  it("returns { error } when address state is invalid", async () => {
-    vi.mock("@/lib/cart/queries", () => ({
-      getCart: vi.fn().mockResolvedValue(MOCK_CART),
-    }))
+  it("returns { error } when STRIPE_SECRET_KEY is missing", async () => {
+    process.env.STRIPE_SECRET_KEY = ""
+    const { createStripePaymentIntent } = await import("@/lib/actions/checkout")
+    const result = await createStripePaymentIntent(VALID_INPUT)
+    expect(result).toHaveProperty("error")
+  })
 
+  it("returns { error } when address state is invalid (Zod validation)", async () => {
     const { createStripePaymentIntent } = await import("@/lib/actions/checkout")
     const result = await createStripePaymentIntent({
       ...VALID_INPUT,
       address: { ...VALID_INPUT.address, state: "Narnia" as never },
     })
     expect(result).toHaveProperty("error")
+  })
+
+  it("returns { error: 'Cart is empty' } when cart has no items", async () => {
+    vi.mocked(getCart).mockResolvedValue({
+      items: [],
+      subtotalKobo: 0,
+      totalQty: 0,
+      hasOOS: false,
+    })
+    const { createStripePaymentIntent } = await import("@/lib/actions/checkout")
+    const result = await createStripePaymentIntent(VALID_INPUT)
+    expect(result).toHaveProperty("error")
+    expect((result as { error: string }).error).toMatch(/empty/i)
   })
 })
 
@@ -168,11 +222,8 @@ describe("createBankTransferOrder — DB integration", () => {
     async () => {
       const { db } = await import("@/lib/db/client")
       const schema = await import("@/lib/db/schema")
-      const { sendBankTransferInstructionsEmail } = await import(
-        "@/lib/email/send-bank-transfer-instructions"
-      )
 
-      // Seed: category → brand → product → variant
+      // Seed: category → brand → product → variant (FK chain for order_item)
       const categoryId = crypto.randomUUID()
       const brandId = crypto.randomUUID()
       const productId = crypto.randomUUID()
@@ -198,27 +249,25 @@ describe("createBankTransferOrder — DB integration", () => {
         stock: 10,
       })
 
-      // Mock getCart to return the seeded variant
-      vi.doMock("@/lib/cart/queries", () => ({
-        getCart: vi.fn().mockResolvedValue({
-          ...MOCK_CART,
-          items: [{ ...MOCK_CART.items[0], variantId }],
-        }),
-      }))
+      // Override getCart to use the seeded variantId
+      vi.mocked(getCart).mockResolvedValue({
+        ...MOCK_CART_BASE,
+        items: [{ ...MOCK_CART_BASE.items[0], variantId }],
+      })
 
       const { createBankTransferOrder } = await import("@/lib/actions/checkout")
       const result = await createBankTransferOrder(VALID_INPUT)
 
-      // Should return a guestToken
+      // Should return a guestToken (no error)
       expect(result).not.toHaveProperty("error")
       expect(result).toHaveProperty("guestToken")
       const { guestToken } = result as { guestToken: string }
       expect(typeof guestToken).toBe("string")
       expect(guestToken.length).toBe(64)
 
-      // Verify the order row
+      // Verify the order row in DB
       const order = await db.query.orders.findFirst({
-        where: (orders, { eq }) => eq(orders.guestToken, guestToken),
+        where: (o, { eq }) => eq(o.guestToken, guestToken),
         with: { items: true },
       })
       expect(order).toBeDefined()
@@ -226,30 +275,31 @@ describe("createBankTransferOrder — DB integration", () => {
       expect(order!.userId).toBeNull()
       expect(order!.customerEmail).toBe(VALID_INPUT.email)
 
-      // Server-side total: 10_000_000 subtotal + 200_000 shipping = 10_200_000
+      // Server-side total: 10_000_000 subtotal + 200_000 shipping = 10_200_000 (CHKT-03/04)
       expect(order!.subtotalKobo).toBe(10_000_000)
       expect(order!.shippingKobo).toBe(200_000)
       expect(order!.totalKobo).toBe(10_200_000)
 
-      // Order items match cart
+      // Order items match cart snapshot
       expect(order!.items.length).toBe(1)
       expect(order!.items[0].variantId).toBe(variantId)
       expect(order!.items[0].quantity).toBe(1)
       expect(order!.items[0].priceKobo).toBe(10_000_000)
+      expect(order!.items[0].lineTotalKobo).toBe(10_000_000)
 
-      // Email was sent
+      // Email was sent exactly once (ORD-02)
       expect(sendBankTransferInstructionsEmail).toHaveBeenCalledOnce()
 
-      // Variant stock NOT changed (D-09)
+      // Variant stock NOT changed — D-09
       const variant = await db.query.variants.findFirst({
-        where: (variants, { eq }) => eq(variants.id, variantId),
+        where: (v, { eq }) => eq(v.id, variantId),
       })
       expect(variant!.stock).toBe(10)
     }
   )
 
   it.skipIf(!hasDatabase)(
-    "uses session email for logged-in user and records userId (D-02)",
+    "uses session email + userId for logged-in user (D-02)",
     async () => {
       const { db } = await import("@/lib/db/client")
       const schema = await import("@/lib/db/schema")
@@ -263,7 +313,7 @@ describe("createBankTransferOrder — DB integration", () => {
 
       await db.insert(schema.users).values({
         id: userId,
-        email: "session@example.com",
+        email: "session-" + userId.slice(0, 8) + "@example.com",
         name: "Session User",
       })
       await db.insert(schema.categories).values({
@@ -286,35 +336,31 @@ describe("createBankTransferOrder — DB integration", () => {
         stock: 5,
       })
 
-      // Override auth to return a session
-      const { auth } = await import("@/lib/auth")
+      // Override auth to return a session for this test
+      const sessionEmail = "session-" + userId.slice(0, 8) + "@example.com"
       vi.mocked(auth).mockResolvedValue({
-        user: { id: userId, email: "session@example.com", name: "Session User" },
+        user: { id: userId, email: sessionEmail, name: "Session User" },
         expires: new Date(Date.now() + 86400000).toISOString(),
-      } as Awaited<ReturnType<typeof auth>>)
+      } as unknown as Awaited<ReturnType<typeof auth>>)
 
-      // Mock getCart
-      vi.doMock("@/lib/cart/queries", () => ({
-        getCart: vi.fn().mockResolvedValue({
-          items: [
-            {
-              variantId,
-              quantity: 1,
-              stock: 5,
-              priceKobo: 5_000_000,
-              productName: "Watch",
-              variantLabel: "",
-              imageUrl: null,
-              lineTotalKobo: 5_000_000,
-              isOOS: false,
-              isClamped: false,
-            },
-          ],
-          subtotalKobo: 5_000_000,
-          totalQty: 1,
-          hasOOS: false,
-        }),
-      }))
+      // Override getCart for the seeded variantId
+      vi.mocked(getCart).mockResolvedValue({
+        items: [{
+          variantId,
+          quantity: 1,
+          stock: 5,
+          priceKobo: 5_000_000,
+          productName: "Watch",
+          variantLabel: "",
+          imageUrl: null,
+          lineTotalKobo: 5_000_000,
+          isOOS: false,
+          isClamped: false,
+        }],
+        subtotalKobo: 5_000_000,
+        totalQty: 1,
+        hasOOS: false,
+      })
 
       const { createBankTransferOrder } = await import("@/lib/actions/checkout")
       const result = await createBankTransferOrder(VALID_INPUT)
@@ -322,12 +368,12 @@ describe("createBankTransferOrder — DB integration", () => {
 
       const { guestToken } = result as { guestToken: string }
       const order = await db.query.orders.findFirst({
-        where: (orders, { eq }) => eq(orders.guestToken, guestToken),
+        where: (o, { eq }) => eq(o.guestToken, guestToken),
       })
 
       // userId from session, email from session (D-02)
       expect(order!.userId).toBe(userId)
-      expect(order!.customerEmail).toBe("session@example.com")
+      expect(order!.customerEmail).toBe(sessionEmail)
     }
   )
 
@@ -342,13 +388,13 @@ describe("createBankTransferOrder — DB integration", () => {
       const result = await createBankTransferOrder(VALID_INPUT)
       expect(result).toHaveProperty("error")
 
-      const count = await db.select().from(schema.orders)
-      expect(count.length).toBe(0)
+      const allOrders = await db.select().from(schema.orders)
+      expect(allOrders.length).toBe(0)
     }
   )
 
   it.skipIf(!hasDatabase)(
-    "returns { error } on invalid address — creates no order row",
+    "returns { error } on invalid address state — creates no order row",
     async () => {
       const { db } = await import("@/lib/db/client")
       const schema = await import("@/lib/db/schema")
@@ -360,19 +406,18 @@ describe("createBankTransferOrder — DB integration", () => {
       })
       expect(result).toHaveProperty("error")
 
-      const count = await db.select().from(schema.orders)
-      expect(count.length).toBe(0)
+      const allOrders = await db.select().from(schema.orders)
+      expect(allOrders.length).toBe(0)
     }
   )
 })
 
 describe("createStripePaymentIntent — DB integration", () => {
   it.skipIf(!hasDatabase)(
-    "creates pending_payment order and calls stripe.paymentIntents.create with kobo amount in NGN",
+    "creates pending_payment order and calls Stripe with server-computed kobo amount in NGN",
     async () => {
       const { db } = await import("@/lib/db/client")
       const schema = await import("@/lib/db/schema")
-      const { stripe } = await import("@/lib/payments/stripe")
 
       // Seed: category → brand → product → variant
       const categoryId = crypto.randomUUID()
@@ -400,41 +445,41 @@ describe("createStripePaymentIntent — DB integration", () => {
         stock: 10,
       })
 
-      vi.doMock("@/lib/cart/queries", () => ({
-        getCart: vi.fn().mockResolvedValue({
-          ...MOCK_CART,
-          items: [{ ...MOCK_CART.items[0], variantId }],
-        }),
-      }))
+      // Override getCart to use the seeded variantId
+      vi.mocked(getCart).mockResolvedValue({
+        ...MOCK_CART_BASE,
+        items: [{ ...MOCK_CART_BASE.items[0], variantId }],
+      })
 
       const { createStripePaymentIntent } = await import("@/lib/actions/checkout")
       const result = await createStripePaymentIntent(VALID_INPUT)
 
-      // Should return clientSecret + guestToken
+      // Returns clientSecret + guestToken (no error)
       expect(result).not.toHaveProperty("error")
       const { clientSecret, guestToken } = result as { clientSecret: string; guestToken: string }
       expect(clientSecret).toBe("cs_test_abc")
       expect(typeof guestToken).toBe("string")
       expect(guestToken.length).toBe(64)
 
-      // Order row: status = pending_payment, stripePaymentIntentId set
+      // Order row: status = pending_payment; stripePaymentIntentId updated
       const order = await db.query.orders.findFirst({
-        where: (orders, { eq }) => eq(orders.guestToken, guestToken),
+        where: (o, { eq }) => eq(o.guestToken, guestToken),
       })
       expect(order!.status).toBe("pending_payment")
       expect(order!.stripePaymentIntentId).toBe("pi_test_123")
 
       // Server-recomputed amount in kobo, currency "ngn" (CLAUDE.md + A1)
+      // subtotal 10_000_000 + shipping 200_000 = 10_200_000
       expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          amount: 10_200_000, // subtotal + shipping
+          amount: 10_200_000,
           currency: "ngn",
         })
       )
 
-      // Variant stock NOT changed (D-09)
+      // Variant stock NOT changed — D-09
       const variant = await db.query.variants.findFirst({
-        where: (variants, { eq }) => eq(variants.id, variantId),
+        where: (v, { eq }) => eq(v.id, variantId),
       })
       expect(variant!.stock).toBe(10)
     }
