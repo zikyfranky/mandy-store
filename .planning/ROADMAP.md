@@ -99,7 +99,7 @@ Plans:
 **Plans**: 6 plans (4 waves)
 Plans:
 **Wave 1**
-- [ ] 04-01-PLAN.md — Order schema (orders + order_item) + [BLOCKING] db:push, flat-shipping total helper, Wave 0 test infra (truncateOrderTables, schema/totals tests), Phase 4 env vars
+- [x] 04-01-PLAN.md — Order schema (orders + order_item) + [BLOCKING] db:push, flat-shipping total helper, Wave 0 test infra (truncateOrderTables, schema/totals tests), Phase 4 env vars *(COMPLETE 2026-06-30 — order+order_item live in Neon dev+test; 159/159 tests pass; FLAT_SHIPPING_KOBO=200000; CHKT-03 foundation)*
 **Wave 2** *(blocked on Wave 1)*
 - [ ] 04-02-PLAN.md — Payment/order primitives: isPaymentMethodEnabled toggle, Stripe singleton, order-reference + guest-token, order queries, order-confirmation + bank-transfer emails (ORD-01/ORD-02)
 **Wave 3** *(blocked on Wave 2)*
@@ -141,7 +141,7 @@ Plans:
 | 1. Foundation | 4/4 | Complete | 01-01 complete 2026-06-10; 01-02 complete 2026-06-10; 01-03 complete 2026-06-11; 01-04 complete 2026-06-11 |
 | 2. Product Catalog | 4/4 | Complete    | 2026-06-19 |
 | 3. Cart | 3/3 | Complete    | 2026-06-25 |
-| 4. Checkout & Payments | 0/6 | Planned | - |
+| 4. Checkout & Payments | 1/6 | Executing | 04-01 complete 2026-06-30 |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
 

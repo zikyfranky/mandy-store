@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-06-29T15:10:49.072Z"
+stopped_at: Phase 4 Plan 01 complete
+last_updated: "2026-06-30T07:14:37Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 17
-  completed_plans: 11
-  percent: 65
+  completed_plans: 12
+  percent: 71
 ---
 
 # Project State: Mandy Store
@@ -18,26 +18,26 @@ progress:
 ## Project Reference
 
 **Core Value:** Customers can find a product, pick their variant, and complete a purchase using their preferred payment method — without friction.
-**Current Focus:** Phase 03 — Cart
+**Current Focus:** Phase 4 — Checkout & Payments
 **Stack:** Next.js 16 (App Router), TypeScript, Tailwind v4. Neon Postgres + Drizzle, Auth.js v5, Stripe + PayPal + manual bank transfer, Resend, Vercel Blob.
 **Currency:** NGN (Nigerian Naira)
 **Shipping:** Flat rate
 
 ## Current Position
 
-Phase: 03 (Cart) — EXECUTING (checkpoint pending)
-Plan: 3 of 3
+Phase: 4 (Checkout & Payments) — EXECUTING
+Plan: 2 of 6
 
 - **Phase:** 4 of 6 (checkout & payments)
-- **Plan:** Not started
-- **Status:** Ready to execute
-- **Progress:** [##########] 2/6 phases complete (11/11 autonomous tasks complete; 3/3 plans in phase 3 built)
+- **Plan:** Plan 01 complete (order schema + shipping foundation)
+- **Status:** Executing Phase 4
+- **Progress:** [###########] 3/6 phases complete partial (12/17 plans complete)
 
 ## Performance Metrics
 
-- Phases completed: 2/6
-- Plans completed: 11 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19)
-- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03)
+- Phases completed: 3 (partial — Phase 4 in progress)
+- Plans completed: 12 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19; 04-01 — complete 2026-06-30)
+- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03) + CHKT-03 foundation (04-01)
 
 ## Accumulated Context
 
@@ -84,6 +84,7 @@ Plan: 3 of 3
 - CATA-01/02/03 delivered: category pages /electronics /watches /phones, search /search?q=, filter by brand + price range, sort by Price↑/↓/Newest/Name A-Z (all URL-driven SSR per D-14).
 - CATA-04 delivered (Plan 02-03): PDP at /products/[slug] with prop-driven variant resolution (resolveVariant), live price+stock via useState, OOS-disable (D-16), tiered stock labels (D-17), CTA stub (D-18), gallery variant image swap (D-19). Suspense split: ProductContent (cacheable boundary for Plan 04) + VariantStockPriceBlock (always dynamic). getProduct query extended to include optionValue.option nested join for productOption.name. Non-async default export pattern required for cacheComponents mode.
 - SC5 delivered (Plan 02-04): ProductContent cached via 'use cache' + cacheLife('hours') + cacheTag('product-<slug>'). VariantStockPriceBlock stays dynamic (no use cache). generateMetadata with alternates.canonical (/products/<slug>, relative, resolves via metadataBase). Product JSON-LD in fresh block (schema.org Product + offers with InStock/OutOfStock per current stock). XSS mitigation: .replace(/</g, "\\u003c") on JSON.stringify. cacheTag hook established for Phase 5 admin updateTag() invalidation. Build: ◐ Partial Prerender. Phase 02 fully complete.
+- Plan 04-01 complete: orders + order_item tables in Neon (dev + test databases). FLAT_SHIPPING_KOBO=200000 (default) server-only constant in src/lib/orders/shipping.ts. truncateOrderTables() helper in tests/helpers/db.ts. Schema applied via direct SQL (@neondatabase/serverless fallback — TTY prompt blocked drizzle-kit push). Schema must be applied to both DATABASE_URL and TEST_DATABASE_URL separately. JavaScript sort() is lexicographic — use .sort((a,b)=>a-b) for numeric ordering in tests. 159/159 tests pass.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -111,9 +112,9 @@ Plan: 3 of 3
 
 ## Session Continuity
 
-**Last session:** 2026-06-25T19:18:33.897Z
-**Stopped at:** Phase 4 context gathered
-**Next action:** User verifies cart UX (drawer, stepper, OOS, persistence, merge); after approval execute post-checkpoint continuation or move to Phase 04
+**Last session:** 2026-06-30T07:14:37Z
+**Stopped at:** Phase 4 Plan 01 complete (order schema + shipping foundation)
+**Next action:** Execute Phase 4 Plan 02 (payment config + Stripe lib)
 
 ---
 *State initialized: 2026-06-10*
