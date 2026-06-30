@@ -29,23 +29,23 @@
 
 ### Checkout
 
-- [ ] **CHKT-01**: User can check out as guest without creating an account
-- [ ] **CHKT-02**: User enters shipping address at checkout
-- [ ] **CHKT-03**: Flat-rate shipping fee is applied to the order total
-- [ ] **CHKT-04**: User sees full order summary before confirming payment
+- [x] **CHKT-01**: User can check out as guest without creating an account *(delivered: Plan 04-03 — userId=null for guests; customerEmail from form; guestToken for order access)*
+- [x] **CHKT-02**: User enters shipping address at checkout *(delivered: Plan 04-03 — Zod AddressSchema: 36 NG states + FCT, required phone, street, city, fullName; landmark optional)*
+- [x] **CHKT-03**: Flat-rate shipping fee is applied to the order total *(delivered: Plans 04-01+04-03 — FLAT_SHIPPING_KOBO added server-side via computeOrderTotal; never trusted from client)*
+- [x] **CHKT-04**: User sees full order summary before confirming payment *(delivered: Plan 04-03 — server-recomputed subtotal+shipping+total stored on order; never from client)*
 - [ ] **CHKT-05**: User sees order confirmation page after successful payment
 
 ### Payments
 
-- [ ] **PAY-01**: User can pay via Stripe (debit/credit cards)
-- [ ] **PAY-02**: User can pay via PayPal
-- [ ] **PAY-03**: User can pay via bank transfer (NGN account details shown on order)
-- [ ] **PAY-04**: Each payment method can be toggled on/off independently via config
+- [x] **PAY-01**: User can pay via Stripe (debit/credit cards) *(delivered: Plan 04-03 — createStripePaymentIntent creates pending_payment order + PaymentIntent with kobo amount in NGN; clientSecret returned)*
+- [ ] **PAY-02**: User can pay via PayPal *(deferred: D-05a — PayPal does not support NGN; toggle exists but defaults OFF)*
+- [x] **PAY-03**: User can pay via bank transfer (NGN account details shown on order) *(delivered: Plan 04-03 — createBankTransferOrder: awaiting_bank_transfer status, MS-XXXXXX reference, bank instructions email)*
+- [x] **PAY-04**: Each payment method can be toggled on/off independently via config *(delivered: Plans 04-02+04-03 — isPaymentMethodEnabled server-only; checked as first statement in each action)*
 
 ### Orders & Notifications
 
 - [ ] **ORD-01**: Customer receives order confirmation email after successful payment
-- [ ] **ORD-02**: Customer receives bank transfer instructions email when that method is chosen
+- [x] **ORD-02**: Customer receives bank transfer instructions email when that method is chosen *(delivered: Plan 04-03 — sendBankTransferInstructionsEmail called synchronously in createBankTransferOrder)*
 - [ ] **ORD-03**: Customer receives email when fulfillment status changes (e.g. shipped, delivered)
 
 ### Admin

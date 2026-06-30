@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 02 complete
-last_updated: "2026-06-30T07:47:27Z"
+stopped_at: Phase 4 Plan 03 complete
+last_updated: "2026-06-30T08:20:41Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 17
-  completed_plans: 13
-  percent: 76
+  completed_plans: 14
+  percent: 82
 ---
 
 # Project State: Mandy Store
@@ -26,18 +26,18 @@ progress:
 ## Current Position
 
 Phase: 4 (Checkout & Payments) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 
 - **Phase:** 4 of 6 (checkout & payments)
-- **Plan:** Plan 02 complete (payment config + email primitives)
+- **Plan:** Plan 03 complete (checkout Server Actions)
 - **Status:** Executing Phase 4
-- **Progress:** [###########] 3/6 phases complete partial (13/17 plans complete)
+- **Progress:** [############] 3/6 phases complete partial (14/17 plans complete)
 
 ## Performance Metrics
 
 - Phases completed: 3 (partial — Phase 4 in progress)
-- Plans completed: 13 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19; 04-01, 04-02 — complete 2026-06-30)
-- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03) + CHKT-03 foundation (04-01) + PAY-04 toggle primitive + ORD-01/ORD-02 email senders (04-02)
+- Plans completed: 14 (01-01, 01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04 — complete 2026-06-10/11; 03-01, 03-02, 03-03 — complete 2026-06-19; 04-01, 04-02 — complete 2026-06-30; 04-03 — complete 2026-06-30)
+- Requirements delivered: 12/27 (AUTH-01/02/03; CATA-01/02/03; CATA-04; SC5; CART-01/02/03) + CHKT-01/02/03/04 (04-03) + PAY-01/03 (04-03) + PAY-04 toggle primitive + ORD-01/ORD-02 email senders (04-02)
 
 ## Accumulated Context
 
@@ -86,6 +86,7 @@ Plan: 2 of 6
 - SC5 delivered (Plan 02-04): ProductContent cached via 'use cache' + cacheLife('hours') + cacheTag('product-<slug>'). VariantStockPriceBlock stays dynamic (no use cache). generateMetadata with alternates.canonical (/products/<slug>, relative, resolves via metadataBase). Product JSON-LD in fresh block (schema.org Product + offers with InStock/OutOfStock per current stock). XSS mitigation: .replace(/</g, "\\u003c") on JSON.stringify. cacheTag hook established for Phase 5 admin updateTag() invalidation. Build: ◐ Partial Prerender. Phase 02 fully complete.
 - Plan 04-01 complete: orders + order_item tables in Neon (dev + test databases). FLAT_SHIPPING_KOBO=200000 (default) server-only constant in src/lib/orders/shipping.ts. truncateOrderTables() helper in tests/helpers/db.ts. Schema applied via direct SQL (@neondatabase/serverless fallback — TTY prompt blocked drizzle-kit push). Schema must be applied to both DATABASE_URL and TEST_DATABASE_URL separately. JavaScript sort() is lexicographic — use .sort((a,b)=>a-b) for numeric ordering in tests. 159/159 tests pass.
 - Plan 04-02 complete: isPaymentMethodEnabled (PAY-04, D-13) server-only toggle in src/lib/payments/config.ts; Stripe singleton in src/lib/payments/stripe.ts (no pinned apiVersion — stripe@22.x pins its own); generateOrderRef/generateUniqueOrderRef/generateGuestToken in src/lib/orders/reference.ts (crypto.getRandomValues only, never Math.random); getOrderByToken/getOrderByStripePaymentIntentId/getOrderStatusByToken in src/lib/orders/queries.ts. OrderConfirmationEmail + BankTransferInstructionsEmail React Email templates in src/emails/. sendOrderConfirmationEmail + sendBankTransferInstructionsEmail Resend senders in src/lib/email/; bank details read from BANK_* env (server-only, no NEXT_PUBLIC_). vi.mock Resend constructor requires regular function (not arrow) + vi.hoisted() for shared spy reference. 30 new unit tests pass (14 toggle + 16 email). PayPal NOT installed (@paypal/react-paypal-js — D-05a).
+- Plan 04-03 complete: createBankTransferOrder + createStripePaymentIntent Server Actions in src/lib/actions/checkout.ts. Server-side total recompute (getCart() + computeOrderTotal — never trust client price). isPaymentMethodEnabled first statement in each action (PAY-04, T-04-11). Bank transfer: status "awaiting_bank_transfer" hardcoded (D-11, Pitfall 8), bank instructions email sent synchronously, NO stock decrement (D-09). Stripe: pending_payment order, PaymentIntent with amount=totalKobo currency="ngn" (A1). Zod CheckoutSchema: 36 NG states + FCT enum, email, required address fields (CHKT-02). Guest: userId=null (CHKT-01); logged-in: userId+email from auth() session (D-02). db.batch for atomic insert. vi.mock at top-level + vi.mocked() override per test (vi.doMock inside test body has no effect on cached modules). 15 tests pass.
 
 ### Carried-Forward Constraints (cross-phase pitfalls)
 
@@ -113,9 +114,9 @@ Plan: 2 of 6
 
 ## Session Continuity
 
-**Last session:** 2026-06-30T07:47:27Z
-**Stopped at:** Phase 4 Plan 02 complete (payment config + email primitives)
-**Next action:** Execute Phase 4 Plan 03 (checkout Server Action)
+**Last session:** 2026-06-30T08:20:41Z
+**Stopped at:** Phase 4 Plan 03 complete (checkout Server Actions)
+**Next action:** Execute Phase 4 Plan 04 (Stripe webhook + order-status polling)
 
 ---
 *State initialized: 2026-06-10*
