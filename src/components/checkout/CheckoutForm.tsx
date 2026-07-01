@@ -115,22 +115,29 @@ export function CheckoutForm({
 
     const values = getValues()
     startTransition(async () => {
-      const result = await createBankTransferOrder({
-        email: values.email,
-        address: {
-          fullName: values.address.fullName,
-          phone: values.address.phone,
-          street: values.address.street,
-          city: values.address.city,
-          state: values.address.state as typeof NG_STATES[number],
-          landmark: values.address.landmark || undefined,
-        },
-      })
+      try {
+        const result = await createBankTransferOrder({
+          email: values.email,
+          address: {
+            fullName: values.address.fullName,
+            phone: values.address.phone,
+            street: values.address.street,
+            city: values.address.city,
+            state: values.address.state as typeof NG_STATES[number],
+            landmark: values.address.landmark || undefined,
+          },
+        })
 
-      if ("error" in result) {
-        setBankError(result.error)
-      } else {
-        router.push("/order/" + result.guestToken)
+        if ("error" in result) {
+          setBankError(result.error)
+        } else {
+          router.push("/order/" + result.guestToken)
+        }
+      } catch (err) {
+        // Unexpected throw (Server Action rejection, network) — show an inline error instead
+        // of failing silently; the transition ends so the button re-enables.
+        console.error("[checkout] bank transfer failed:", err)
+        setBankError("Something went wrong placing your order. Please try again.")
       }
     })
   }

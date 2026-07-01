@@ -166,49 +166,61 @@ export async function createBankTransferOrder(
 
   const { parsed, userId, customerEmail, totals, orderId, guestToken, reference, items } = ctx
 
-  // Insert order + items atomically via db.batch (neon-http; note: db.transaction not available)
-  await db.batch([
-    db.insert(orders).values({
-      id: orderId,
-      reference,
-      guestToken,
-      status: "awaiting_bank_transfer",  // D-11, Pitfall 8 — NOT paid
-      userId,
-      customerEmail,
-      subtotalKobo: totals.subtotalKobo,
-      shippingKobo: totals.shippingKobo,
-      totalKobo: totals.totalKobo,
-      shippingName:     parsed.address.fullName,
-      shippingPhone:    parsed.address.phone,
-      shippingStreet:   parsed.address.street,
-      shippingCity:     parsed.address.city,
-      shippingState:    parsed.address.state,
-      shippingLandmark: parsed.address.landmark ?? null,
-      createdAt: new Date(),
-    }),
-    ...(items.length > 0
-      ? [db.insert(orderItems).values(items)]
-      : []
-    ),
-  ])
+  // Insert order + items atomically via db.batch (neon-http; note: db.transaction not available).
+  // A DB failure returns a graceful { error } (never an unhandled throw) so the UI can recover.
+  try {
+    await db.batch([
+      db.insert(orders).values({
+        id: orderId,
+        reference,
+        guestToken,
+        status: "awaiting_bank_transfer",  // D-11, Pitfall 8 — NOT paid
+        userId,
+        customerEmail,
+        subtotalKobo: totals.subtotalKobo,
+        shippingKobo: totals.shippingKobo,
+        totalKobo: totals.totalKobo,
+        shippingName:     parsed.address.fullName,
+        shippingPhone:    parsed.address.phone,
+        shippingStreet:   parsed.address.street,
+        shippingCity:     parsed.address.city,
+        shippingState:    parsed.address.state,
+        shippingLandmark: parsed.address.landmark ?? null,
+        createdAt: new Date(),
+      }),
+      ...(items.length > 0
+        ? [db.insert(orderItems).values(items)]
+        : []
+      ),
+    ])
+  } catch (err) {
+    console.error("[checkout] bank-transfer order insert failed:", err)
+    return { error: "Something went wrong creating your order. Please try again." }
+  }
 
   // D-09: variant.stock is NOT modified here — atomic decrement in admin-confirm (Phase 5)
 
-  // ORD-02: send bank transfer instructions email (synchronous — propagates on failure)
-  await sendBankTransferInstructionsEmail({
-    customerEmail,
-    reference,
-    guestToken,
-    items: items.map((i) => ({
-      productName:   i.productName,
-      variantLabel:  i.variantLabel,
-      quantity:      i.quantity,
-      lineTotalKobo: i.lineTotalKobo,
-    })),
-    subtotalKobo: totals.subtotalKobo,
-    shippingKobo: totals.shippingKobo,
-    totalKobo:    totals.totalKobo,
-  })
+  // ORD-02: bank transfer instructions email is BEST-EFFORT. The /order/<token> page shows the
+  // bank details + reference regardless, so a mail provider failure must not lose the order or
+  // block the customer — log it and continue to the confirmation page.
+  try {
+    await sendBankTransferInstructionsEmail({
+      customerEmail,
+      reference,
+      guestToken,
+      items: items.map((i) => ({
+        productName:   i.productName,
+        variantLabel:  i.variantLabel,
+        quantity:      i.quantity,
+        lineTotalKobo: i.lineTotalKobo,
+      })),
+      subtotalKobo: totals.subtotalKobo,
+      shippingKobo: totals.shippingKobo,
+      totalKobo:    totals.totalKobo,
+    })
+  } catch (err) {
+    console.error("[checkout] bank-transfer email failed (order still created):", err)
+  }
 
   revalidatePath("/", "layout")
   return { guestToken }
@@ -239,48 +251,71 @@ export async function createStripePaymentIntent(
 
   const { parsed, userId, customerEmail, totals, orderId, guestToken, reference, items } = ctx
 
-  // Insert order + items atomically (pending_payment; stripePaymentIntentId updated after PI creation)
-  await db.batch([
-    db.insert(orders).values({
-      id: orderId,
-      reference,
-      guestToken,
-      status: "pending_payment",
-      userId,
-      customerEmail,
-      subtotalKobo: totals.subtotalKobo,
-      shippingKobo: totals.shippingKobo,
-      totalKobo: totals.totalKobo,
-      shippingName:     parsed.address.fullName,
-      shippingPhone:    parsed.address.phone,
-      shippingStreet:   parsed.address.street,
-      shippingCity:     parsed.address.city,
-      shippingState:    parsed.address.state,
-      shippingLandmark: parsed.address.landmark ?? null,
-      createdAt: new Date(),
-    }),
-    ...(items.length > 0
-      ? [db.insert(orderItems).values(items)]
-      : []
-    ),
-  ])
+  // Insert order + items atomically (pending_payment; stripePaymentIntentId updated after PI creation).
+  // DB failure returns a graceful { error } rather than an unhandled throw.
+  try {
+    await db.batch([
+      db.insert(orders).values({
+        id: orderId,
+        reference,
+        guestToken,
+        status: "pending_payment",
+        userId,
+        customerEmail,
+        subtotalKobo: totals.subtotalKobo,
+        shippingKobo: totals.shippingKobo,
+        totalKobo: totals.totalKobo,
+        shippingName:     parsed.address.fullName,
+        shippingPhone:    parsed.address.phone,
+        shippingStreet:   parsed.address.street,
+        shippingCity:     parsed.address.city,
+        shippingState:    parsed.address.state,
+        shippingLandmark: parsed.address.landmark ?? null,
+        createdAt: new Date(),
+      }),
+      ...(items.length > 0
+        ? [db.insert(orderItems).values(items)]
+        : []
+      ),
+    ])
+  } catch (err) {
+    console.error("[checkout] order insert failed:", err)
+    return { error: "Something went wrong creating your order. Please try again." }
+  }
 
   // D-09: variant.stock is NOT modified here — atomic decrement in webhook (Phase 4)
 
-  // Create Stripe PaymentIntent with SERVER-COMPUTED totalKobo (T-04-10)
-  // amount = kobo (NGN minor unit); currency must be "ngn" (A1 from RESEARCH.md)
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: totals.totalKobo,
-    currency: "ngn",
-    automatic_payment_methods: { enabled: true },
-    metadata: { orderId, reference },
-  })
+  // Create Stripe PaymentIntent with SERVER-COMPUTED totalKobo (T-04-10).
+  // amount = kobo (NGN minor unit); currency must be "ngn" (A1 from RESEARCH.md).
+  // A Stripe failure (e.g. invalid/expired STRIPE_SECRET_KEY, network) must NOT bubble up as an
+  // unhandled Server Action rejection — that leaves the client's Place-order button stuck disabled
+  // with no feedback. Catch it, roll back the orphaned pending order (order_items cascade via FK),
+  // and return a user-facing { error }.
+  let paymentIntent: Awaited<ReturnType<typeof stripe.paymentIntents.create>>
+  try {
+    paymentIntent = await stripe.paymentIntents.create({
+      amount: totals.totalKobo,
+      currency: "ngn",
+      automatic_payment_methods: { enabled: true },
+      metadata: { orderId, reference },
+    })
 
-  // Store the PaymentIntent ID so the webhook can look up the order
-  await db
-    .update(orders)
-    .set({ stripePaymentIntentId: paymentIntent.id })
-    .where(eq(orders.id, orderId))
+    // Store the PaymentIntent ID so the webhook can look up the order
+    await db
+      .update(orders)
+      .set({ stripePaymentIntentId: paymentIntent.id })
+      .where(eq(orders.id, orderId))
+  } catch (err) {
+    console.error("[checkout] Stripe PaymentIntent creation failed:", err)
+    // Roll back the orphaned pending_payment order so a failed start leaves no dangling row.
+    await db.delete(orders).where(eq(orders.id, orderId)).catch((cleanupErr) => {
+      console.error("[checkout] failed to roll back orphaned order:", cleanupErr)
+    })
+    return {
+      error:
+        "We couldn't start the card payment. Please try again in a moment, or choose another payment method.",
+    }
+  }
 
   revalidatePath("/", "layout")
   return { clientSecret: paymentIntent.client_secret!, guestToken }

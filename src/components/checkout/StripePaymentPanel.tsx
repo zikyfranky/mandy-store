@@ -113,18 +113,29 @@ function ConfirmButton({ guestToken, hasOOS }: ConfirmButtonProps) {
     setPaymentError(null)
     setIsSubmitting(true) // Pitfall 7: disable on first click (T-04-26)
 
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: returnUrl },
-      redirect: "if_required",
-    })
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: returnUrl },
+        redirect: "if_required",
+      })
 
-    if (error) {
-      // D-08: stay on page, show inline error, re-enable button
-      setPaymentError(mapStripeError({ code: error.code, message: error.message }))
+      if (error) {
+        // D-08: stay on page, show inline error, re-enable button
+        setPaymentError(mapStripeError({ code: error.code, message: error.message }))
+        setIsSubmitting(false)
+      }
+      // On success: Stripe redirects to /order/{guestToken} (button stays disabled during redirect)
+    } catch (err) {
+      // confirmPayment can throw (e.g. Stripe.js failed to load with a bad publishable key,
+      // network loss). Surface a message and re-enable so the customer isn't stuck.
+      console.error("[checkout] confirmPayment threw:", err)
+      setPaymentError({
+        title: "Payment could not be processed",
+        body: "Please try again or use a different payment method.",
+      })
       setIsSubmitting(false)
     }
-    // On success: Stripe redirects to /order/{guestToken}
   }
 
   return (
@@ -236,30 +247,41 @@ export function StripePaymentPanel({
 
     setIsCreatingIntent(true) // Pitfall 7: disable on first click (T-04-26)
 
-    const values = getValues()
-    const result = await createStripePaymentIntent({
-      email: values.email,
-      address: {
-        fullName: values.address.fullName,
-        phone: values.address.phone,
-        street: values.address.street,
-        city: values.address.city,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        state: values.address.state as any,
-        landmark: values.address.landmark || undefined,
-      },
-    })
+    try {
+      const values = getValues()
+      const result = await createStripePaymentIntent({
+        email: values.email,
+        address: {
+          fullName: values.address.fullName,
+          phone: values.address.phone,
+          street: values.address.street,
+          city: values.address.city,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          state: values.address.state as any,
+          landmark: values.address.landmark || undefined,
+        },
+      })
 
-    if ("error" in result) {
-      setIntentError(result.error)
-      setIsCreatingIntent(false) // re-enable on error (D-08)
-      return
+      if ("error" in result) {
+        setIntentError(result.error)
+        return
+      }
+
+      // Mount the Elements panel with the returned clientSecret
+      setClientSecret(result.clientSecret)
+      setGuestToken(result.guestToken)
+    } catch (err) {
+      // Any unexpected throw (network drop, Server Action rejection) must surface an inline error
+      // and re-enable the button — never leave it stuck in "Processing…" (D-08).
+      console.error("[checkout] place order failed:", err)
+      setIntentError(
+        "Something went wrong starting your payment. Please check your connection and try again."
+      )
+    } finally {
+      // finally guarantees the button re-enables on every path except the success redirect
+      // (on success the Elements panel replaces this button anyway).
+      setIsCreatingIntent(false)
     }
-
-    // Mount the Elements panel with the returned clientSecret
-    setClientSecret(result.clientSecret)
-    setGuestToken(result.guestToken)
-    setIsCreatingIntent(false)
   }, [getValues, trigger])
 
   // Loading skeleton while Stripe.js loads (§4b)
