@@ -53,6 +53,9 @@ export function CartDrawer() {
           onDeactivate: close,
           returnFocusOnDeactivate: true,
           escapeDeactivates: true,
+          // Allow clicks outside the panel to deactivate the trap (fires onDeactivate→close).
+          // Without this, focus-trap swallows the overlay onClick and the drawer never closes.
+          clickOutsideDeactivates: true,
           // Avoid errors when the panel has no tabbable children (empty state)
           fallbackFocus: "[data-cart-close]",
         }}
@@ -132,7 +135,7 @@ export function CartDrawer() {
                 Shipping calculated at checkout
               </p>
 
-              {/* Checkout CTA — Phase 4 stub; routes to /cart; disabled when OOS (D-11) */}
+              {/* Checkout CTA — disabled when OOS (D-11); closes drawer on click so it doesn't persist across navigation */}
               {cart.hasOOS ? (
                 <button
                   type="button"
@@ -145,16 +148,18 @@ export function CartDrawer() {
                 </button>
               ) : (
                 <Link
-                  href="/cart"
+                  href="/checkout"
+                  onClick={close}
                   className="w-full rounded-xl bg-brand hover:bg-brand-strong text-white px-6 py-4 text-base font-semibold transition-colors block text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                 >
                   Checkout
                 </Link>
               )}
 
-              {/* View full cart link */}
+              {/* View full cart link — closes drawer so it doesn't persist across navigation */}
               <Link
                 href="/cart"
+                onClick={close}
                 className="w-full text-center block text-sm font-semibold text-brand hover:text-brand-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               >
                 View full cart
