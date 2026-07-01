@@ -42,6 +42,19 @@
 - [x] **PAY-03**: User can pay via bank transfer (NGN account details shown on order) *(delivered: Plan 04-03 — createBankTransferOrder: awaiting_bank_transfer status, MS-XXXXXX reference, bank instructions email)*
 - [x] **PAY-04**: Each payment method can be toggled on/off independently via config *(delivered: Plans 04-02+04-03 — isPaymentMethodEnabled server-only; checked as first statement in each action)*
 
+### Nigerian Payment Gateways (Phase 7)
+
+NGN-native gateways added as additional server-toggleable payment methods reusing the Phase 4 order/webhook/idempotency/atomic-decrement infrastructure. Priority: Paystack + Flutterwave first (aggregators covering cards/bank/USSD/Opay/Palmpay channels); the rest fast-follow as direct integrations.
+
+- [ ] **PAY-05**: User can pay via Paystack (NGN)
+- [ ] **PAY-06**: User can pay via Flutterwave (NGN)
+- [ ] **PAY-07**: User can pay via Opay
+- [ ] **PAY-08**: User can pay via Palmpay
+- [ ] **PAY-09**: User can pay via Interswitch
+- [ ] **PAY-10**: User can pay via GTPay
+- [ ] **PAY-11**: User can pay via Remita
+- [ ] **PAY-12**: Each NG gateway is independently toggleable via server-only config and rejected at the action/route level when disabled (extends PAY-04)
+
 ### Orders & Notifications
 
 - [x] **ORD-01**: Customer receives order confirmation email after successful payment *(delivered: Plan 04-04 — sendOrderConfirmationEmail called non-blocking in webhook on payment_confirmed)*
@@ -115,12 +128,21 @@
 | ADMN-02 | Phase 5 | Pending |
 | ADMN-03 | Phase 5 | Pending |
 | ADMN-04 | Phase 5 | Pending |
+| PAY-05 | Phase 7 | Pending |
+| PAY-06 | Phase 7 | Pending |
+| PAY-07 | Phase 7 | Pending |
+| PAY-08 | Phase 7 | Pending |
+| PAY-09 | Phase 7 | Pending |
+| PAY-10 | Phase 7 | Pending |
+| PAY-11 | Phase 7 | Pending |
+| PAY-12 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
-- Mapped to phases: 27
+- Phase 7 (Nigerian Payment Gateways) requirements: 8 (PAY-05..PAY-12)
+- Mapped to phases: 35
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-06*
-*Last updated: 2026-06-06 after initial definition*
+*Last updated: 2026-07-01 — added Phase 7 (Nigerian Payment Gateways): PAY-05..PAY-12*

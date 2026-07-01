@@ -41,6 +41,10 @@ Plan: 6 of 6
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- 2026-07-01 — Phase 7 added: **Nigerian Payment Gateways** (PAY-05..PAY-12). NGN-native gateways as additional server-toggleable payment methods reusing the Phase 4 order/webhook/idempotency/atomic-decrement infrastructure. Scope: Paystack + Flutterwave first (aggregators covering cards/bank/USSD/Opay/Palmpay channels), then Opay, Palmpay, Interswitch, GTPay, Remita as direct integrations. Depends on Phase 4. Stripe + bank transfer stay; PayPal stays deferred (no NGN).
+
 ### Decisions
 
 - Phase order follows the deterministic dependency chain: Foundation → Catalog → Cart → Checkout+Payments → Admin → Accounts.

@@ -13,6 +13,7 @@
 - [x] **Phase 4: Checkout & Payments** - End-to-end purchase via Stripe or bank transfer with order confirmation (completed 2026-06-30)
 - [ ] **Phase 5: Admin Panel** - Store owner manages products, variants, stock, and order fulfillment
 - [ ] **Phase 6: Customer Accounts** - Repeat buyers can view their order history
+- [ ] **Phase 7: Nigerian Payment Gateways** - NGN-native gateways (Paystack/Flutterwave first; Opay, Palmpay, Interswitch, GTPay, Remita fast-follow)
 
 ## Phase Details
 
@@ -134,6 +135,19 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
+### Phase 7: Nigerian Payment Gateways
+**Goal**: Customers can pay with NGN-native gateways at checkout — added as additional, independently server-toggleable payment methods that reuse the Phase 4 order + webhook + idempotency + atomic-decrement infrastructure. Stripe and bank transfer remain intact; PayPal stays deferred (no NGN). Delivered in priority waves: **Paystack** and **Flutterwave** first (aggregators covering cards, bank transfer, USSD, and Opay/Palmpay as channels — ~90% of NGN payments), then **Opay**, **Palmpay**, **Interswitch**, **GTPay**, and **Remita** as direct integrations.
+**Depends on**: Phase 4 (Checkout & Payments — order schema, webhook/idempotency pattern, server-side total recompute, PAY-04 toggle pattern)
+**Requirements**: PAY-05, PAY-06, PAY-07, PAY-08, PAY-09, PAY-10, PAY-11, PAY-12
+**Success Criteria** (what must be TRUE):
+  1. A customer can pay with Paystack and, on success, lands on the order confirmation page and receives a confirmation email (same flow as Stripe)
+  2. A customer can pay with Flutterwave with the same confirmation + email flow
+  3. Each additional gateway (Opay, Palmpay, Interswitch, GTPay, Remita) is integrated so a customer can complete an NGN payment through it
+  4. Every gateway is independently enable/disable-able via server-only config and a disabled gateway is rejected at the Server Action / Route Handler level, not just hidden in the UI (extends PAY-04)
+  5. For every gateway the amount is recomputed server-side (never trusted from the client), each webhook is signature-verified and is the sole authority for marking an order paid, duplicate webhook deliveries are idempotent (processed_webhook_events), and stock is atomically decremented on confirmation — no overselling or duplicate orders
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -144,6 +158,7 @@ Plans:
 | 4. Checkout & Payments | 6/6 | Complete | 2026-06-30 |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
+| 7. Nigerian Payment Gateways | 0/0 | Not started | - |
 
 ---
 *Roadmap created: 2026-06-10*
