@@ -80,9 +80,10 @@ export function CheckoutForm({
   const [bankError, setBankError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  // Default to first enabled method (Stripe or bank transfer)
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
-    enabledMethods[0] ?? "stripe"
+  // Default to first server-enabled method. Never fall back to a hardcoded method —
+  // that would show a payment panel the server-side gate will reject (UI/server mismatch).
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
+    enabledMethods[0] ?? null
   )
 
   const {
@@ -397,108 +398,126 @@ export function CheckoutForm({
           Payment
         </h2>
 
-        {/* Method selector */}
-        <PaymentMethodSelector
-          enabledMethods={enabledMethods}
-          selected={selectedMethod}
-          onChange={setSelectedMethod}
-        />
-
-        {/* Bank transfer error banner (D-08 — stays on page) */}
-        {bankError && (
+        {enabledMethods.length === 0 ? (
+          /* No-methods-available state — shown when the store owner has not yet enabled
+             any payment method via env vars. Prevents rendering a panel the server will reject. */
           <div
             role="alert"
-            aria-live="assertive"
-            className="mt-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 p-4 flex gap-3 items-start"
+            className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 p-4 text-sm text-amber-800 dark:text-amber-300"
           >
-            {/* Heroicons ExclamationCircleIcon 20px */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-5 h-5 text-stock-out shrink-0"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <div>
-              <p className="text-sm font-semibold text-stock-out">Order could not be placed</p>
-              <p className="text-sm text-red-700 dark:text-red-300 mt-1">{bankError}</p>
-            </div>
+            <p className="font-semibold">Payment unavailable</p>
+            <p className="mt-1">
+              No payment methods are currently enabled. Please contact the store to complete your order.
+            </p>
           </div>
-        )}
-
-        {/* Payment panels */}
-        {selectedMethod === "stripe" ? (
-          <StripePaymentPanel
-            publishableKey={publishableKey}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            getValues={getValues as UseFormGetValues<any>}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            trigger={trigger as UseFormTrigger<any>}
-            hasOOS={hasOOS}
-          />
-        ) : selectedMethod === "bank_transfer" ? (
+        ) : (
           <>
-            <BankTransferPanel />
+            {/* Method selector — rendered only when at least one method is enabled */}
+            {selectedMethod !== null && (
+              <PaymentMethodSelector
+                enabledMethods={enabledMethods}
+                selected={selectedMethod}
+                onChange={setSelectedMethod}
+              />
+            )}
 
-            {/* Place order button for bank transfer */}
-            <button
-              type="button"
-              onClick={handleBankTransferSubmit}
-              disabled={isPending || hasOOS}
-              aria-disabled={isPending || hasOOS}
-              aria-label={
-                hasOOS
-                  ? "Remove out-of-stock items from your cart before placing an order"
-                  : undefined
-              }
-              className="w-full mt-4 rounded-xl bg-brand hover:bg-brand-strong text-white px-6 py-4 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isPending ? (
-                <>
-                  {/* Heroicons ArrowPathIcon 20px animate-spin */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-5 h-5 animate-spin"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Processing…
-                </>
-              ) : (
-                <>
-                  {/* Heroicons LockClosedIcon 16px */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-4 h-4"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Place order
-                </>
-              )}
-            </button>
+            {/* Bank transfer error banner (D-08 — stays on page) */}
+            {bankError && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="mt-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 p-4 flex gap-3 items-start"
+              >
+                {/* Heroicons ExclamationCircleIcon 20px */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-5 h-5 text-stock-out shrink-0"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-semibold text-stock-out">Order could not be placed</p>
+                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">{bankError}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Payment panels — only rendered when a method is actually selected/enabled */}
+            {selectedMethod === "stripe" ? (
+              <StripePaymentPanel
+                publishableKey={publishableKey}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                getValues={getValues as UseFormGetValues<any>}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                trigger={trigger as UseFormTrigger<any>}
+                hasOOS={hasOOS}
+              />
+            ) : selectedMethod === "bank_transfer" ? (
+              <>
+                <BankTransferPanel />
+
+                {/* Place order button for bank transfer */}
+                <button
+                  type="button"
+                  onClick={handleBankTransferSubmit}
+                  disabled={isPending || hasOOS}
+                  aria-disabled={isPending || hasOOS}
+                  aria-label={
+                    hasOOS
+                      ? "Remove out-of-stock items from your cart before placing an order"
+                      : undefined
+                  }
+                  className="w-full mt-4 rounded-xl bg-brand hover:bg-brand-strong text-white px-6 py-4 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isPending ? (
+                    <>
+                      {/* Heroicons ArrowPathIcon 20px animate-spin */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-5 h-5 animate-spin"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Processing…
+                    </>
+                  ) : (
+                    <>
+                      {/* Heroicons LockClosedIcon 16px */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Place order
+                    </>
+                  )}
+                </button>
+              </>
+            ) : null}
           </>
-        ) : null}
+        )}
       </section>
     </div>
   )
