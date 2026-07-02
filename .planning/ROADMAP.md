@@ -13,7 +13,8 @@
 - [x] **Phase 4: Checkout & Payments** - End-to-end purchase via Stripe or bank transfer with order confirmation (completed 2026-06-30)
 - [ ] **Phase 5: Admin Panel** - Store owner manages products, variants, stock, and order fulfillment
 - [ ] **Phase 6: Customer Accounts** - Repeat buyers can view their order history
-- [ ] **Phase 7: Nigerian Payment Gateways** - NGN-native gateways (Paystack/Flutterwave first; Opay, Palmpay, Interswitch, GTPay, Remita fast-follow)
+- [ ] **Phase 7: Nigerian Payment Gateways** - Paystack + Flutterwave (the two NGN aggregators) behind a reusable gateway-adapter interface
+- [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface
 
 ## Phase Details
 
@@ -135,16 +136,27 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 7: Nigerian Payment Gateways
-**Goal**: Customers can pay with NGN-native gateways at checkout — added as additional, independently server-toggleable payment methods that reuse the Phase 4 order + webhook + idempotency + atomic-decrement infrastructure. Stripe and bank transfer remain intact; PayPal stays deferred (no NGN). Delivered in priority waves: **Paystack** and **Flutterwave** first (aggregators covering cards, bank transfer, USSD, and Opay/Palmpay as channels — ~90% of NGN payments), then **Opay**, **Palmpay**, **Interswitch**, **GTPay**, and **Remita** as direct integrations.
+### Phase 7: Nigerian Payment Gateways (Paystack + Flutterwave)
+**Goal**: Customers can pay with the two NGN-native aggregators — **Paystack** and **Flutterwave** — at checkout, added as additional, independently server-toggleable payment methods that reuse the Phase 4 order + webhook + idempotency + atomic-decrement infrastructure. Built behind a **reusable gateway-adapter interface** (init → verify → webhook-handle → refund) so the fast-follow gateways slot in as new adapters (Phase 7.1). Stripe and bank transfer remain intact; PayPal stays deferred (no NGN). The aggregators cover cards, bank transfer, USSD, and Opay/Palmpay as channels — ~90% of NGN payments.
 **Depends on**: Phase 4 (Checkout & Payments — order schema, webhook/idempotency pattern, server-side total recompute, PAY-04 toggle pattern)
-**Requirements**: PAY-05, PAY-06, PAY-07, PAY-08, PAY-09, PAY-10, PAY-11, PAY-12
+**Requirements**: PAY-05, PAY-06, PAY-12
 **Success Criteria** (what must be TRUE):
   1. A customer can pay with Paystack and, on success, lands on the order confirmation page and receives a confirmation email (same flow as Stripe)
   2. A customer can pay with Flutterwave with the same confirmation + email flow
-  3. Each additional gateway (Opay, Palmpay, Interswitch, GTPay, Remita) is integrated so a customer can complete an NGN payment through it
+  3. Both gateways are built against a shared adapter interface so a new gateway is a new adapter + toggle (not net-new plumbing)
   4. Every gateway is independently enable/disable-able via server-only config and a disabled gateway is rejected at the Server Action / Route Handler level, not just hidden in the UI (extends PAY-04)
-  5. For every gateway the amount is recomputed server-side (never trusted from the client), each webhook is signature-verified and is the sole authority for marking an order paid, duplicate webhook deliveries are idempotent (processed_webhook_events), and stock is atomically decremented on confirmation — no overselling or duplicate orders
+  5. For every gateway the amount is recomputed server-side (never trusted from the client), each webhook is signature-verified, duplicate webhook deliveries are idempotent (processed_webhook_events), and stock is atomically decremented on confirmation — no overselling or duplicate orders. A server-side verify-on-callback and the webhook share one idempotent confirmation path; the webhook remains the ultimate authority.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 7.1: Additional NG Gateways (fast-follow)
+**Goal**: Add the direct-integration NGN gateways — **Opay**, **Palmpay**, **Interswitch**, **GTPay**, **Remita** — as new adapters against the Phase 7 gateway-adapter interface, each independently server-toggleable. Note: Opay/Palmpay already ride the Paystack/Flutterwave popups as channels, so their standalone value should be re-evaluated before building.
+**Depends on**: Phase 7 (gateway-adapter interface, shared idempotent confirmation path, checkout method-selector extension)
+**Requirements**: PAY-07, PAY-08, PAY-09, PAY-10, PAY-11
+**Success Criteria** (what must be TRUE):
+  1. Each additional gateway (Opay, Palmpay, Interswitch, GTPay, Remita) is integrated as a new adapter so a customer can complete an NGN payment through it
+  2. Each gateway is independently enable/disable-able via server-only config and rejected at the action/route level when disabled (extends PAY-04/PAY-12)
+  3. Each reuses the Phase 7 shared idempotent confirmation path (server-side amount recompute, signature-verified webhook, atomic stock decrement) — no overselling or duplicate orders
 **Plans**: TBD
 **UI hint**: yes
 
@@ -158,7 +170,8 @@ Plans:
 | 4. Checkout & Payments | 6/6 | Complete | 2026-06-30 |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
-| 7. Nigerian Payment Gateways | 0/0 | Not started | - |
+| 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 0/0 | Not started | - |
+| 7.1. Additional NG Gateways (fast-follow) | 0/0 | Not started | - |
 
 ---
 *Roadmap created: 2026-06-10*

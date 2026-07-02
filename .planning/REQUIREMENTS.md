@@ -42,18 +42,23 @@
 - [x] **PAY-03**: User can pay via bank transfer (NGN account details shown on order) *(delivered: Plan 04-03 — createBankTransferOrder: awaiting_bank_transfer status, MS-XXXXXX reference, bank instructions email)*
 - [x] **PAY-04**: Each payment method can be toggled on/off independently via config *(delivered: Plans 04-02+04-03 — isPaymentMethodEnabled server-only; checked as first statement in each action)*
 
-### Nigerian Payment Gateways (Phase 7)
+### Nigerian Payment Gateways (Phase 7 — Paystack + Flutterwave)
 
-NGN-native gateways added as additional server-toggleable payment methods reusing the Phase 4 order/webhook/idempotency/atomic-decrement infrastructure. Priority: Paystack + Flutterwave first (aggregators covering cards/bank/USSD/Opay/Palmpay channels); the rest fast-follow as direct integrations.
+NGN-native gateways added as additional server-toggleable payment methods reusing the Phase 4 order/webhook/idempotency/atomic-decrement infrastructure. Phase 7 delivers the two aggregators (Paystack + Flutterwave — cards/bank/USSD/Opay/Palmpay channels) behind a reusable gateway-adapter interface. The direct integrations fast-follow in Phase 7.1.
 
 - [ ] **PAY-05**: User can pay via Paystack (NGN)
 - [ ] **PAY-06**: User can pay via Flutterwave (NGN)
+- [ ] **PAY-12**: Each NG gateway is independently toggleable via server-only config and rejected at the action/route level when disabled (extends PAY-04)
+
+### Additional NG Gateways (Phase 7.1 — fast-follow)
+
+Direct-integration gateways added as new adapters against the Phase 7 gateway interface. Note: several of these (Opay, Palmpay) already ride the Paystack/Flutterwave popups as channels — re-evaluate standalone value before building.
+
 - [ ] **PAY-07**: User can pay via Opay
 - [ ] **PAY-08**: User can pay via Palmpay
 - [ ] **PAY-09**: User can pay via Interswitch
 - [ ] **PAY-10**: User can pay via GTPay
 - [ ] **PAY-11**: User can pay via Remita
-- [ ] **PAY-12**: Each NG gateway is independently toggleable via server-only config and rejected at the action/route level when disabled (extends PAY-04)
 
 ### Orders & Notifications
 
@@ -130,19 +135,20 @@ NGN-native gateways added as additional server-toggleable payment methods reusin
 | ADMN-04 | Phase 5 | Pending |
 | PAY-05 | Phase 7 | Pending |
 | PAY-06 | Phase 7 | Pending |
-| PAY-07 | Phase 7 | Pending |
-| PAY-08 | Phase 7 | Pending |
-| PAY-09 | Phase 7 | Pending |
-| PAY-10 | Phase 7 | Pending |
-| PAY-11 | Phase 7 | Pending |
 | PAY-12 | Phase 7 | Pending |
+| PAY-07 | Phase 7.1 | Pending |
+| PAY-08 | Phase 7.1 | Pending |
+| PAY-09 | Phase 7.1 | Pending |
+| PAY-10 | Phase 7.1 | Pending |
+| PAY-11 | Phase 7.1 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
-- Phase 7 (Nigerian Payment Gateways) requirements: 8 (PAY-05..PAY-12)
+- Phase 7 (Paystack + Flutterwave) requirements: 3 (PAY-05, PAY-06, PAY-12)
+- Phase 7.1 (Additional NG Gateways, fast-follow) requirements: 5 (PAY-07..PAY-11)
 - Mapped to phases: 35
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-06*
-*Last updated: 2026-07-01 — added Phase 7 (Nigerian Payment Gateways): PAY-05..PAY-12*
+*Last updated: 2026-07-02 — split Phase 7: Paystack+Flutterwave (PAY-05/06/12) stay in Phase 7; PAY-07..PAY-11 move to fast-follow Phase 7.1 (per Phase 7 CONTEXT D-01)*
