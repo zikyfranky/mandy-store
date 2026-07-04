@@ -86,7 +86,7 @@ type OrderContext = {
  * CLAUDE.md: totals are ALWAYS derived from getCart() (server-side DB read + price join),
  * never from any client-supplied value. PaymentIntent amount is set from here.
  */
-async function buildOrderContext(input: unknown): Promise<{ error: string } | OrderContext> {
+export async function buildOrderContext(input: unknown): Promise<{ error: string } | OrderContext> {
   // 1. Validate address + email (Zod; rejects bad states, invalid emails, missing required fields)
   const parsed = CheckoutSchema.safeParse(input)
   if (!parsed.success) {
