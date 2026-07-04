@@ -112,9 +112,61 @@ describe("isPaymentMethodEnabled — bank_transfer", () => {
   })
 })
 
+describe("isPaymentMethodEnabled — paystack", () => {
+  it("returns true when ENABLE_PAYSTACK=true and PAYSTACK_SECRET_KEY is set", () => {
+    vi.stubEnv("ENABLE_PAYSTACK", "true")
+    vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_test_paystack_abc123")
+    expect(isPaymentMethodEnabled("paystack")).toBe(true)
+  })
+
+  it("returns false when ENABLE_PAYSTACK=false (key present)", () => {
+    vi.stubEnv("ENABLE_PAYSTACK", "false")
+    vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_test_paystack_abc123")
+    expect(isPaymentMethodEnabled("paystack")).toBe(false)
+  })
+
+  it("returns false when ENABLE_PAYSTACK=true but PAYSTACK_SECRET_KEY is missing", () => {
+    vi.stubEnv("ENABLE_PAYSTACK", "true")
+    delete process.env.PAYSTACK_SECRET_KEY
+    expect(isPaymentMethodEnabled("paystack")).toBe(false)
+  })
+
+  it("returns false when neither env var is set", () => {
+    delete process.env.ENABLE_PAYSTACK
+    delete process.env.PAYSTACK_SECRET_KEY
+    expect(isPaymentMethodEnabled("paystack")).toBe(false)
+  })
+})
+
+describe("isPaymentMethodEnabled — flutterwave", () => {
+  it("returns true when ENABLE_FLUTTERWAVE=true and FLUTTERWAVE_SECRET_KEY is set", () => {
+    vi.stubEnv("ENABLE_FLUTTERWAVE", "true")
+    vi.stubEnv("FLUTTERWAVE_SECRET_KEY", "FLWSECK_TEST-abc123")
+    expect(isPaymentMethodEnabled("flutterwave")).toBe(true)
+  })
+
+  it("returns false when ENABLE_FLUTTERWAVE=false (key present)", () => {
+    vi.stubEnv("ENABLE_FLUTTERWAVE", "false")
+    vi.stubEnv("FLUTTERWAVE_SECRET_KEY", "FLWSECK_TEST-abc123")
+    expect(isPaymentMethodEnabled("flutterwave")).toBe(false)
+  })
+
+  it("returns false when ENABLE_FLUTTERWAVE=true but FLUTTERWAVE_SECRET_KEY is missing", () => {
+    vi.stubEnv("ENABLE_FLUTTERWAVE", "true")
+    delete process.env.FLUTTERWAVE_SECRET_KEY
+    expect(isPaymentMethodEnabled("flutterwave")).toBe(false)
+  })
+
+  it("returns false when neither env var is set", () => {
+    delete process.env.ENABLE_FLUTTERWAVE
+    delete process.env.FLUTTERWAVE_SECRET_KEY
+    expect(isPaymentMethodEnabled("flutterwave")).toBe(false)
+  })
+})
+
 describe("enabledPaymentMethods", () => {
   it("returns only enabled methods", () => {
-    // Enable stripe + bank_transfer, keep paypal OFF
+    // Enable stripe + bank_transfer, keep paypal/paystack/flutterwave OFF
     vi.stubEnv("ENABLE_STRIPE", "true")
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_xxx")
     vi.stubEnv("ENABLE_BANK_TRANSFER", "true")
@@ -122,17 +174,39 @@ describe("enabledPaymentMethods", () => {
     vi.stubEnv("BANK_ACCOUNT_NUMBER", "0123456789")
     vi.stubEnv("BANK_ACCOUNT_NAME", "Mandy Store Ltd")
     delete process.env.ENABLE_PAYPAL
+    delete process.env.ENABLE_PAYSTACK
+    delete process.env.ENABLE_FLUTTERWAVE
 
     const methods = enabledPaymentMethods()
     expect(methods).toContain("stripe")
     expect(methods).toContain("bank_transfer")
     expect(methods).not.toContain("paypal")
+    expect(methods).not.toContain("paystack")
+    expect(methods).not.toContain("flutterwave")
+  })
+
+  it("returns paystack and flutterwave when both are enabled", () => {
+    vi.stubEnv("ENABLE_PAYSTACK", "true")
+    vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_test_paystack_xxx")
+    vi.stubEnv("ENABLE_FLUTTERWAVE", "true")
+    vi.stubEnv("FLUTTERWAVE_SECRET_KEY", "FLWSECK_TEST-xxx")
+    delete process.env.ENABLE_STRIPE
+    delete process.env.ENABLE_BANK_TRANSFER
+    delete process.env.ENABLE_PAYPAL
+
+    const methods = enabledPaymentMethods()
+    expect(methods).toContain("paystack")
+    expect(methods).toContain("flutterwave")
+    expect(methods).not.toContain("stripe")
+    expect(methods).not.toContain("bank_transfer")
   })
 
   it("returns empty array when nothing is enabled", () => {
     delete process.env.ENABLE_STRIPE
     delete process.env.ENABLE_BANK_TRANSFER
     delete process.env.ENABLE_PAYPAL
+    delete process.env.ENABLE_PAYSTACK
+    delete process.env.ENABLE_FLUTTERWAVE
     expect(enabledPaymentMethods()).toEqual([])
   })
 })
