@@ -151,59 +151,169 @@ describe("PaystackAdapter — status normalization and amount passthrough", () =
   })
 })
 
-// ─── Flutterwave Amount Conversion ───────────────────────────────────────────
-// Pitfall 1 (RESEARCH): amountKobo / 100 = naira for Flutterwave popup.
-// The adapter's initPayment must divide by 100 before sending to Flutterwave.
-// The adapter's verifyTransaction must multiply amountNaira × 100 to get kobo.
-// These values are used in Plan 03 tests (flutterwave.ts adapter).
+// ─── Flutterwave Adapter Tests (Plan 03) ─────────────────────────────────────
 
-describe("Flutterwave amount unit conversion", () => {
-  it.todo(
-    "[Plan 03] flutterwaveBuildParams({amountKobo: 150000}) → amount === 1500 (÷100 = naira). " +
-    "Expected: params.amount === 1500, NOT 150000. " +
-    "Anti-pattern: passing kobo directly charges 100× (₦1500 order → ₦150,000 charge)."
-  )
+describe("FlutterwaveAdapter — amount unit conversion (Pitfall 1/8)", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn())
+    process.env.FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST-testkey"
+    process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK_TEST-pubkey"
+  })
 
-  it.todo(
-    "[Plan 03] flutterwaveVerify returns amountNaira; FlutterwaveAdapter.verifyTransaction multiplies × 100 → amountKobo. " +
-    "Given stub response: { data: { status: 'successful', amount: 1500, currency: 'NGN', tx_ref: 'ref-1' } }, " +
-    "FlutterwaveAdapter.verifyTransaction('ref-1') resolves to { status: 'confirmed', amountKobo: 150000, currency: 'NGN', reference: 'ref-1' }."
-  )
+  it("flutterwaveBuildParams({amountKobo: 150000}) → amount === 1500 (÷100 = naira, NOT kobo)", async () => {
+    const { flutterwaveBuildParams } = await import("@/lib/payments/gateways/flutterwave")
+    const params = flutterwaveBuildParams({
+      email: "test@example.com",
+      amountKobo: 150_000,  // ₦1,500 = 150,000 kobo
+      txRef: "order-ref-abc",
+      orderId: "ord-uuid-1",
+      customerName: "Ada Okafor",
+    })
+    // Must be naira (÷100), NOT kobo — anti-pattern would charge ₦150,000 instead of ₦1,500
+    expect(params.amount).toBe(1500)
+    expect(params.tx_ref).toBe("order-ref-abc")
+    expect(params.currency).toBe("NGN")
+    expect(params.meta).toEqual({ orderId: "ord-uuid-1" })
+  })
 
-  it.todo(
-    "[Plan 03] Large amount guard: if amountKobo / 100 > 1_000_000 (₦1M), initPayment throws an error. " +
-    "This catches accidental kobo→naira double-pass."
-  )
+  it("flutterwaveBuildParams: throws if amountNaira > 1_000_000 (unit sanity guard — Pitfall 1)", async () => {
+    const { flutterwaveBuildParams } = await import("@/lib/payments/gateways/flutterwave")
+    // amountKobo = 101_000_000_000 → amountNaira = 1_010_000_000 > ₦1M → guard fires
+    expect(() => flutterwaveBuildParams({
+      email: "test@example.com",
+      amountKobo: 101_000_000_000,
+      txRef: "ref-guard",
+      orderId: "ord-1",
+      customerName: "Test",
+    })).toThrow(/FLW amount > ₦1M/)
+  })
+
+  it("flutterwaveVerify: returns amountKobo = naira × 100 (Pitfall 8 normalization)", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: {
+          status: "successful",
+          amount: 1500,  // FLW returns NAIRA — must be converted to 150000 kobo
+          currency: "NGN",
+          tx_ref: "ref-1",
+        },
+      }),
+    } as Response)
+
+    const { flutterwaveVerify } = await import("@/lib/payments/gateways/flutterwave")
+    const result = await flutterwaveVerify("txn-123")
+
+    expect(result.amountKobo).toBe(150_000)  // 1500 naira × 100 = 150000 kobo
+    expect(result.currency).toBe("NGN")
+    expect(result.reference).toBe("ref-1")
+  })
+
+  it("flutterwaveAdapter.verifyTransaction: amountKobo === 70000 for amountNaira === 700", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: { status: "successful", amount: 700, currency: "NGN", tx_ref: "ref-4" },
+      }),
+    } as Response)
+
+    const { flutterwaveAdapter } = await import("@/lib/payments/gateways/flutterwave")
+    const result = await flutterwaveAdapter.verifyTransaction("txn-700")
+    // 700 naira × 100 = 70000 kobo — VerifyResult must always be in kobo (D-02, Pitfall 8)
+    expect(result.amountKobo).toBe(70_000)
+  })
 })
 
 // ─── Status String Normalization (Flutterwave — Plan 03) ─────────────────────
 // Pitfall 7 (RESEARCH): Paystack uses "success", Flutterwave uses "successful".
 // Each adapter maps to the unified NormalizedStatus type.
 
-describe("Status string normalization (Flutterwave — Plan 03)", () => {
-  it.todo(
-    "[Plan 03] FlutterwaveAdapter.verifyTransaction: status 'successful' → NormalizedStatus 'confirmed'. " +
-    "Stub response: { data: { status: 'successful', amount: 1500, currency: 'NGN', tx_ref: 'ref-1' } } → { status: 'confirmed', ... }."
-  )
+describe("FlutterwaveAdapter — status string normalization (Pitfall 7)", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn())
+    process.env.FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST-testkey"
+  })
 
-  it.todo(
-    "[Plan 03] FlutterwaveAdapter.verifyTransaction: status 'failed' → NormalizedStatus 'failed'. " +
-    "Stub response: { data: { status: 'failed', amount: 0, currency: 'NGN', tx_ref: 'ref-1' } } → { status: 'failed', ... }."
-  )
+  it("status 'successful' → NormalizedStatus 'confirmed' (Flutterwave string, NOT 'success')", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: { status: "successful", amount: 1500, currency: "NGN", tx_ref: "ref-1" },
+      }),
+    } as Response)
 
-  it.todo(
-    "[Plan 03] FlutterwaveAdapter.verifyTransaction: status 'pending' → NormalizedStatus 'pending'. " +
-    "Stub response: { data: { status: 'pending', amount: 0, currency: 'NGN', tx_ref: 'ref-1' } } → { status: 'pending', ... }."
-  )
+    const { flutterwaveAdapter } = await import("@/lib/payments/gateways/flutterwave")
+    const result = await flutterwaveAdapter.verifyTransaction("txn-1")
+    expect(result.status).toBe("confirmed")
+    expect(result.amountKobo).toBe(150_000)
+  })
+
+  it("status 'failed' → NormalizedStatus 'failed'", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: { status: "failed", amount: 0, currency: "NGN", tx_ref: "ref-2" },
+      }),
+    } as Response)
+
+    const { flutterwaveAdapter } = await import("@/lib/payments/gateways/flutterwave")
+    const result = await flutterwaveAdapter.verifyTransaction("txn-2")
+    expect(result.status).toBe("failed")
+  })
+
+  it("status 'pending' → NormalizedStatus 'pending'", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: { status: "pending", amount: 0, currency: "NGN", tx_ref: "ref-3" },
+      }),
+    } as Response)
+
+    const { flutterwaveAdapter } = await import("@/lib/payments/gateways/flutterwave")
+    const result = await flutterwaveAdapter.verifyTransaction("txn-3")
+    expect(result.status).toBe("pending")
+  })
+
+  it("provider is 'flutterwave'", async () => {
+    const { flutterwaveAdapter } = await import("@/lib/payments/gateways/flutterwave")
+    expect(flutterwaveAdapter.provider).toBe("flutterwave")
+  })
 })
 
-// ─── VerifyResult amountKobo normalization ────────────────────────────────────
-// Adapters must always return amountKobo in minor units so the shared confirmation
-// path can compare verifiedKobo to order.totalKobo without knowing the gateway.
+// ─── Flutterwave refund ───────────────────────────────────────────────────────
 
-describe("VerifyResult.amountKobo is always in kobo (Flutterwave — Plan 03)", () => {
-  it.todo(
-    "[Plan 03] FlutterwaveAdapter.verifyTransaction multiplies amountNaira × 100. " +
-    "Given stub: { data: { amount: 700, ... } } → VerifyResult.amountKobo === 70000."
-  )
+describe("FlutterwaveAdapter — refund (kobo → naira conversion)", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn())
+    process.env.FLUTTERWAVE_SECRET_KEY = "FLWSECK_TEST-testkey"
+  })
+
+  it("refund: posts to /transactions/:id/refund with no amount (full refund)", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "success" }),
+    } as Response)
+
+    const { flutterwaveAdapter } = await import("@/lib/payments/gateways/flutterwave")
+    await flutterwaveAdapter.refund("txn-100")
+
+    const [url, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit]
+    const body = JSON.parse(options.body as string)
+    expect(url).toContain("api.flutterwave.com/v3/transactions/txn-100/refund")
+    expect(body.amount).toBeUndefined()  // full refund — no amount field
+  })
+
+  it("refund: converts amountKobo to naira (÷100) in refund body", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "success" }),
+    } as Response)
+
+    const { flutterwaveAdapter } = await import("@/lib/payments/gateways/flutterwave")
+    await flutterwaveAdapter.refund("txn-101", 50_000)  // 50000 kobo = ₦500
+
+    const [, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit]
+    const body = JSON.parse(options.body as string)
+    expect(body.amount).toBe(500)  // 50000 kobo ÷ 100 = 500 naira
+  })
 })
