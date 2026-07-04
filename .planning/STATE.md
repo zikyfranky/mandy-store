@@ -121,11 +121,11 @@ Plan: 6 of 6
 
 ## Session Continuity
 
-**Last session:** 2026-07-04T12:00:00Z
-**Stopped at:** Phase 7 executed — Waves 1–2 complete (07-01/02/03), Wave 3 (07-04 UI) CODE COMPLETE. Full suite 278 passing, tsc + next build clean. Paystack + Flutterwave wired end-to-end behind the D-02 adapter interface + shared confirmOrderPaid.
-**Blocked on:** Live-popup human-verify (07-04 Task 3) — needs Paystack + Flutterwave TEST keys in .env.local (see 07-04 checkpoint). Chain paused here (genuine human-action gate).
-**Next action:** Add gateway test keys → complete live-popup verification → then `/gsd-verify-work 7` (or resume 07-04) and mark Phase 7 complete.
-**Resume file:** .planning/phases/07-nigerian-payment-gateways/07-04-SUMMARY.md
+**Last session:** 2026-07-04T13:00:00Z
+**Stopped at:** Phase 7.1 context gathered (07.1-CONTEXT.md). Decisions: D-11 build Interswitch/GTPay/Remita only (Opay/Palmpay satisfied-via-channel); D-12 GTPay = shared Interswitch WebPay adapter (two toggles); D-13/D-14 relax "never leaves site" for redirect gateways → callback verify → confirmation page; D-15 verify-on-return primary authority + polling backstop (no new infra); D-16/D-17 initPayment returns typed popup|redirect union, Remita RRR inside initPayment; D-19 done = sandbox + toggle OFF. Ran with --chain → auto-advancing to plan.
+**Blocked on:** Phase 7 live-popup human-verify still pending (Paystack + Flutterwave TEST keys in .env.local, 07-04 Task 3) — does not block 7.1 planning.
+**Next action:** `/gsd-plan-phase 7.1` (auto-advancing now via --chain). Separately, complete Phase 7 live-popup verify when test keys available.
+**Resume file:** .planning/phases/07.1-additional-ng-gateways/07.1-CONTEXT.md
 
 ---
 *State initialized: 2026-06-10*
