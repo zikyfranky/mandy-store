@@ -288,6 +288,9 @@ export const orders = pgTable("order", {
   shippingLandmark: text("shipping_landmark"),                    // optional
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   paypalOrderId:         text("paypal_order_id"),                 // reserved (PAY-02 deferred)
+  // Phase 7: generalized gateway correlation (Paystack/Flutterwave + future gateways)
+  gatewayProvider:   text("gateway_provider"),                    // "paystack" | "flutterwave" | null (Stripe uses stripePaymentIntentId)
+  gatewayReference:  text("gateway_reference"),                   // Paystack reference or Flutterwave tx_ref
   refundReason:  text("refund_reason"),                           // set on last-unit-race refund (D-09)
   createdAt:     timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   paidAt:        timestamp("paid_at", { mode: "date" }),          // set when payment_confirmed
@@ -295,6 +298,7 @@ export const orders = pgTable("order", {
   index("order_user_idx").on(table.userId),
   index("order_guest_token_idx").on(table.guestToken),
   index("order_stripe_pi_idx").on(table.stripePaymentIntentId),
+  index("order_gateway_ref_idx").on(table.gatewayReference),
 ])
 
 // order_item: one row per line, with price + label snapshot at purchase time

@@ -48,3 +48,17 @@ export async function getOrderStatusByToken(token: string): Promise<string | nul
   })
   return order?.status ?? null
 }
+
+/**
+ * Looks up an order by the gateway-agnostic reference field.
+ * Used by Paystack/Flutterwave webhook handlers and verify-on-callback actions.
+ *
+ * @param reference - The gateway reference (Paystack: order reference; Flutterwave: tx_ref)
+ */
+export async function getOrderByGatewayReference(reference: string) {
+  if (!reference) return undefined
+  return db.query.orders.findFirst({
+    where: eq(orders.gatewayReference, reference),
+    with: { items: true },
+  })
+}
