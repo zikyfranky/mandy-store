@@ -124,7 +124,8 @@ beforeEach(() => {
     totalQty: 1,
     hasOOS: false,
   })
-  vi.mocked(getOrderByGatewayReference).mockResolvedValue(MOCK_ORDER as ReturnType<typeof MOCK_ORDER.constructor>)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  vi.mocked(getOrderByGatewayReference).mockResolvedValue(MOCK_ORDER as any)
   vi.mocked(paystackInitialize).mockResolvedValue({ accessCode: "acc_test_default", reference: "ref-default" })
   vi.mocked(paystackVerify).mockResolvedValue({ status: "confirmed", amountKobo: 10_200_000, currency: "NGN", reference: "ref-test" })
   vi.mocked(paystackRefund).mockResolvedValue(undefined)
