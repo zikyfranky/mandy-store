@@ -799,21 +799,21 @@ Use `event.data.reference` as the idempotency key prefix. No top-level event `id
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All three questions below were resolved during planning (see 07-01..07-04-PLAN.md). Each carries a live-verification caveat to confirm against the gateways' test webhooks during execution, but none blocks planning — the plans implement defensive handling for every case.
 
 1. **Flutterwave `flutterwave-signature` vs `verif-hash`**
    - What we know: Current docs say `flutterwave-signature` (HMAC SHA256 base64). Older community articles say `verif-hash` (plaintext compare). Multiple sources contradict.
-   - What's unclear: Is `verif-hash` still sent by Flutterwave alongside `flutterwave-signature` in 2026, or deprecated?
-   - Recommendation: Check both headers in the webhook route; verify against HMAC SHA256. If HMAC fails, fall back to plaintext compare. Test with actual FLW test webhook delivery to confirm which header arrives.
+   - **RESOLVED:** Plan 03/T3 checks BOTH headers — verify HMAC SHA256 base64 against `flutterwave-signature`; if absent/failing, fall back to plaintext compare of `verif-hash` against `FLUTTERWAVE_WEBHOOK_HASH`. Confirm which header arrives with a real FLW test webhook during the Wave 2 / human-verify step.
 
 2. **Paystack top-level event `id`**
    - What we know: Multiple sources show payload structure without a top-level `id`. Stripe has `evt_xxx` top-level id; Paystack examples show only `event` and `data`.
-   - What's unclear: Does Paystack's current API include a stable top-level event ID?
-   - Recommendation: Use `"paystack:" + event.data.reference` as idempotency key. If a top-level ID exists in real payloads, prefer it and update.
+   - **RESOLVED:** Plans 02/T2 + 02/T3 use `"paystack:" + event.data.reference` as the idempotency key (shared by the verify-on-callback and webhook paths so exactly one confirms). This does not depend on a top-level event id.
 
 3. **Schema column strategy: `gatewayProvider`/`gatewayReference` vs per-gateway columns**
-   - What we know: Existing `stripePaymentIntentId` is Stripe-specific. `paypalOrderId` column is reserved. Adding two generic columns is simpler for Phase 7.1 extensibility.
-   - Recommendation: Add `gatewayProvider` + `gatewayReference` (planner's call per CONTEXT.md). Keep `stripePaymentIntentId` for Stripe (existing Stripe webhook relies on it).
+   - What we know: Existing `stripePaymentIntentId` is Stripe-specific. Adding two generic columns is simpler for Phase 7.1 extensibility.
+   - **RESOLVED:** Plan 01 adds `gatewayProvider` + indexed `gatewayReference` (per CONTEXT Claude's Discretion) and keeps `stripePaymentIntentId` for the existing Stripe webhook.
 
 ---
 

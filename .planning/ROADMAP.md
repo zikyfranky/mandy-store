@@ -146,7 +146,17 @@ Plans:
   3. Both gateways are built against a shared adapter interface so a new gateway is a new adapter + toggle (not net-new plumbing)
   4. Every gateway is independently enable/disable-able via server-only config and a disabled gateway is rejected at the Server Action / Route Handler level, not just hidden in the UI (extends PAY-04)
   5. For every gateway the amount is recomputed server-side (never trusted from the client), each webhook is signature-verified, duplicate webhook deliveries are idempotent (processed_webhook_events), and stock is atomically decremented on confirmation — no overselling or duplicate orders. A server-side verify-on-callback and the webhook share one idempotent confirmation path; the webhook remains the ultimate authority.
-**Plans**: TBD
+**Plans**: 4 plans (3 waves)
+Plans:
+**Wave 1**
+- [ ] 07-01-PLAN.md — Foundation: install gateway SDKs, extend orders schema (gatewayProvider/gatewayReference) + [BLOCKING] DB push, extend server-only toggle (paystack/flutterwave), define D-02 gateway-adapter interface, extract shared idempotent `confirmOrderPaid()` from Stripe webhook (regression-safe), scaffold Wave 0 tests
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 07-02-PLAN.md — Paystack end-to-end (PAY-05): PaystackAdapter (kobo passthrough), toggle-gated init/verify Server Actions, SHA-512 signature-verified webhook → shared confirmOrderPaid (paystack:<ref> idempotency) + oversold refund
+- [ ] 07-03-PLAN.md — Flutterwave end-to-end (PAY-06): FlutterwaveAdapter (naira↔kobo conversion + 100× overcharge guard), toggle-gated init/verify actions, SHA-256-base64 (+verif-hash) webhook gating on status "successful" → shared confirmOrderPaid (flutterwave:<tx_ref>)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 07-04-PLAN.md — Checkout UI (D-05): extend flat radio PaymentMethodSelector + two inline-popup panels mirroring StripePaymentPanel (verify-before-redirect, public-key-only), branch CheckoutForm; human-verify checkpoint for live test-payment popup flow
 **UI hint**: yes
 
 ### Phase 7.1: Additional NG Gateways (fast-follow)
@@ -170,7 +180,7 @@ Plans:
 | 4. Checkout & Payments | 6/6 | Complete | 2026-06-30 |
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
-| 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 0/0 | Not started | - |
+| 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 0/4 | Planned | - |
 | 7.1. Additional NG Gateways (fast-follow) | 0/0 | Not started | - |
 
 ---
