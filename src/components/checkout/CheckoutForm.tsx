@@ -15,6 +15,8 @@ import { createBankTransferOrder } from "@/lib/actions/checkout"
 import { PaymentMethodSelector } from "@/components/checkout/PaymentMethodSelector"
 import { StripePaymentPanel } from "@/components/checkout/StripePaymentPanel"
 import { BankTransferPanel } from "@/components/checkout/BankTransferPanel"
+import { PaystackPaymentPanel } from "@/components/checkout/PaystackPaymentPanel"
+import { FlutterwavePaymentPanel } from "@/components/checkout/FlutterwavePaymentPanel"
 import type { PaymentMethod } from "@/lib/payments/config"
 import type { UseFormGetValues, UseFormTrigger } from "react-hook-form"
 
@@ -460,6 +462,22 @@ export function CheckoutForm({
             {selectedMethod === "stripe" ? (
               <StripePaymentPanel
                 publishableKey={publishableKey}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                getValues={getValues as UseFormGetValues<any>}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                trigger={trigger as UseFormTrigger<any>}
+                hasOOS={hasOOS}
+              />
+            ) : selectedMethod === "paystack" ? (
+              <PaystackPaymentPanel
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                getValues={getValues as UseFormGetValues<any>}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                trigger={trigger as UseFormTrigger<any>}
+                hasOOS={hasOOS}
+              />
+            ) : selectedMethod === "flutterwave" ? (
+              <FlutterwavePaymentPanel
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 getValues={getValues as UseFormGetValues<any>}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
