@@ -122,7 +122,20 @@ Plans:
   3. An admin can view all orders, filter by status, and update fulfillment status through a shared status function (never setting the status field directly)
   4. When an order moves to shipped/delivered, the customer automatically receives a status-change email
   5. An admin can toggle Stripe, PayPal, and bank transfer on or off, and every admin Server Action re-verifies the admin role before acting
-**Plans**: TBD
+**Plans**: 5 plans (4 waves) — *scope re-evaluated per CONTEXT D-11: Opay/Palmpay are **satisfied-via-channel** through the Phase 7 aggregator popups (no standalone build); only Interswitch/GTPay/Remita are built as direct redirect adapters.*
+Plans:
+**Wave 1**
+- [ ] 07.1-01-PLAN.md — Foundation: D-16 InitResult discriminated union in types.ts (migrate Paystack/Flutterwave returns to {mode:"popup"}), extend server-only toggle for interswitch/gtpay/remita (PAY-12), .env.local.example, and scaffold RED Wave 0 adapter tests
+
+**Wave 2** *(blocked on Wave 1; plans 02 & 03 run in parallel — no file overlap)*
+- [ ] 07.1-02-PLAN.md — Interswitch (PAY-09) + GTPay (PAY-10) adapters as two thin configs over one shared webpay-core.ts (D-12), SHA-512 request/requery hashes, kobo passthrough
+- [ ] 07.1-03-PLAN.md — Remita (PAY-11) adapter: RRR-inside-init (D-17), naira↔kobo conversion, JSONP-safe requery verify
+
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 07.1-04-PLAN.md — Init Server Actions (server total recompute, order insert, RRR→gatewayReference) + per-gateway verify-on-return callback routes (D-14/D-15) + optional GTPay/Remita webhooks, all funneling the untouched confirmOrderPaid with <provider>:<ref> idempotency
+
+**Wave 4** *(blocked on Wave 3)*
+- [ ] 07.1-05-PLAN.md — Checkout UI: shared RedirectLauncherPanel (POST auto-submit for Interswitch/GTPay, GET for Remita) + 3 radio entries + ?error= banner wiring; document PAY-07/08 satisfied-via-channel + REQUIREMENTS.md traceability; human-verify sandbox round-trip (D-19)
 **UI hint**: yes
 
 ### Phase 6: Customer Accounts
@@ -181,7 +194,7 @@ Plans:
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
-| 7.1. Additional NG Gateways (fast-follow) | 0/0 | Not started | - |
+| 7.1. Additional NG Gateways (fast-follow) | 0/5 | Planned | - |
 
 ---
 *Roadmap created: 2026-06-10*
