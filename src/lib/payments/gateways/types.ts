@@ -6,7 +6,9 @@
  * Identifies the gateway provider.
  * "stripe" and "paypal" are handled separately (not via this adapter interface).
  */
-export type GatewayProvider = "paystack" | "flutterwave"
+export type GatewayProvider =
+  | "paystack" | "flutterwave"
+  | "interswitch" | "gtpay" | "remita"
 
 /**
  * Normalized payment status — gateway-agnostic.
@@ -26,6 +28,18 @@ export interface VerifyResult {
   currency: string     // "NGN"
   reference: string    // merchant reference (order ref for Paystack; tx_ref for Flutterwave)
 }
+
+/**
+ * D-16: adapters declare how the client proceeds after initPayment.
+ * - "popup":    Paystack/Flutterwave — client opens inline popup with the returned data.
+ * - "redirect": Remita — plain GET redirect (window.location.assign(url)).
+ * - "redirect" + method:"POST" + fields: Interswitch/GTPay — client builds a hidden
+ *   auto-submit <form method="POST" action={url}> with one hidden input per field (WebPay POST).
+ */
+export type InitResult =
+  | { mode: "popup"; [k: string]: unknown }
+  | { mode: "redirect"; url: string }
+  | { mode: "redirect"; url: string; method: "POST"; fields: Record<string, string> }
 
 /**
  * Gateway adapter interface (D-02).
@@ -50,7 +64,7 @@ export interface GatewayAdapter {
     orderId: string
     customerName: string
     phone?: string
-  }): Promise<Record<string, unknown>>
+  }): Promise<InitResult>
 
   /**
    * Authoritative server-side verification (re-fetch from gateway).

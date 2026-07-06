@@ -166,14 +166,18 @@ export const flutterwaveAdapter: GatewayAdapter = {
   provider: "flutterwave",
 
   async initPayment(params) {
-    return flutterwaveBuildParams({
-      email: params.email,
-      amountKobo: params.amountKobo,
-      txRef: params.reference,
-      orderId: params.orderId,
-      customerName: params.customerName,
-      phone: params.phone,
-    })
+    // D-16: client opens the Flutterwave inline popup with these params
+    return {
+      mode: "popup",
+      ...flutterwaveBuildParams({
+        email: params.email,
+        amountKobo: params.amountKobo,
+        txRef: params.reference,
+        orderId: params.orderId,
+        customerName: params.customerName,
+        phone: params.phone,
+      }),
+    }
   },
 
   async verifyTransaction(reference: string): Promise<VerifyResult> {

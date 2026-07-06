@@ -156,6 +156,7 @@ export const paystackAdapter: GatewayAdapter = {
     })
 
     return {
+      mode: "popup",  // D-16: client opens the Paystack inline popup with this data
       accessCode,
       reference,
       // Only the PUBLIC key is returned to the client (T-07-10, D-08)
