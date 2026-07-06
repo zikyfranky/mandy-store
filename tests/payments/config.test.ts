@@ -164,6 +164,75 @@ describe("isPaymentMethodEnabled — flutterwave", () => {
   })
 })
 
+describe("isPaymentMethodEnabled — interswitch (PAY-09/PAY-12, default OFF D-19)", () => {
+  it("returns true when ENABLE_INTERSWITCH=true and both secrets are set", () => {
+    vi.stubEnv("ENABLE_INTERSWITCH", "true")
+    vi.stubEnv("INTERSWITCH_MAC_KEY", "mac_key_abc")
+    vi.stubEnv("INTERSWITCH_MERCHANT_CODE", "MX123")
+    expect(isPaymentMethodEnabled("interswitch")).toBe(true)
+  })
+
+  it("returns false when ENABLE_INTERSWITCH unset (default OFF)", () => {
+    delete process.env.ENABLE_INTERSWITCH
+    vi.stubEnv("INTERSWITCH_MAC_KEY", "mac_key_abc")
+    vi.stubEnv("INTERSWITCH_MERCHANT_CODE", "MX123")
+    expect(isPaymentMethodEnabled("interswitch")).toBe(false)
+  })
+
+  it("returns false when a required secret is missing", () => {
+    vi.stubEnv("ENABLE_INTERSWITCH", "true")
+    vi.stubEnv("INTERSWITCH_MERCHANT_CODE", "MX123")
+    delete process.env.INTERSWITCH_MAC_KEY
+    expect(isPaymentMethodEnabled("interswitch")).toBe(false)
+  })
+})
+
+describe("isPaymentMethodEnabled — gtpay (PAY-10/PAY-12, default OFF D-19)", () => {
+  it("returns true when ENABLE_GTPAY=true and both secrets are set", () => {
+    vi.stubEnv("ENABLE_GTPAY", "true")
+    vi.stubEnv("GTPAY_HASH_KEY", "hash_key_abc")
+    vi.stubEnv("GTPAY_MERCHANT_ID", "GT123")
+    expect(isPaymentMethodEnabled("gtpay")).toBe(true)
+  })
+
+  it("returns false when ENABLE_GTPAY unset (default OFF)", () => {
+    delete process.env.ENABLE_GTPAY
+    vi.stubEnv("GTPAY_HASH_KEY", "hash_key_abc")
+    vi.stubEnv("GTPAY_MERCHANT_ID", "GT123")
+    expect(isPaymentMethodEnabled("gtpay")).toBe(false)
+  })
+
+  it("returns false when a required secret is missing", () => {
+    vi.stubEnv("ENABLE_GTPAY", "true")
+    vi.stubEnv("GTPAY_MERCHANT_ID", "GT123")
+    delete process.env.GTPAY_HASH_KEY
+    expect(isPaymentMethodEnabled("gtpay")).toBe(false)
+  })
+})
+
+describe("isPaymentMethodEnabled — remita (PAY-11/PAY-12, default OFF D-19)", () => {
+  it("returns true when ENABLE_REMITA=true and both secrets are set", () => {
+    vi.stubEnv("ENABLE_REMITA", "true")
+    vi.stubEnv("REMITA_API_KEY", "api_key_abc")
+    vi.stubEnv("REMITA_MERCHANT_ID", "RM123")
+    expect(isPaymentMethodEnabled("remita")).toBe(true)
+  })
+
+  it("returns false when ENABLE_REMITA unset (default OFF)", () => {
+    delete process.env.ENABLE_REMITA
+    vi.stubEnv("REMITA_API_KEY", "api_key_abc")
+    vi.stubEnv("REMITA_MERCHANT_ID", "RM123")
+    expect(isPaymentMethodEnabled("remita")).toBe(false)
+  })
+
+  it("returns false when a required secret is missing", () => {
+    vi.stubEnv("ENABLE_REMITA", "true")
+    vi.stubEnv("REMITA_MERCHANT_ID", "RM123")
+    delete process.env.REMITA_API_KEY
+    expect(isPaymentMethodEnabled("remita")).toBe(false)
+  })
+})
+
 describe("enabledPaymentMethods", () => {
   it("returns only enabled methods", () => {
     // Enable stripe + bank_transfer, keep paypal/paystack/flutterwave OFF
@@ -207,6 +276,29 @@ describe("enabledPaymentMethods", () => {
     delete process.env.ENABLE_PAYPAL
     delete process.env.ENABLE_PAYSTACK
     delete process.env.ENABLE_FLUTTERWAVE
+    delete process.env.ENABLE_INTERSWITCH
+    delete process.env.ENABLE_GTPAY
+    delete process.env.ENABLE_REMITA
     expect(enabledPaymentMethods()).toEqual([])
+  })
+
+  it("returns interswitch/gtpay/remita when all three are enabled", () => {
+    delete process.env.ENABLE_STRIPE
+    delete process.env.ENABLE_BANK_TRANSFER
+    delete process.env.ENABLE_PAYPAL
+    delete process.env.ENABLE_PAYSTACK
+    delete process.env.ENABLE_FLUTTERWAVE
+    vi.stubEnv("ENABLE_INTERSWITCH", "true")
+    vi.stubEnv("INTERSWITCH_MAC_KEY", "mac")
+    vi.stubEnv("INTERSWITCH_MERCHANT_CODE", "MX")
+    vi.stubEnv("ENABLE_GTPAY", "true")
+    vi.stubEnv("GTPAY_HASH_KEY", "hash")
+    vi.stubEnv("GTPAY_MERCHANT_ID", "GT")
+    vi.stubEnv("ENABLE_REMITA", "true")
+    vi.stubEnv("REMITA_API_KEY", "api")
+    vi.stubEnv("REMITA_MERCHANT_ID", "RM")
+
+    const methods = enabledPaymentMethods()
+    expect(methods).toEqual(["interswitch", "gtpay", "remita"])
   })
 })

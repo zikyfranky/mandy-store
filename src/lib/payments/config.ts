@@ -4,7 +4,9 @@ import "server-only"
 // never just the UI. PayPal deferred (D-05a) — defaults OFF because ENABLE_PAYPAL and
 // credentials are not set. No NEXT_PUBLIC_ prefix — server-only env pattern (CLAUDE.md).
 
-export type PaymentMethod = "stripe" | "paypal" | "bank_transfer" | "paystack" | "flutterwave"
+export type PaymentMethod =
+  | "stripe" | "paypal" | "bank_transfer" | "paystack" | "flutterwave"
+  | "interswitch" | "gtpay" | "remita"
 
 /**
  * Returns true if the payment method is enabled via server-only env config.
@@ -25,10 +27,19 @@ export function isPaymentMethodEnabled(method: PaymentMethod): boolean {
       return process.env.ENABLE_PAYSTACK === "true" && !!process.env.PAYSTACK_SECRET_KEY
     case "flutterwave":
       return process.env.ENABLE_FLUTTERWAVE === "true" && !!process.env.FLUTTERWAVE_SECRET_KEY
+    case "interswitch":
+      return process.env.ENABLE_INTERSWITCH === "true"
+        && !!process.env.INTERSWITCH_MAC_KEY && !!process.env.INTERSWITCH_MERCHANT_CODE
+    case "gtpay":
+      return process.env.ENABLE_GTPAY === "true"
+        && !!process.env.GTPAY_HASH_KEY && !!process.env.GTPAY_MERCHANT_ID
+    case "remita":
+      return process.env.ENABLE_REMITA === "true"
+        && !!process.env.REMITA_API_KEY && !!process.env.REMITA_MERCHANT_ID
   }
 }
 
 /** List of enabled methods for the UI (server-computed; passed as a prop). */
 export function enabledPaymentMethods(): PaymentMethod[] {
-  return (["stripe", "paypal", "bank_transfer", "paystack", "flutterwave"] as const).filter(isPaymentMethodEnabled)
+  return (["stripe", "paypal", "bank_transfer", "paystack", "flutterwave", "interswitch", "gtpay", "remita"] as const).filter(isPaymentMethodEnabled)
 }
