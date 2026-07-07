@@ -194,7 +194,7 @@ Plans:
 - [x] 07.1-04-PLAN.md — Init actions (server total recompute, RRR→gatewayReference) + verify-on-return callback routes (D-14/D-15) + optional webhooks, all through the untouched `confirmOrderPaid` with `<provider>:<ref>` idempotency *(PAY-09/10/11)* *(COMPLETE 2026-07-07)*
 
 **Wave 4** *(blocked on Wave 3 completion — human-verify checkpoint, D-19)*
-- [ ] 07.1-05-PLAN.md — Checkout UI (shared `RedirectLauncherPanel` — POST auto-submit vs GET), radio entries, `?error=` banner; PAY-07/08 satisfied-via-channel doc + REQUIREMENTS traceability; sandbox human-verify *(PAY-07/08/09/10/11)* *(NOT STARTED — deferred: UI + sandbox human-verify gate)*
+- [~] 07.1-05-PLAN.md — Checkout UI (shared `RedirectLauncherPanel` — POST auto-submit vs GET), radio entries, `?error=` banner; PAY-07/08 satisfied-via-channel doc + REQUIREMENTS traceability; sandbox human-verify *(PAY-07/08/09/10/11)* *(CODE COMPLETE 2026-07-07 — tsc + build + 319 tests clean; **sandbox human-verify PENDING user creds**)*
 **UI hint**: yes
 
 ## Progress
@@ -208,7 +208,7 @@ Plans:
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
-| 7.1. Additional NG Gateways (fast-follow) | 4/5 | Waves 1–3 complete — Wave 4 (UI + sandbox verify) pending | - |
+| 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 
 ---
 *Roadmap created: 2026-06-10*

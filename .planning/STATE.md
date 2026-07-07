@@ -121,11 +121,12 @@ Plan: 6 of 6
 
 ## Session Continuity
 
-**Last session:** 2026-07-07T00:00:00Z
-**Stopped at:** Phase 7.1 Waves 1–3 EXECUTED (4/5 plans). Built: D-16 InitResult union + toggles (01); shared webpay-core + Interswitch/GTPay adapters D-12 (02); Remita adapter RRR-inside-init D-17 (03); 3 init actions + 3 verify-on-return callback routes D-14/D-15 + 2 optional webhooks, shared `<provider>:<ref>` idempotency (04). Full suite **319 passing** (DB-gated integration tests ran — TEST_DATABASE_URL is set); `npx next build --webpack` clean; tsc clean. Untouchable core held: confirm-order-paid.ts + schema.ts zero diff, no db:push. Executed INLINE by the orchestrator — the gsd-executor/ui-checker subagents repeatedly stalled on a ~600s stream watchdog in this environment (intermittent; researcher/planner/checker succeeded).
-**Blocked on:** **Wave 4 (07.1-05) deferred by user** — checkout UI (RedirectLauncherPanel + radio entries + ?error banner) + PAY-07/08 satisfied-via-channel doc + REQUIREMENTS traceability + sandbox human-verify (needs Interswitch/GTPay/Remita sandbox merchant creds, D-19). Also still open: Phase 7 live-popup human-verify (Paystack/Flutterwave test keys, 07-04).
-**Next action:** `/gsd-execute-phase 7.1 --wave 4` to build the checkout UI + close PAY-07/08 traceability (the sandbox live-verify task within it remains a human-action gate). Then `/gsd-verify-work 7.1`.
-**Resume file:** .planning/phases/07.1-additional-ng-gateways/07.1-05-PLAN.md
+**Last session:** 2026-07-07T12:00:00Z
+**Stopped at:** Phase 7.1 ALL WAVES CODE COMPLETE (5/5 plans). Wave 4 (07.1-05) added the checkout UI — shared `RedirectLauncherPanel` (POST auto-submit for Interswitch/GTPay, GET for Remita) + 3 thin panels + 3 flat-peer radio entries + `?error=` return banner (D-14) + REQUIREMENTS traceability (PAY-07/08 satisfied-via-channel D-11; PAY-09/10/11 complete at sandbox bar D-19). tsc + `next build --webpack` clean; full suite **319 passing** (1 transient DB-flake did not reproduce). The plan-05 human-verify checkpoint (Task 4) is PENDING — needs sandbox merchant creds for the redirect round-trip, mirroring Phase 7's still-open live-popup verify.
+PRIOR (Waves 1–3, 2026-07-07): Built: D-16 InitResult union + toggles (01); shared webpay-core + Interswitch/GTPay adapters D-12 (02); Remita adapter RRR-inside-init D-17 (03); 3 init actions + 3 verify-on-return callback routes D-14/D-15 + 2 optional webhooks, shared `<provider>:<ref>` idempotency (04). Full suite **319 passing** (DB-gated integration tests ran — TEST_DATABASE_URL is set); `npx next build --webpack` clean; tsc clean. Untouchable core held: confirm-order-paid.ts + schema.ts zero diff, no db:push. Executed INLINE by the orchestrator — the gsd-executor/ui-checker subagents repeatedly stalled on a ~600s stream watchdog in this environment (intermittent; researcher/planner/checker succeeded).
+**Blocked on:** **Sandbox human-verify (07.1-05 Task 4, D-19)** — enable a gateway with Interswitch/GTPay/Remita sandbox merchant creds, place an order, confirm the hosted-page redirect + return to `/order/[token]`. Gateways without creds are "code complete, live-verify pending". Also still open: Phase 7 live-popup human-verify (Paystack/Flutterwave test keys, 07-04).
+**Next action:** Do the sandbox redirect round-trip when creds are available, then `/gsd-verify-work 7.1`. Toggles ship OFF by default, so the code is safe to merge before live-verify.
+**Resume file:** .planning/phases/07.1-additional-ng-gateways/07.1-05-SUMMARY.md
 
 ---
 *State initialized: 2026-06-10*
