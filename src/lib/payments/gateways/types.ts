@@ -38,7 +38,9 @@ export interface VerifyResult {
  */
 export type InitResult =
   | { mode: "popup"; [k: string]: unknown }
-  | { mode: "redirect"; url: string }
+  // Plain GET redirect (Remita). `rrr` is surfaced so the init action can persist it as
+  // gatewayReference (D-17) — the RRR generation itself stays hidden inside initPayment.
+  | { mode: "redirect"; url: string; rrr?: string }
   | { mode: "redirect"; url: string; method: "POST"; fields: Record<string, string> }
 
 /**
