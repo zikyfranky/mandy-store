@@ -184,17 +184,17 @@ Plans:
 **Plans**: 5 plans (4 waves)
 Plans:
 **Wave 1**
-- [ ] 07.1-01-PLAN.md — Foundation: D-16 `InitResult` discriminated union (migrate Paystack/Flutterwave → `{mode:"popup"}`, regression-safe), extend server-only toggles (interswitch/gtpay/remita), `.env.local.example`, scaffold RED Wave 0 adapter tests *(PAY-09/10/11)*
+- [x] 07.1-01-PLAN.md — Foundation: D-16 `InitResult` discriminated union (migrate Paystack/Flutterwave → `{mode:"popup"}`, regression-safe), extend server-only toggles (interswitch/gtpay/remita), `.env.local.example`, scaffold RED Wave 0 adapter tests *(PAY-09/10/11)* *(COMPLETE 2026-07-07)*
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 07.1-02-PLAN.md — Interswitch + GTPay adapters as two thin configs over one shared `webpay-core.ts` (D-12), SHA-512 request/requery hashes, kobo passthrough *(PAY-09, PAY-10)*
-- [ ] 07.1-03-PLAN.md — Remita adapter: RRR-inside-init (D-17), naira↔kobo conversion, JSONP-safe requery verify *(PAY-11)*
+- [x] 07.1-02-PLAN.md — Interswitch + GTPay adapters as two thin configs over one shared `webpay-core.ts` (D-12), SHA-512 request/requery hashes, kobo passthrough *(PAY-09, PAY-10)* *(COMPLETE 2026-07-07)*
+- [x] 07.1-03-PLAN.md — Remita adapter: RRR-inside-init (D-17), naira↔kobo conversion, JSONP-safe requery verify *(PAY-11)* *(COMPLETE 2026-07-07)*
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 07.1-04-PLAN.md — Init actions (server total recompute, RRR→gatewayReference) + verify-on-return callback routes (D-14/D-15) + optional webhooks, all through the untouched `confirmOrderPaid` with `<provider>:<ref>` idempotency *(PAY-09/10/11)*
+- [x] 07.1-04-PLAN.md — Init actions (server total recompute, RRR→gatewayReference) + verify-on-return callback routes (D-14/D-15) + optional webhooks, all through the untouched `confirmOrderPaid` with `<provider>:<ref>` idempotency *(PAY-09/10/11)* *(COMPLETE 2026-07-07)*
 
 **Wave 4** *(blocked on Wave 3 completion — human-verify checkpoint, D-19)*
-- [ ] 07.1-05-PLAN.md — Checkout UI (shared `RedirectLauncherPanel` — POST auto-submit vs GET), radio entries, `?error=` banner; PAY-07/08 satisfied-via-channel doc + REQUIREMENTS traceability; sandbox human-verify *(PAY-07/08/09/10/11)*
+- [ ] 07.1-05-PLAN.md — Checkout UI (shared `RedirectLauncherPanel` — POST auto-submit vs GET), radio entries, `?error=` banner; PAY-07/08 satisfied-via-channel doc + REQUIREMENTS traceability; sandbox human-verify *(PAY-07/08/09/10/11)* *(NOT STARTED — deferred: UI + sandbox human-verify gate)*
 **UI hint**: yes
 
 ## Progress
@@ -208,7 +208,7 @@ Plans:
 | 5. Admin Panel | 0/0 | Not started | - |
 | 6. Customer Accounts | 0/0 | Not started | - |
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
-| 7.1. Additional NG Gateways (fast-follow) | 0/5 | Planned | - |
+| 7.1. Additional NG Gateways (fast-follow) | 4/5 | Waves 1–3 complete — Wave 4 (UI + sandbox verify) pending | - |
 
 ---
 *Roadmap created: 2026-06-10*
