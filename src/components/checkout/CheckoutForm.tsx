@@ -5,7 +5,7 @@
 // Manages form state via react-hook-form + Zod; bank transfer submit path wired here;
 // Stripe path delegated to StripePaymentPanel. Failed payment stays on page (D-08).
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -17,6 +17,9 @@ import { StripePaymentPanel } from "@/components/checkout/StripePaymentPanel"
 import { BankTransferPanel } from "@/components/checkout/BankTransferPanel"
 import { PaystackPaymentPanel } from "@/components/checkout/PaystackPaymentPanel"
 import { FlutterwavePaymentPanel } from "@/components/checkout/FlutterwavePaymentPanel"
+import { InterswitchPaymentPanel } from "@/components/checkout/InterswitchPaymentPanel"
+import { GtpayPaymentPanel } from "@/components/checkout/GtpayPaymentPanel"
+import { RemitaPaymentPanel } from "@/components/checkout/RemitaPaymentPanel"
 import type { PaymentMethod } from "@/lib/payments/config"
 import type { UseFormGetValues, UseFormTrigger } from "react-hook-form"
 
@@ -81,6 +84,21 @@ export function CheckoutForm({
   const router = useRouter()
   const [bankError, setBankError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  // UI-SPEC §4e — redirect gateways return to /checkout?error=... on cancel/disabled/notfound.
+  // Read the query param on mount and surface the EXISTING red banner (no new visual).
+  const [returnError, setReturnError] = useState<{ title: string; body: string } | null>(null)
+  useEffect(() => {
+    const err = new URLSearchParams(window.location.search).get("error")
+    if (err === "cancelled") {
+      setReturnError({ title: "Payment cancelled", body: "Payment cancelled — you can try again." })
+    } else if (err === "disabled" || err === "notfound") {
+      setReturnError({
+        title: "Order could not be started",
+        body: "That payment method isn't available right now. Please choose another and try again.",
+      })
+    }
+  }, [])
 
   // Default to first server-enabled method. Never fall back to a hardcoded method —
   // that would show a payment panel the server-side gate will reject (UI/server mismatch).
@@ -430,6 +448,33 @@ export function CheckoutForm({
               />
             )}
 
+            {/* Redirect-return banner (UI-SPEC §4e) — reuses the identical red banner markup */}
+            {returnError && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="mt-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 p-4 flex gap-3 items-start"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-5 h-5 text-stock-out shrink-0"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-semibold text-stock-out">{returnError.title}</p>
+                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">{returnError.body}</p>
+                </div>
+              </div>
+            )}
+
             {/* Bank transfer error banner (D-08 — stays on page) */}
             {bankError && (
               <div
@@ -478,6 +523,30 @@ export function CheckoutForm({
               />
             ) : selectedMethod === "flutterwave" ? (
               <FlutterwavePaymentPanel
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                getValues={getValues as UseFormGetValues<any>}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                trigger={trigger as UseFormTrigger<any>}
+                hasOOS={hasOOS}
+              />
+            ) : selectedMethod === "interswitch" ? (
+              <InterswitchPaymentPanel
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                getValues={getValues as UseFormGetValues<any>}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                trigger={trigger as UseFormTrigger<any>}
+                hasOOS={hasOOS}
+              />
+            ) : selectedMethod === "gtpay" ? (
+              <GtpayPaymentPanel
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                getValues={getValues as UseFormGetValues<any>}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                trigger={trigger as UseFormTrigger<any>}
+                hasOOS={hasOOS}
+              />
+            ) : selectedMethod === "remita" ? (
+              <RemitaPaymentPanel
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 getValues={getValues as UseFormGetValues<any>}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any

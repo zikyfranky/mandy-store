@@ -54,11 +54,11 @@ NGN-native gateways added as additional server-toggleable payment methods reusin
 
 Direct-integration gateways added as new adapters against the Phase 7 gateway interface. Note: several of these (Opay, Palmpay) already ride the Paystack/Flutterwave popups as channels — re-evaluate standalone value before building.
 
-- [ ] **PAY-07**: User can pay via Opay
-- [ ] **PAY-08**: User can pay via Palmpay
-- [ ] **PAY-09**: User can pay via Interswitch
-- [ ] **PAY-10**: User can pay via GTPay
-- [ ] **PAY-11**: User can pay via Remita
+- [x] **PAY-07**: User can pay via Opay — **satisfied-via-channel** (Phase 7.1 D-11): Opay is reachable as a channel inside the Phase 7 Paystack/Flutterwave inline popups; no standalone adapter built (redundant).
+- [x] **PAY-08**: User can pay via Palmpay — **satisfied-via-channel** (Phase 7.1 D-11): Palmpay is reachable as a channel inside the Phase 7 Paystack/Flutterwave inline popups; no standalone adapter built (redundant).
+- [x] **PAY-09**: User can pay via Interswitch — complete at the sandbox bar (Phase 7.1 D-19); live-verify is a go-live checklist item.
+- [x] **PAY-10**: User can pay via GTPay — complete at the sandbox bar (Phase 7.1 D-19); live-verify is a go-live checklist item.
+- [x] **PAY-11**: User can pay via Remita — complete at the sandbox bar (Phase 7.1 D-19); live-verify is a go-live checklist item.
 
 ### Orders & Notifications
 
@@ -136,11 +136,11 @@ Direct-integration gateways added as new adapters against the Phase 7 gateway in
 | PAY-05 | Phase 7 | Pending |
 | PAY-06 | Phase 7 | Pending |
 | PAY-12 | Phase 7 | Pending |
-| PAY-07 | Phase 7.1 | Pending |
-| PAY-08 | Phase 7.1 | Pending |
-| PAY-09 | Phase 7.1 | Pending |
-| PAY-10 | Phase 7.1 | Pending |
-| PAY-11 | Phase 7.1 | Pending |
+| PAY-07 | Phase 7.1 | Satisfied-via-channel (D-11) |
+| PAY-08 | Phase 7.1 | Satisfied-via-channel (D-11) |
+| PAY-09 | Phase 7.1 | Complete (sandbox — D-19) |
+| PAY-10 | Phase 7.1 | Complete (sandbox — D-19) |
+| PAY-11 | Phase 7.1 | Complete (sandbox — D-19) |
 
 **Coverage:**
 - v1 requirements: 27 total
@@ -152,3 +152,4 @@ Direct-integration gateways added as new adapters against the Phase 7 gateway in
 ---
 *Requirements defined: 2026-06-06*
 *Last updated: 2026-07-02 — split Phase 7: Paystack+Flutterwave (PAY-05/06/12) stay in Phase 7; PAY-07..PAY-11 move to fast-follow Phase 7.1 (per Phase 7 CONTEXT D-01)*
+*2026-07-07 — Phase 7.1: PAY-09/10/11 built as Interswitch/GTPay/Remita redirect adapters (sandbox-verified, toggle OFF by default, D-19). PAY-07/08 satisfied-via-channel through the Phase 7 aggregators (D-11) — no standalone build.*
