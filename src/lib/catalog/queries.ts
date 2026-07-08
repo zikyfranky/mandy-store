@@ -193,7 +193,9 @@ export async function getCatalog(opts: {
 
 export async function getProduct(slug: string) {
   const product = await db.query.products.findFirst({
-    where: eq(products.slug, slug),
+    // T-05-05: filter isActive so a soft-deleted product 404s on the PDP
+    // instead of rendering with an empty/broken variant selector.
+    where: and(eq(products.slug, slug), eq(products.isActive, true)),
     with: {
       brand: true,
       category: true,
