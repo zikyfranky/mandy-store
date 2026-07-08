@@ -125,8 +125,8 @@ Plans:
 **Plans**: 6 plans (4 waves)
 Plans:
 **Wave 1** *(foundation — parallel, no file overlap)*
-- [ ] 05-01-PLAN.md — store_settings table + [BLOCKING] direct-SQL push (both DBs) + sync→async `isPaymentMethodEnabled` migration across all 15 call sites + config async tests (ADMN-04 server-side enforcement half, D-11)
-- [ ] 05-02-PLAN.md — getProduct isActive soft-delete fix + admin read-queries (getProductForAdmin/listProductsForAdmin/listOrdersForAdmin) + @vercel/blob install + .env.local.example + Wave 0 RED admin test scaffolds (ADMN-01/02/03, ORD-03)
+- [x] 05-01-PLAN.md — store_settings table + [BLOCKING] direct-SQL push (both DBs) + sync→async `isPaymentMethodEnabled` migration across all 15 call sites + config async tests (ADMN-04 server-side enforcement half, D-11) *(COMPLETE 2026-07-08 — 325 tests green, tsc+build clean)*
+- [x] 05-02-PLAN.md — getProduct isActive soft-delete fix + admin read-queries (getProductForAdmin/listProductsForAdmin/listOrdersForAdmin/getOrderForAdmin) + @vercel/blob install + .env.local.example + Wave 0 RED admin test scaffolds (ADMN-01/02/03, ORD-03) *(COMPLETE 2026-07-08 — scaffolds RED-by-design; 325 pre-existing tests green)*
 
 **Wave 2** *(server logic — parallel, no file overlap; blocked on Wave 1)*
 - [ ] 05-03-PLAN.md — Product/variant/image admin Server Actions (create/update/deactivate/upsertVariant + Vercel Blob upload wrapper + required-alt-text + updateTag invalidation) (ADMN-01, ADMN-02, D-03/04/05/06)
