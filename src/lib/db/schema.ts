@@ -91,6 +91,16 @@ export const processedWebhookEvents = pgTable("processed_webhook_events", {
   eventIdUnique: unique("processed_webhook_events_id_unique").on(table.id),
 }))
 
+// Phase 5 (D-11 / ADMN-04): store_settings — one row per DB-backed payment method.
+// A method is enabled only when BOTH this flag is true AND env credentials are present
+// (see src/lib/payments/config.ts). Mirrors processedWebhookEvents: small text-PK lookup
+// table, no relations.
+export const storeSettings = pgTable("store_settings", {
+  method:    text("method").primaryKey(),
+  enabled:   boolean("enabled").notNull().default(false),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+})
+
 // ─── Phase 2: Product Catalog Tables ─────────────────────────────────────────
 // Implements the flexible per-product variant model (D-01 through D-05, D-08)
 // All IDs: text UUID (crypto.randomUUID()); timestamps: { mode: "date" }

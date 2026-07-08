@@ -98,3 +98,15 @@ export async function truncateCatalogTables() {
   await db.delete(schema.brands)
   await db.delete(schema.categories)
 }
+
+/**
+ * Truncate the store_settings table (D-11 / ADMN-04).
+ * No FK dependents — safe to delete standalone.
+ */
+export async function truncateStoreSettingsTable() {
+  assertTestDatabase()
+  const { db } = await import("@/lib/db/client")
+  const schema = await import("@/lib/db/schema")
+
+  await db.delete(schema.storeSettings)
+}
