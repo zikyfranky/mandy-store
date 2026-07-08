@@ -27,7 +27,7 @@ vi.mock("@/lib/dal", () => ({
 // vi.hoisted runs before vi.mock factory hoisting — allows us to share these
 // references reliably (the bare "mock"-prefix hoisting convention does not
 // reliably hoist a chain of variables that reference each other).
-const { mockWhere, mockSet, mockUpdate } = vi.hoisted(() => {
+const { mockUpdate } = vi.hoisted(() => {
   const mockWhere = vi.fn().mockResolvedValue(undefined)
   const mockSet = vi.fn(() => ({ where: mockWhere }))
   const mockUpdate = vi.fn(() => ({ set: mockSet }))
