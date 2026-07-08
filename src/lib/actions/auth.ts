@@ -97,10 +97,23 @@ export async function register(
     expires,
   })
 
-  // Send the verification email via Resend seam
-  await sendVerificationEmail(email, token)
+  // Send the verification email — BEST-EFFORT. The account + token already exist, so a mail
+  // failure (e.g. RESEND_API_KEY unset on the server, Resend API error) must NOT 500 the signup.
+  // Log it and return success with a softer message so the user can request a resend instead.
+  let emailSent = true
+  try {
+    await sendVerificationEmail(email, token)
+  } catch (err) {
+    emailSent = false
+    console.error("[register] verification email failed (account still created):", err)
+  }
 
-  return { success: true, message: "Check your email to verify your account." }
+  return {
+    success: true,
+    message: emailSent
+      ? "Check your email to verify your account."
+      : "Account created. We couldn't send the verification email right now — please request a new one or contact support.",
+  }
 }
 
 // ─── verifyEmail() ────────────────────────────────────────────────────────────

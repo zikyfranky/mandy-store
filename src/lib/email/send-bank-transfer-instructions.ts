@@ -4,10 +4,8 @@ import "server-only"
 // ORD-02: sent synchronously in the bank-transfer checkout action (must succeed before redirect).
 // T-04-07: bank account details read from server-only env (BANK_* — no NEXT_PUBLIC_ prefix, D-10).
 
-import { Resend } from "resend"
+import { getResendClient } from "./resend-client"
 import { BankTransferInstructionsEmail } from "@/emails/BankTransferInstructionsEmail"
-
-const resend = new Resend(process.env.RESEND_API_KEY!)
 
 export interface BankTransferInstructionsInput {
   customerEmail: string
@@ -42,6 +40,11 @@ export async function sendBankTransferInstructionsEmail(
     throw new Error(
       "Bank account env vars not configured (BANK_NAME, BANK_ACCOUNT_NUMBER, BANK_ACCOUNT_NAME)"
     )
+  }
+
+  const resend = getResendClient()
+  if (!resend) {
+    throw new Error("RESEND_API_KEY is not configured — cannot send bank transfer instructions email")
   }
 
   const { error } = await resend.emails.send({

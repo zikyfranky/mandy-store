@@ -4,10 +4,8 @@ import "server-only"
 // Source: RESEARCH.md Pattern 6, §Open Question 1 (from address)
 // Threat model: T-01-08 (server-only guard prevents client bundle exposure)
 
-import { Resend } from "resend"
+import { getResendClient } from "./resend-client"
 import { VerificationEmail } from "@/emails/VerificationEmail"
-
-const resend = new Resend(process.env.RESEND_API_KEY!)
 
 /**
  * Sends a verification email to the given address with a clickable verify link.
@@ -17,6 +15,11 @@ const resend = new Resend(process.env.RESEND_API_KEY!)
  * @throws Error if Resend API returns an error
  */
 export async function sendVerificationEmail(email: string, token: string): Promise<void> {
+  const resend = getResendClient()
+  if (!resend) {
+    throw new Error("RESEND_API_KEY is not configured — cannot send verification email")
+  }
+
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(email)}`
 
   const { error } = await resend.emails.send({

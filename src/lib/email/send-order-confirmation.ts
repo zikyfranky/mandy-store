@@ -4,10 +4,8 @@ import "server-only"
 // ORD-01: sent when payment is confirmed (Stripe webhook calls with .catch(console.error) — non-blocking).
 // T-04-07: server-only; no bank details here.
 
-import { Resend } from "resend"
+import { getResendClient } from "./resend-client"
 import { OrderConfirmationEmail } from "@/emails/OrderConfirmationEmail"
-
-const resend = new Resend(process.env.RESEND_API_KEY!)
 
 export interface OrderConfirmationInput {
   customerEmail: string
@@ -32,6 +30,11 @@ export interface OrderConfirmationInput {
  * @throws Error if Resend API returns an error (caller decides whether to swallow)
  */
 export async function sendOrderConfirmationEmail(order: OrderConfirmationInput): Promise<void> {
+  const resend = getResendClient()
+  if (!resend) {
+    throw new Error("RESEND_API_KEY is not configured — cannot send order confirmation email")
+  }
+
   const { error } = await resend.emails.send({
     from: "Mandy Store <onboarding@resend.dev>",
     to: order.customerEmail,

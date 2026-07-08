@@ -61,6 +61,41 @@ describe("register()", () => {
   )
 
   it.skipIf(skip)(
+    "still succeeds (does NOT 500) when the verification email fails to send",
+    async () => {
+      // Regression: register() must not crash when Resend is misconfigured/unreachable
+      // (e.g. RESEND_API_KEY unset on the server). The account is already created; a mail
+      // failure degrades to a softer success message, never an unhandled throw.
+      const { sendVerificationEmail } = await import("@/lib/email/send-verification")
+      vi.mocked(sendVerificationEmail).mockRejectedValueOnce(
+        new Error("RESEND_API_KEY is not configured — cannot send verification email"),
+      )
+
+      const { register } = await import("@/lib/actions/auth")
+      const { getDb } = await import("../helpers/db")
+      const { users } = await import("@/lib/db/schema")
+      const { eq } = await import("drizzle-orm")
+
+      const formData = new FormData()
+      formData.set("email", "mailfail@example.com")
+      formData.set("password", "password123")
+      formData.set("name", "Mail Fail")
+      formData.set("username", "mail_fail")
+
+      const result = await register(formData)
+      // Does not throw; returns success with the degraded message
+      expect(result).toMatchObject({ success: true })
+      expect((result as { message: string }).message).toMatch(/couldn't send the verification email/i)
+
+      // The user was still created (account exists, just unverified)
+      const db = await getDb()
+      const user = await db.query.users.findFirst({ where: eq(users.email, "mailfail@example.com") })
+      expect(user).toBeDefined()
+      expect(user!.emailVerified).toBeNull()
+    },
+  )
+
+  it.skipIf(skip)(
     "rejects registration with a duplicate email",
     async () => {
       const { register } = await import("@/lib/actions/auth")
