@@ -129,8 +129,8 @@ Plans:
 - [x] 05-02-PLAN.md — getProduct isActive soft-delete fix + admin read-queries (getProductForAdmin/listProductsForAdmin/listOrdersForAdmin/getOrderForAdmin) + @vercel/blob install + .env.local.example + Wave 0 RED admin test scaffolds (ADMN-01/02/03, ORD-03) *(COMPLETE 2026-07-08 — scaffolds RED-by-design; 325 pre-existing tests green)*
 
 **Wave 2** *(server logic — parallel, no file overlap; blocked on Wave 1)*
-- [ ] 05-03-PLAN.md — Product/variant/image admin Server Actions (create/update/deactivate/upsertVariant + Vercel Blob upload wrapper + required-alt-text + updateTag invalidation) (ADMN-01, ADMN-02, D-03/04/05/06)
-- [ ] 05-04-PLAN.md — Shared guarded updateOrderStatus transition machine + D-09 bank-transfer confirm via confirmOrderPaid + ORD-03 shipped/delivered status email + toggleStoreSetting action (ADMN-03, ADMN-04, ORD-03, D-08/09/10)
+- [x] 05-03-PLAN.md — Product/variant/image admin Server Actions (create/update/deactivate/reactivate/upsertVariant + Vercel Blob upload wrapper + required-alt-text + updateTag invalidation) (ADMN-01, ADMN-02, D-03/04/05/06) *(COMPLETE 2026-07-08 — products.test.ts 9/9 green)*
+- [x] 05-04-PLAN.md — Shared guarded updateOrderStatus transition machine + D-09 bank-transfer confirm via confirmOrderPaid + ORD-03 shipped/delivered status email + toggleStoreSetting action (ADMN-03, ADMN-04, ORD-03, D-08/09/10) *(COMPLETE 2026-07-08 — full suite 340 tests green, no RED scaffolds)*
 
 **Wave 3** *(admin shell + products UI; blocked on Wave 2)*
 - [ ] 05-05-PLAN.md — Admin shell (layout/sidebar/formStyles/OrderStatusBadge, D-01/02 dual-auth) + Products UI (list + status filter + editor with variants + image upload) (ADMN-01, ADMN-02)
