@@ -18,7 +18,7 @@ import { interswitchAdapter } from "@/lib/payments/gateways/interswitch"
 
 async function handle(req: NextRequest): Promise<NextResponse> {
   // ── Toggle check — FIRST (PAY-12, D-18) ───────────────────────────────────
-  if (!isPaymentMethodEnabled("interswitch")) {
+  if (!(await isPaymentMethodEnabled("interswitch"))) {
     return NextResponse.redirect(new URL("/checkout?error=disabled", req.url))
   }
 

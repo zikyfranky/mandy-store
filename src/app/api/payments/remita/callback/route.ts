@@ -13,7 +13,7 @@ import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { remitaAdapter } from "@/lib/payments/gateways/remita"
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  if (!isPaymentMethodEnabled("remita")) {
+  if (!(await isPaymentMethodEnabled("remita"))) {
     return NextResponse.redirect(new URL("/checkout?error=disabled", req.url))
   }
 

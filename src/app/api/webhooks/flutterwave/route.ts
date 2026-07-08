@@ -25,7 +25,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── 0. Toggle check — FIRST statement (D-06, PAY-12, T-07-15) ─────────────────
   // Reject at the route level before reading any data. A disabled gateway must be
   // rejected here, not merely hidden in the UI (plan constraint).
-  if (!isPaymentMethodEnabled("flutterwave")) {
+  if (!(await isPaymentMethodEnabled("flutterwave"))) {
     return NextResponse.json({ error: "Gateway disabled" }, { status: 400 })
   }
 

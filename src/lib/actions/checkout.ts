@@ -157,7 +157,7 @@ export async function createBankTransferOrder(
   input: CheckoutInput
 ): Promise<BankTransferResult> {
   // PAY-04 / D-13 — disabled method rejected server-side before any other work (T-04-11)
-  if (!isPaymentMethodEnabled("bank_transfer")) {
+  if (!(await isPaymentMethodEnabled("bank_transfer"))) {
     return { error: "Bank transfer is not available" }
   }
 
@@ -242,7 +242,7 @@ export async function createStripePaymentIntent(
   input: CheckoutInput
 ): Promise<StripeIntentResult> {
   // PAY-04 / D-13 — disabled method rejected server-side (T-04-11)
-  if (!isPaymentMethodEnabled("stripe")) {
+  if (!(await isPaymentMethodEnabled("stripe"))) {
     return { error: "Card payment is not available" }
   }
 

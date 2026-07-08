@@ -40,7 +40,7 @@ export type PaystackInitResult =
  */
 export async function initPaystackPayment(input: CheckoutInput): Promise<PaystackInitResult> {
   // ── 1. Toggle check — FIRST statement (PAY-12, D-06) ─────────────────────
-  if (!isPaymentMethodEnabled("paystack")) {
+  if (!(await isPaymentMethodEnabled("paystack"))) {
     return { error: "Paystack is not available" }
   }
 
@@ -138,7 +138,7 @@ export async function verifyPaystackPayment({
   reference: string
 }): Promise<PaystackVerifyResult> {
   // ── 1. Toggle check — FIRST statement (PAY-12, D-06) ─────────────────────
-  if (!isPaymentMethodEnabled("paystack")) {
+  if (!(await isPaymentMethodEnabled("paystack"))) {
     return { error: "Paystack is not available" }
   }
 

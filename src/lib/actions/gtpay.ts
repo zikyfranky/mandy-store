@@ -20,7 +20,7 @@ export type GtpayInitResult =
 
 export async function initGtpayPayment(input: CheckoutInput): Promise<GtpayInitResult> {
   // ── 1. Toggle check — FIRST statement (PAY-12, D-18) ─────────────────────
-  if (!isPaymentMethodEnabled("gtpay")) {
+  if (!(await isPaymentMethodEnabled("gtpay"))) {
     return { error: "GTPay is not available" }
   }
 

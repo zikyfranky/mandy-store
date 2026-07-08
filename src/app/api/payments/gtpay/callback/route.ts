@@ -14,7 +14,7 @@ import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { gtpayAdapter } from "@/lib/payments/gateways/gtpay"
 
 async function handle(req: NextRequest): Promise<NextResponse> {
-  if (!isPaymentMethodEnabled("gtpay")) {
+  if (!(await isPaymentMethodEnabled("gtpay"))) {
     return NextResponse.redirect(new URL("/checkout?error=disabled", req.url))
   }
 

@@ -19,7 +19,7 @@ import { remitaAdapter } from "@/lib/payments/gateways/remita"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── Toggle FIRST — 200 so a disabled endpoint stops retries ───────────────
-  if (!isPaymentMethodEnabled("remita")) {
+  if (!(await isPaymentMethodEnabled("remita"))) {
     return new NextResponse(null, { status: 200 })
   }
 

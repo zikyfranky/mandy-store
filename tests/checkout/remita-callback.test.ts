@@ -21,7 +21,7 @@ const MOCK_ORDER = { id: "o1", guestToken: "gt-rem", totalKobo: 10_200_000 }
 const RRR = "123456789012"
 
 beforeEach(() => {
-  vi.mocked(isPaymentMethodEnabled).mockReturnValue(true)
+  vi.mocked(isPaymentMethodEnabled).mockResolvedValue(true)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   vi.mocked(getOrderByGatewayReference).mockResolvedValue(MOCK_ORDER as any)
   vi.mocked(confirmOrderPaid).mockResolvedValue({ outcome: "confirmed" })

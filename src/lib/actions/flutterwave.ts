@@ -52,7 +52,7 @@ export type FlutterwaveInitResult =
  */
 export async function initFlutterwavePayment(input: CheckoutInput): Promise<FlutterwaveInitResult> {
   // ── 1. Toggle check — FIRST statement (PAY-12, D-06, T-07-15) ───────────────
-  if (!isPaymentMethodEnabled("flutterwave")) {
+  if (!(await isPaymentMethodEnabled("flutterwave"))) {
     return { error: "Flutterwave is not available" }
   }
 
@@ -140,7 +140,7 @@ export async function verifyFlutterwavePayment({
   txRef: string
 }): Promise<FlutterwaveVerifyResult> {
   // ── 1. Toggle check — FIRST statement (PAY-12, D-06, T-07-15) ───────────────
-  if (!isPaymentMethodEnabled("flutterwave")) {
+  if (!(await isPaymentMethodEnabled("flutterwave"))) {
     return { error: "Flutterwave is not available" }
   }
 

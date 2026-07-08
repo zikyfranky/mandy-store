@@ -21,7 +21,7 @@ export type RemitaInitResult =
 
 export async function initRemitaPayment(input: CheckoutInput): Promise<RemitaInitResult> {
   // ── 1. Toggle check — FIRST statement (PAY-12, D-18) ─────────────────────
-  if (!isPaymentMethodEnabled("remita")) {
+  if (!(await isPaymentMethodEnabled("remita"))) {
     return { error: "Remita is not available" }
   }
 

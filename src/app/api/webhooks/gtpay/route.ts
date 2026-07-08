@@ -18,7 +18,7 @@ import { gtpayAdapter } from "@/lib/payments/gateways/gtpay"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── Toggle FIRST — 200 so the gateway stops retrying a disabled endpoint ──
-  if (!isPaymentMethodEnabled("gtpay")) {
+  if (!(await isPaymentMethodEnabled("gtpay"))) {
     return new NextResponse(null, { status: 200 })
   }
 

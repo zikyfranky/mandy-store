@@ -22,7 +22,7 @@ export type InterswitchInitResult =
 
 export async function initInterswitchPayment(input: CheckoutInput): Promise<InterswitchInitResult> {
   // ── 1. Toggle check — FIRST statement (PAY-12, D-18) ─────────────────────
-  if (!isPaymentMethodEnabled("interswitch")) {
+  if (!(await isPaymentMethodEnabled("interswitch"))) {
     return { error: "Interswitch is not available" }
   }
 

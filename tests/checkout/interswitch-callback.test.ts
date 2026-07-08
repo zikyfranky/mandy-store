@@ -21,7 +21,7 @@ import { interswitchAdapter } from "@/lib/payments/gateways/interswitch"
 const MOCK_ORDER = { id: "o1", guestToken: "gt-abc", totalKobo: 10_200_000 }
 
 beforeEach(() => {
-  vi.mocked(isPaymentMethodEnabled).mockReturnValue(true)
+  vi.mocked(isPaymentMethodEnabled).mockResolvedValue(true)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   vi.mocked(getOrderByGatewayReference).mockResolvedValue(MOCK_ORDER as any)
   vi.mocked(confirmOrderPaid).mockResolvedValue({ outcome: "confirmed" })
@@ -37,7 +37,7 @@ const req = () => new NextRequest("http://localhost:3000/api/payments/interswitc
 
 describe("interswitch callback — toggle + lookup guards", () => {
   it("toggle OFF → redirects to /checkout?error=disabled (toggle FIRST)", async () => {
-    vi.mocked(isPaymentMethodEnabled).mockReturnValue(false)
+    vi.mocked(isPaymentMethodEnabled).mockResolvedValue(false)
     const { GET } = await import("@/app/api/payments/interswitch/callback/route")
     const res = await GET(req())
     expect(res.headers.get("location")).toContain("/checkout?error=disabled")

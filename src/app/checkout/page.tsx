@@ -54,7 +54,7 @@ async function CheckoutContent() {
   }
 
   const session = await auth()
-  const methods = enabledPaymentMethods() // server-only — safe in a Server Component
+  const methods = await enabledPaymentMethods() // server-only — safe in a Server Component
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 
   const prefilledEmail = session?.user?.email ?? null
