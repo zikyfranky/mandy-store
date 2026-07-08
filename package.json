@@ -23,6 +23,7 @@
     "@react-email/components": "^1.0.12",
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
+    "@vercel/blob": "^2.6.1",
     "argon2": "^0.44.0",
     "drizzle-orm": "^0.45.2",
     "flutterwave-node-v3": "^1.4.1",
