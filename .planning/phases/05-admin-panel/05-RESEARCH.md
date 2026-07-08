@@ -583,7 +583,10 @@ export async function sendOrderStatusChangeEmail(input: {
 
 **If this table is empty:** N/A — see above.
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> RESOLVED: each question below carries a "Recommendation:" that the plans implement — Q1 (no refund-on-cancel) → Plan 04 transition graph; Q2 (don't auto-reactivate variants) → Plan 03 reactivateProduct; Q3 (don't seed NG-gateway rows) → Plan 01 store_settings seed.
+
 
 1. **Does cancelling a `payment_confirmed` order need to trigger a gateway refund?**
    - What we know: The Phase 4/7 gateway adapters (`stripe.refunds.create`, Flutterwave refund path) already exist for the *oversold* recovery case inside `confirmOrderPaid`'s caller.

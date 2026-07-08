@@ -122,20 +122,21 @@ Plans:
   3. An admin can view all orders, filter by status, and update fulfillment status through a shared status function (never setting the status field directly)
   4. When an order moves to shipped/delivered, the customer automatically receives a status-change email
   5. An admin can toggle Stripe, PayPal, and bank transfer on or off, and every admin Server Action re-verifies the admin role before acting
-**Plans**: 5 plans (4 waves) — *scope re-evaluated per CONTEXT D-11: Opay/Palmpay are **satisfied-via-channel** through the Phase 7 aggregator popups (no standalone build); only Interswitch/GTPay/Remita are built as direct redirect adapters.*
+**Plans**: 6 plans (4 waves)
 Plans:
-**Wave 1**
-- [ ] 07.1-01-PLAN.md — Foundation: D-16 InitResult discriminated union in types.ts (migrate Paystack/Flutterwave returns to {mode:"popup"}), extend server-only toggle for interswitch/gtpay/remita (PAY-12), .env.local.example, and scaffold RED Wave 0 adapter tests
+**Wave 1** *(foundation — parallel, no file overlap)*
+- [ ] 05-01-PLAN.md — store_settings table + [BLOCKING] direct-SQL push (both DBs) + sync→async `isPaymentMethodEnabled` migration across all 15 call sites + config async tests (ADMN-04 server-side enforcement half, D-11)
+- [ ] 05-02-PLAN.md — getProduct isActive soft-delete fix + admin read-queries (getProductForAdmin/listProductsForAdmin/listOrdersForAdmin) + @vercel/blob install + .env.local.example + Wave 0 RED admin test scaffolds (ADMN-01/02/03, ORD-03)
 
-**Wave 2** *(blocked on Wave 1; plans 02 & 03 run in parallel — no file overlap)*
-- [ ] 07.1-02-PLAN.md — Interswitch (PAY-09) + GTPay (PAY-10) adapters as two thin configs over one shared webpay-core.ts (D-12), SHA-512 request/requery hashes, kobo passthrough
-- [ ] 07.1-03-PLAN.md — Remita (PAY-11) adapter: RRR-inside-init (D-17), naira↔kobo conversion, JSONP-safe requery verify
+**Wave 2** *(server logic — parallel, no file overlap; blocked on Wave 1)*
+- [ ] 05-03-PLAN.md — Product/variant/image admin Server Actions (create/update/deactivate/upsertVariant + Vercel Blob upload wrapper + required-alt-text + updateTag invalidation) (ADMN-01, ADMN-02, D-03/04/05/06)
+- [ ] 05-04-PLAN.md — Shared guarded updateOrderStatus transition machine + D-09 bank-transfer confirm via confirmOrderPaid + ORD-03 shipped/delivered status email + toggleStoreSetting action (ADMN-03, ADMN-04, ORD-03, D-08/09/10)
 
-**Wave 3** *(blocked on Wave 2)*
-- [ ] 07.1-04-PLAN.md — Init Server Actions (server total recompute, order insert, RRR→gatewayReference) + per-gateway verify-on-return callback routes (D-14/D-15) + optional GTPay/Remita webhooks, all funneling the untouched confirmOrderPaid with <provider>:<ref> idempotency
+**Wave 3** *(admin shell + products UI; blocked on Wave 2)*
+- [ ] 05-05-PLAN.md — Admin shell (layout/sidebar/formStyles/OrderStatusBadge, D-01/02 dual-auth) + Products UI (list + status filter + editor with variants + image upload) (ADMN-01, ADMN-02)
 
-**Wave 4** *(blocked on Wave 3)*
-- [ ] 07.1-05-PLAN.md — Checkout UI: shared RedirectLauncherPanel (POST auto-submit for Interswitch/GTPay, GET for Remita) + 3 radio entries + ?error= banner wiring; document PAY-07/08 satisfied-via-channel + REQUIREMENTS.md traceability; human-verify sandbox round-trip (D-19)
+**Wave 4** *(orders + settings UI + human-verify; blocked on Wave 3)*
+- [ ] 05-06-PLAN.md — Orders UI (list/filter + detail + guided no-dropdown transitions + bank-transfer confirm) + Settings UI (Stripe/PayPal/Bank toggles with dual-gate notes) + credential-gated human-verify checkpoint (Blob image round-trip + live toggle) (ADMN-03, ADMN-04, ORD-03)
 **UI hint**: yes
 
 ### Phase 6: Customer Accounts
