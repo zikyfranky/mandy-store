@@ -133,7 +133,7 @@ Plans:
 - [x] 05-04-PLAN.md — Shared guarded updateOrderStatus transition machine + D-09 bank-transfer confirm via confirmOrderPaid + ORD-03 shipped/delivered status email + toggleStoreSetting action (ADMN-03, ADMN-04, ORD-03, D-08/09/10) *(COMPLETE 2026-07-08 — full suite 340 tests green, no RED scaffolds)*
 
 **Wave 3** *(admin shell + products UI; blocked on Wave 2)*
-- [ ] 05-05-PLAN.md — Admin shell (layout/sidebar/formStyles/OrderStatusBadge, D-01/02 dual-auth) + Products UI (list + status filter + editor with variants + image upload) (ADMN-01, ADMN-02)
+- [x] 05-05-PLAN.md — Admin shell (layout/sidebar/formStyles/OrderStatusBadge, D-01/02 dual-auth) + Products UI (list + status filter + editor with variants + image upload) (ADMN-01, ADMN-02) *(COMPLETE 2026-07-09 — 4 admin routes build as PPR; 340 tests green)*
 
 **Wave 4** *(orders + settings UI + human-verify; blocked on Wave 3)*
 - [ ] 05-06-PLAN.md — Orders UI (list/filter + detail + guided no-dropdown transitions + bank-transfer confirm) + Settings UI (Stripe/PayPal/Bank toggles with dual-gate notes) + credential-gated human-verify checkpoint (Blob image round-trip + live toggle) (ADMN-03, ADMN-04, ORD-03)
