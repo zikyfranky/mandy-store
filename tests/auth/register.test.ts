@@ -3,7 +3,7 @@
 // Integration tests against the live Neon test DB.
 
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { hasDatabase, truncateAuthTables } from "../helpers/db"
+import { hasDatabase, truncateAuthTables, truncateOrderTables } from "../helpers/db"
 
 // Mock sendVerificationEmail so no real emails are sent during tests
 vi.mock("@/lib/email/send-verification", () => ({
@@ -26,6 +26,7 @@ const skip = !hasDatabase
 describe("register()", () => {
   beforeEach(async () => {
     if (!hasDatabase) return
+    await truncateOrderTables() // orders reference users(id) — clear before auth tables (D-06 claim tests)
     await truncateAuthTables()
     vi.clearAllMocks()
   })
@@ -237,6 +238,108 @@ describe("register()", () => {
       const result = await register(formData)
       expect(result).toMatchObject({ error: expect.any(String) })
       expect("success" in result).toBe(false)
+    },
+  )
+
+  // ─── D-06: best-effort guest-order claim on register (Phase 6, AUTH-04) ──────
+
+  async function insertGuestOrder(guestToken: string, userId: string | null) {
+    const { db } = await import("@/lib/db/client")
+    const { orders } = await import("@/lib/db/schema")
+    const orderId = crypto.randomUUID()
+    await db.insert(orders).values({
+      id: orderId,
+      reference: "MS-CLAIM-" + orderId.slice(0, 6),
+      guestToken,
+      status: "awaiting_bank_transfer",
+      userId,
+      customerEmail: "guest@example.com",
+      subtotalKobo: 1_000_000,
+      shippingKobo: 200_000,
+      totalKobo: 1_200_000,
+      shippingName: "Guest",
+      shippingPhone: "08000000000",
+      shippingStreet: "1 Test St",
+      shippingCity: "Lagos",
+      shippingState: "Lagos",
+    })
+    return orderId
+  }
+
+  it.skipIf(skip)(
+    "claims the guest order when register() is given a valid, unclaimed orderToken",
+    async () => {
+      const { register } = await import("@/lib/actions/auth")
+      const { getDb } = await import("../helpers/db")
+      const { users, orders } = await import("@/lib/db/schema")
+      const { eq } = await import("drizzle-orm")
+
+      const tok = "c".repeat(64)
+      const orderId = await insertGuestOrder(tok, null)
+
+      const formData = new FormData()
+      formData.set("email", "claimer@example.com")
+      formData.set("password", "password123")
+      formData.set("name", "Claim User")
+      formData.set("username", "claimuser")
+      formData.set("orderToken", tok)
+
+      const result = await register(formData)
+      expect(result).toMatchObject({ success: true })
+
+      const db = await getDb()
+      const newUser = await db.query.users.findFirst({ where: eq(users.email, "claimer@example.com") })
+      const order = await db.query.orders.findFirst({ where: eq(orders.id, orderId) })
+      expect(order!.userId).toBe(newUser!.id) // order now linked to the new account
+    },
+  )
+
+  it.skipIf(skip)(
+    "does not reassign an already-claimed orderToken and still succeeds",
+    async () => {
+      const { register } = await import("@/lib/actions/auth")
+      const { getDb } = await import("../helpers/db")
+      const { users, orders } = await import("@/lib/db/schema")
+      const { eq } = await import("drizzle-orm")
+
+      // Pre-existing owner
+      const ownerId = crypto.randomUUID()
+      const db0 = await getDb()
+      await db0.insert(users).values({ id: ownerId, email: "owner@example.com", name: "Owner", username: "owner_x" })
+
+      const tok = "d".repeat(64)
+      const orderId = await insertGuestOrder(tok, ownerId) // already claimed by owner
+
+      const formData = new FormData()
+      formData.set("email", "attacker@example.com")
+      formData.set("password", "password123")
+      formData.set("name", "Attacker")
+      formData.set("username", "attacker_x")
+      formData.set("orderToken", tok)
+
+      const result = await register(formData)
+      expect(result).toMatchObject({ success: true }) // registration still succeeds
+
+      const db = await getDb()
+      const order = await db.query.orders.findFirst({ where: eq(orders.id, orderId) })
+      expect(order!.userId).toBe(ownerId) // UNCHANGED — not reassigned
+    },
+  )
+
+  it.skipIf(skip)(
+    "still succeeds when the orderToken is missing/garbage (best-effort, never blocks)",
+    async () => {
+      const { register } = await import("@/lib/actions/auth")
+
+      const formData = new FormData()
+      formData.set("email", "garbagetoken@example.com")
+      formData.set("password", "password123")
+      formData.set("name", "Garbage Token")
+      formData.set("username", "garbage_tok")
+      formData.set("orderToken", "garbage-not-a-real-token")
+
+      const result = await register(formData)
+      expect(result).toMatchObject({ success: true })
     },
   )
 })
