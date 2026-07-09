@@ -136,7 +136,7 @@ Plans:
 - [x] 05-05-PLAN.md — Admin shell (layout/sidebar/formStyles/OrderStatusBadge, D-01/02 dual-auth) + Products UI (list + status filter + editor with variants + image upload) (ADMN-01, ADMN-02) *(COMPLETE 2026-07-09 — 4 admin routes build as PPR; 340 tests green)*
 
 **Wave 4** *(orders + settings UI + human-verify; blocked on Wave 3)*
-- [ ] 05-06-PLAN.md — Orders UI (list/filter + detail + guided no-dropdown transitions + bank-transfer confirm) + Settings UI (Stripe/PayPal/Bank toggles with dual-gate notes) + credential-gated human-verify checkpoint (Blob image round-trip + live toggle) (ADMN-03, ADMN-04, ORD-03)
+- [~] 05-06-PLAN.md — Orders UI (list/filter + detail + guided no-dropdown transitions + bank-transfer confirm) + Settings UI (Stripe/PayPal/Bank toggles with dual-gate notes) + credential-gated human-verify checkpoint (Blob image round-trip + live toggle) (ADMN-03, ADMN-04, ORD-03) *(CODE COMPLETE 2026-07-09 — 340 tests green, build clean; **human-verify PENDING creds**: BLOB_READ_WRITE_TOKEN + live toggle round-trip)*
 **UI hint**: yes
 
 ### Phase 6: Customer Accounts
