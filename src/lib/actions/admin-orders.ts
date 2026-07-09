@@ -22,26 +22,11 @@ import { db } from "@/lib/db/client"
 import { orders } from "@/lib/db/schema"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { sendOrderStatusChangeEmail } from "@/lib/email/send-order-status-change"
-
-// D-08: single transition allowlist over the 8-value order_status enum. Copied verbatim
-// from 05-RESEARCH.md Pattern 4 / 05-PATTERNS.md — do not diverge from this graph without
-// updating both docs.
-export const LEGAL_TRANSITIONS: Record<string, string[]> = {
-  pending_payment: ["cancelled"],
-  awaiting_bank_transfer: ["payment_confirmed", "cancelled"],
-  payment_confirmed: ["processing", "cancelled"],
-  processing: ["shipped", "cancelled"],
-  shipped: ["delivered"],
-  delivered: [],
-  cancelled: [],
-  payment_failed: [],
-}
-
-/** Returns the legal next statuses for a given current status — used by the UI (Plan 06) to
- * render only valid transition buttons, never a free-choice dropdown (Pitfall 3). */
-export function getValidNextStatuses(currentStatus: string): string[] {
-  return LEGAL_TRANSITIONS[currentStatus] ?? []
-}
+// D-08: single transition allowlist — extracted to a non-"use server" module because
+// Next.js requires every export of a "use server" file to be an async function, and
+// getValidNextStatuses is a plain sync helper the UI calls directly (see
+// src/lib/orders/legal-transitions.ts for the full rationale).
+import { LEGAL_TRANSITIONS } from "@/lib/orders/legal-transitions"
 
 export type UpdateOrderStatusResult = { success: boolean; outcome?: string }
 
