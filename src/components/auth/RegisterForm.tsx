@@ -13,7 +13,7 @@ type RegisterState =
   | { success: true; message: string }
   | null
 
-export default function RegisterForm() {
+export default function RegisterForm({ orderToken }: { orderToken?: string }) {
   const [state, formAction, isPending] = useActionState<RegisterState, FormData>(
     async (_prev: RegisterState, formData: FormData) => {
       return await register(formData)
@@ -49,6 +49,7 @@ export default function RegisterForm() {
       </h1>
 
       <form action={formAction} className="space-y-4">
+        {orderToken && <input type="hidden" name="orderToken" value={orderToken} />}
         <div>
           <label
             htmlFor="name"

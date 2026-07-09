@@ -5,11 +5,11 @@
 // Threat model: T-01-10 (zod validation), T-01-11 (login enumeration), T-01-12 (token), T-01-13 (ADMIN_EMAILS), T-01-14 (argon2id)
 
 import { db } from "@/lib/db/client"
-import { users, verificationTokens } from "@/lib/db/schema"
+import { users, verificationTokens, orders } from "@/lib/db/schema"
 import { sendVerificationEmail } from "@/lib/email/send-verification"
 import { signIn, signOut, auth } from "@/lib/auth"
 import * as argon2 from "argon2"
-import { eq, and } from "drizzle-orm"
+import { eq, and, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { AuthError } from "next-auth"
 import { redirect } from "next/navigation"
@@ -87,6 +87,22 @@ export async function register(
     role,
     emailVerified: null,
   })
+
+  // D-06 (Phase 6, AUTH-04): best-effort guest-order claim — links a just-placed guest order
+  // to this new account so it appears in order history. NEVER blocks registration success.
+  // The guarded WHERE is the entire validation: a bad/foreign/already-claimed token updates
+  // 0 rows (intentional silent no-op). No pre-check read — the userId IS NULL guard is the defense.
+  const orderToken = (formData.get("orderToken") as string | null) || null
+  if (orderToken) {
+    try {
+      await db
+        .update(orders)
+        .set({ userId })
+        .where(and(eq(orders.guestToken, orderToken), isNull(orders.userId)))
+    } catch (err) {
+      console.error("[register] guest-order claim failed (account still created):", err)
+    }
+  }
 
   // T-01-12: Generate single-use, expiring verification token (24h, RESEARCH Pattern 6)
   const token   = crypto.randomUUID()
