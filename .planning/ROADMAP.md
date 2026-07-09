@@ -149,7 +149,7 @@ Plans:
   3. The order history page is protected by both proxy.ts redirect and an in-action verifySession check
 **Plans**: 2 plans
 - [x] 06-01-PLAN.md — user-scoped IDOR-safe order queries + best-effort guest-order claim on register (Wave 1) *(COMPLETE 2026-07-09 — 16 tests green incl. IDOR; executed inline after executor watchdog stall)*
-- [ ] 06-02-PLAN.md — account UI: /account landing, /account/orders history list + OrderHistoryCard, IDOR-safe /account/orders/[id] detail (Wave 2)
+- [x] 06-02-PLAN.md — account UI: /account landing, /account/orders history list + OrderHistoryCard, IDOR-safe /account/orders/[id] detail (Wave 2) *(COMPLETE 2026-07-09 — 348 tests green, build clean; proxy /account exact-match dual-auth closed)*
 **UI hint**: yes
 
 ### Phase 7: Nigerian Payment Gateways (Paystack + Flutterwave)
