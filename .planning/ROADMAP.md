@@ -148,7 +148,7 @@ Plans:
   2. A customer can open an individual past order and see its line items, variant labels, shipping address, and final total as captured at purchase time
   3. The order history page is protected by both proxy.ts redirect and an in-action verifySession check
 **Plans**: 2 plans
-- [ ] 06-01-PLAN.md — user-scoped IDOR-safe order queries + best-effort guest-order claim on register (Wave 1)
+- [x] 06-01-PLAN.md — user-scoped IDOR-safe order queries + best-effort guest-order claim on register (Wave 1) *(COMPLETE 2026-07-09 — 16 tests green incl. IDOR; executed inline after executor watchdog stall)*
 - [ ] 06-02-PLAN.md — account UI: /account landing, /account/orders history list + OrderHistoryCard, IDOR-safe /account/orders/[id] detail (Wave 2)
 **UI hint**: yes
 
