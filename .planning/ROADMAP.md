@@ -11,7 +11,7 @@
 - [x] **Phase 2: Product Catalog** - A browsable, searchable, filterable storefront with variant selection (completed 2026-06-19)
 - [x] **Phase 3: Cart** - A cart that survives navigation and refresh for guests and logged-in users (completed 2026-06-25)
 - [x] **Phase 4: Checkout & Payments** - End-to-end purchase via Stripe or bank transfer with order confirmation (completed 2026-06-30)
-- [ ] **Phase 5: Admin Panel** - Store owner manages products, variants, stock, and order fulfillment
+- [x] **Phase 5: Admin Panel** - Store owner manages products, variants, stock, and order fulfillment (completed 2026-07-09 — code-complete; 2 credential-gated go-live human-verify items in 05-HUMAN-UAT)
 - [ ] **Phase 6: Customer Accounts** - Repeat buyers can view their order history
 - [ ] **Phase 7: Nigerian Payment Gateways** - Paystack + Flutterwave (the two NGN aggregators) behind a reusable gateway-adapter interface
 - [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface

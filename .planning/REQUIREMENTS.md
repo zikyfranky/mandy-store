@@ -64,14 +64,14 @@ Direct-integration gateways added as new adapters against the Phase 7 gateway in
 
 - [x] **ORD-01**: Customer receives order confirmation email after successful payment *(delivered: Plan 04-04 — sendOrderConfirmationEmail called non-blocking in webhook on payment_confirmed)*
 - [x] **ORD-02**: Customer receives bank transfer instructions email when that method is chosen *(delivered: Plan 04-03 — sendBankTransferInstructionsEmail called synchronously in createBankTransferOrder)*
-- [ ] **ORD-03**: Customer receives email when fulfillment status changes (e.g. shipped, delivered)
+- [x] **ORD-03**: Customer receives email when fulfillment status changes (e.g. shipped, delivered) *(delivered: Plan 05-04 — sendOrderStatusChangeEmail fires non-blocking only on shipped/delivered inside the shared updateOrderStatus transition)*
 
 ### Admin
 
-- [ ] **ADMN-01**: Admin can add, edit, and delete products with images
-- [ ] **ADMN-02**: Admin can manage product variants with individual prices and stock levels
-- [ ] **ADMN-03**: Admin can view all orders and update fulfillment status
-- [ ] **ADMN-04**: Admin can toggle Stripe / PayPal / bank transfer on or off
+- [x] **ADMN-01**: Admin can add, edit, and delete products with images *(delivered: Plans 05-03/05-05 — admin-products actions (create/update/soft-delete/reactivate) + Vercel Blob upload w/ server-enforced required alt text + product editor UI; live upload round-trip is a go-live human-verify per 05-HUMAN-UAT)*
+- [x] **ADMN-02**: Admin can manage product variants with individual prices and stock levels *(delivered: Plans 05-03/05-05 — upsertVariant (own priceKobo+stock) + inline VariantEditor; every catalog-visible mutation calls updateTag('product-<slug>') to expire the Phase 2 cache)*
+- [x] **ADMN-03**: Admin can view all orders and update fulfillment status *(delivered: Plans 05-04/05-06 — orders list+filter, order detail, shared guarded updateOrderStatus (LEGAL_TRANSITIONS allowlist, sole status writer), D-09 bank-transfer confirm via confirmOrderPaid)*
+- [x] **ADMN-04**: Admin can toggle Stripe / PayPal / bank transfer on or off *(delivered: Plans 05-01/05-04/05-06 — DB-backed store_settings toggles (toggleStoreSetting), async isPaymentMethodEnabled dual-gate (DB flag AND env creds), enforced server-side in every payment action/route; Settings UI)*
 
 ## v2 Requirements
 
@@ -128,11 +128,11 @@ Direct-integration gateways added as new adapters against the Phase 7 gateway in
 | PAY-04 | Phase 4 | Complete (04-02 toggle + 04-03/04 enforcement) |
 | ORD-01 | Phase 4 | Complete (04-02+04-04) |
 | ORD-02 | Phase 4 | Complete (04-02+04-03 bank transfer email + 04-06 bank details UI) |
-| ORD-03 | Phase 5 | Pending |
-| ADMN-01 | Phase 5 | Pending |
-| ADMN-02 | Phase 5 | Pending |
-| ADMN-03 | Phase 5 | Pending |
-| ADMN-04 | Phase 5 | Pending |
+| ORD-03 | Phase 5 | Complete (05-04) |
+| ADMN-01 | Phase 5 | Complete (05-03/05-05 — live Blob upload go-live human-verify) |
+| ADMN-02 | Phase 5 | Complete (05-03/05-05) |
+| ADMN-03 | Phase 5 | Complete (05-04/05-06) |
+| ADMN-04 | Phase 5 | Complete (05-01/05-04/05-06 — live toggle→checkout go-live human-verify) |
 | PAY-05 | Phase 7 | Pending |
 | PAY-06 | Phase 7 | Pending |
 | PAY-12 | Phase 7 | Pending |
