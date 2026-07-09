@@ -17,10 +17,14 @@ export const proxy = auth((req) => {
   // /admin/* requires admin role (D-09, D-12)
   const isAdminRoute = path.startsWith("/admin")
 
-  // /account/orders and /account/settings require any authenticated user (D-12)
+  // /account (bare landing), /account/orders and /account/settings require any
+  // authenticated user (D-12). Exact match on "/account" (NOT startsWith) so
+  // /account/login + /account/register stay public — they're the auth routes.
   // NOTE: /account/login and /account/register are NOT protected — they are the auth routes
   const isAccountRoute =
-    path.startsWith("/account/orders") || path.startsWith("/account/settings")
+    path === "/account" ||
+    path.startsWith("/account/orders") ||
+    path.startsWith("/account/settings")
 
   // Auth routes redirect already-authenticated users away (avoid double-login)
   const isAuthRoute =
