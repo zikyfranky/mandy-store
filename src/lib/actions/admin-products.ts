@@ -18,11 +18,11 @@ import "server-only"
 //     record (Pitfall 10, T-05-11).
 
 import { z } from "zod"
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { updateTag } from "next/cache"
 import { verifyAdminSession } from "@/lib/dal"
 import { db } from "@/lib/db/client"
-import { products, variants, variantOptionValues } from "@/lib/db/schema"
+import { products, variants, variantOptionValues, productOptions, optionValues } from "@/lib/db/schema"
 import { uniqueSlug } from "@/lib/utils/slug"
 
 // ─── Shared result types ───────────────────────────────────────────────────────
@@ -52,6 +52,11 @@ const UpdateVariantSchema = z.object({
   sku: z.string().optional(),
   imageUrl: z.string().optional(),
   isActive: z.boolean().optional(),
+})
+
+const UpsertOptionValueSchema = z.object({
+  optionName: z.string().min(1, "Option name is required"),
+  value: z.string().min(1, "Value is required"),
 })
 
 const UpsertVariantSchema = z.object({
@@ -315,5 +320,49 @@ export async function upsertVariant(
   } catch (err) {
     console.error("[admin-products] upsertVariant failed:", err)
     return { success: false, error: "Something went wrong saving the variant." }
+  }
+}
+
+// ─── upsertOptionValue ────────────────────────────────────────────────────────
+// Find-or-create a product option ("Color") and one of its values ("Black") for a
+// product. Required plumbing for the Wave 3 variant editor's inline option-value
+// picker (Rule 2 — without this, a brand-new product with zero pre-existing options
+// has no way to define the option-value combination a new variant needs). No new
+// table: writes to the existing productOptions/optionValues tables from Phase 2.
+
+export async function upsertOptionValue(
+  productId: string,
+  input: unknown
+): Promise<ActionResult<{ optionValueId: string; optionId: string }>> {
+  await verifyAdminSession() // D-02 — FIRST statement
+
+  const parsed = UpsertOptionValueSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: firstZodError(parsed.error) }
+  }
+
+  try {
+    let option = await db.query.productOptions.findFirst({
+      where: and(eq(productOptions.productId, productId), eq(productOptions.name, parsed.data.optionName)),
+    })
+    if (!option) {
+      const optionId = crypto.randomUUID()
+      await db.insert(productOptions).values({ id: optionId, productId, name: parsed.data.optionName, position: 0 })
+      option = { id: optionId, productId, name: parsed.data.optionName, position: 0 }
+    }
+
+    let value = await db.query.optionValues.findFirst({
+      where: and(eq(optionValues.productOptionId, option.id), eq(optionValues.value, parsed.data.value)),
+    })
+    if (!value) {
+      const valueId = crypto.randomUUID()
+      await db.insert(optionValues).values({ id: valueId, productOptionId: option.id, value: parsed.data.value, position: 0 })
+      value = { id: valueId, productOptionId: option.id, value: parsed.data.value, position: 0 }
+    }
+
+    return { success: true, optionValueId: value.id, optionId: option.id }
+  } catch (err) {
+    console.error("[admin-products] upsertOptionValue failed:", err)
+    return { success: false, error: "Something went wrong saving the option." }
   }
 }

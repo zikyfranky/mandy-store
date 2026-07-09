@@ -1,6 +1,12 @@
+"use server"
 import "server-only"
 // src/lib/blob/upload.ts
 // Vercel Blob product-image upload/delete (ADMN-01, D-03).
+//
+// "use server" (added Wave 3, 05-05): this module's exports are called directly from
+// the ImageUploadField client island (Server Actions), matching the admin-products.ts
+// convention. Missing this directive breaks the client→server import boundary Next.js
+// requires (Rule 1 fix — Wave 2 shipped this file without it).
 //
 // Security contracts:
 //   - verifyAdminSession() is the literal FIRST statement in every exported function (D-02,
