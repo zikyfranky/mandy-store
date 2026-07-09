@@ -147,7 +147,9 @@ Plans:
   1. A logged-in customer can view a list of their past orders with status and totals
   2. A customer can open an individual past order and see its line items, variant labels, shipping address, and final total as captured at purchase time
   3. The order history page is protected by both proxy.ts redirect and an in-action verifySession check
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 06-01-PLAN.md — user-scoped IDOR-safe order queries + best-effort guest-order claim on register (Wave 1)
+- [ ] 06-02-PLAN.md — account UI: /account landing, /account/orders history list + OrderHistoryCard, IDOR-safe /account/orders/[id] detail (Wave 2)
 **UI hint**: yes
 
 ### Phase 7: Nigerian Payment Gateways (Paystack + Flutterwave)

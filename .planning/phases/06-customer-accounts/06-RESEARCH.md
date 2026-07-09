@@ -435,7 +435,10 @@ Not applicable — this phase makes no framework/library version choices; it ext
 
 **If this table is empty:** N/A — two low-risk assumptions logged above.
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> RESOLVED: Q1 (/account landing vs redirect) → Plan 06-02 Task 3 builds the minimal landing page per the recommendation. Q2 (symmetric login-time claim) → deliberately NOT added; only the required D-06 registration-time claim is implemented, consistent with CONTEXT.md framing it as nice-to-have/discretion.
+
 
 1. **Should `/account` be a separate page or a redirect to `/account/orders`?**
    - What we know: D-07 says either is fine, leaning toward a minimal landing page.
