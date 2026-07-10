@@ -12,7 +12,7 @@
 - [x] **AUTH-01**: User can register with email and password *(delivered: Plan 01-03 — register() + verifyEmail() actions, argon2id, email verification gate)*
 - [x] **AUTH-02**: User can log in and session persists across browser refresh *(delivered: Plan 01-03 — login() via signIn("credentials"), D-08 DB session workaround)*
 - [x] **AUTH-03**: User can log out from any page *(delivered: Plan 01-03 — logout() calling signOut())*
-- [ ] **AUTH-04**: Logged-in user can view their order history
+- [x] **AUTH-04**: Logged-in user can view their order history *(delivered: Plans 06-01/06-02 — IDOR-safe listOrdersForUser/getOrderForUser (ownership in SQL WHERE, null-uniform), /account order-history list + detail reusing OrderSummaryLines/ShippingAddressBlock (price-at-purchase snapshot), dual-auth (proxy + verifySession), guest-order claim on register; 16 integration tests incl. IDOR)*
 
 ### Product Catalog
 
@@ -109,7 +109,7 @@ Direct-integration gateways added as new adapters against the Phase 7 gateway in
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Complete |
-| AUTH-04 | Phase 6 | Pending |
+| AUTH-04 | Phase 6 | Complete (06-01/06-02 — 2 browser-UX human-verify items in 06-HUMAN-UAT) |
 | CATA-01 | Phase 2 | Pending |
 | CATA-02 | Phase 2 | Pending |
 | CATA-03 | Phase 2 | Pending |

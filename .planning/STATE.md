@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 (Admin Panel) COMPLETE — 6/6 plans, 340 tests green, verified 5/5 SCs; 2 credential-gated go-live human-verify items pending
+stopped_at: Phase 6 (Customer Accounts) COMPLETE — v1 milestone: all 6 phases done. 348 tests green; AUTH-04 delivered; 2 browser-UX human-verify items pending
 last_updated: "2026-06-30T12:15:00Z"
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 23
-  completed_plans: 23
+  completed_phases: 6
+  total_plans: 25
+  completed_plans: 25
   percent: 100
 ---
 
