@@ -1,6 +1,7 @@
 // tests/actions/gateway-credentials.test.ts
-// Phase 8 (D-05, ADMN-05/ADMN-06): saveGatewayCredentials Server Action.
-// Pure unit test — mocks admin session, db insert...onConflictDoUpdate chain, and crypto.
+// Phase 8 (D-05/D-06, ADMN-05/ADMN-06): saveGatewayCredentials + testGatewayConnection
+// Server Actions. Pure unit tests — mocks admin session, db insert chain, the gateway-
+// credentials resolver, the Stripe SDK, and global fetch.
 
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest"
 
@@ -8,6 +9,16 @@ import { describe, it, expect, afterEach, beforeEach, vi } from "vitest"
 
 vi.mock("server-only", () => ({}))
 vi.mock("@/lib/dal", () => ({ verifyAdminSession: vi.fn() }))
+
+vi.mock("@/lib/payments/gateway-credentials", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/payments/gateway-credentials")>(
+    "@/lib/payments/gateway-credentials",
+  )
+  return {
+    ...actual,
+    getGatewayConfig: vi.fn(),
+  }
+})
 
 // Unit test — mock the db insert...onConflictDoUpdate chain instead of hitting a
 // real database (mirrors tests/admin/settings.test.ts's vi.hoisted db-chain mock).
@@ -24,17 +35,20 @@ vi.mock("@/lib/db/client", () => ({ db: { insert: mockInsert } }))
 // ─── Lazy imports after mocks ─────────────────────────────────────────────────
 
 import { verifyAdminSession } from "@/lib/dal"
-import { saveGatewayCredentials } from "@/lib/actions/gateway-credentials"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
+import { saveGatewayCredentials, testGatewayConnection } from "@/lib/actions/gateway-credentials"
 
 const ADMIN_USER = { id: "admin-1", role: "admin" as const, email: "admin@example.com" }
 
 beforeEach(() => {
   vi.mocked(verifyAdminSession).mockResolvedValue(ADMIN_USER)
+  vi.mocked(getGatewayConfig).mockResolvedValue({})
 })
 
 afterEach(() => {
   vi.clearAllMocks()
   vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
 })
 
 describe("saveGatewayCredentials", () => {
@@ -94,5 +108,116 @@ describe("saveGatewayCredentials", () => {
     await saveGatewayCredentials("stripe", { secret_key: "sk_live_abc" })
     const call = mockValues.mock.calls.find((c) => c[0].field === "secret_key")
     expect(call![0].updatedBy).toBe(ADMIN_USER.email)
+  })
+})
+
+describe("testGatewayConnection", () => {
+  it("stripe pass: reports success when balance.retrieve resolves", async () => {
+    const mockRetrieve = vi.fn().mockResolvedValue({ available: [] })
+    vi.doMock("stripe", () => ({
+      default: class {
+        balance = { retrieve: mockRetrieve }
+      },
+    }))
+    vi.resetModules()
+    const { testGatewayConnection: testConn } = await import("@/lib/actions/gateway-credentials")
+    const result = await testConn("stripe", { secret_key: "sk_test_valid" })
+    expect(result).toEqual({ success: true })
+    vi.doUnmock("stripe")
+    vi.resetModules()
+  })
+
+  it("stripe fail: reports failure when balance.retrieve rejects, never throws", async () => {
+    const mockRetrieve = vi.fn().mockRejectedValue(new Error("Invalid API key"))
+    vi.doMock("stripe", () => ({
+      default: class {
+        balance = { retrieve: mockRetrieve }
+      },
+    }))
+    vi.resetModules()
+    const { testGatewayConnection: testConn } = await import("@/lib/actions/gateway-credentials")
+    const result = await testConn("stripe", { secret_key: "sk_test_invalid" })
+    expect(result).toEqual({ success: false, error: "Invalid API key" })
+    vi.doUnmock("stripe")
+    vi.resetModules()
+  })
+
+  it("paystack pass/fail: maps fetch ok/!ok to success/failure", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal("fetch", fetchMock)
+    const passResult = await testGatewayConnection("paystack", { secret_key: "sk_paystack_valid" })
+    expect(passResult).toEqual({ success: true })
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.paystack.co/balance",
+      expect.objectContaining({ headers: { Authorization: "Bearer sk_paystack_valid" } }),
+    )
+
+    fetchMock.mockResolvedValue({ ok: false, status: 401 })
+    const failResult = await testGatewayConnection("paystack", { secret_key: "sk_paystack_invalid" })
+    expect(failResult).toEqual({ success: false, error: "Paystack returned 401" })
+  })
+
+  it("flutterwave pass/fail: maps fetch ok/!ok to success/failure", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal("fetch", fetchMock)
+    const passResult = await testGatewayConnection("flutterwave", { secret_key: "flw_valid" })
+    expect(passResult).toEqual({ success: true })
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.flutterwave.com/v3/balances",
+      expect.objectContaining({ headers: { Authorization: "Bearer flw_valid" } }),
+    )
+
+    fetchMock.mockResolvedValue({ ok: false, status: 403 })
+    const failResult = await testGatewayConnection("flutterwave", { secret_key: "flw_invalid" })
+    expect(failResult).toEqual({ success: false, error: "Flutterwave returned 403" })
+  })
+
+  it("unsupported provider: never attempts a network call", async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+    const result = await testGatewayConnection("interswitch", {})
+    expect(result).toEqual({ success: false, error: "This gateway can't be tested directly" })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("admin-gated: rejects before any network call", async () => {
+    vi.mocked(verifyAdminSession).mockImplementation(() => {
+      throw new Error("redirect")
+    })
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+    await expect(testGatewayConnection("paystack", { secret_key: "x" })).rejects.toThrow()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("tests the unsaved candidate value when provided, not the persisted value", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal("fetch", fetchMock)
+    vi.mocked(getGatewayConfig).mockResolvedValue({ secret_key: "persisted-value-should-not-be-used" })
+    await testGatewayConnection("paystack", { secret_key: "candidate-value" })
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.paystack.co/balance",
+      expect.objectContaining({ headers: { Authorization: "Bearer candidate-value" } }),
+    )
+    expect(getGatewayConfig).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the persisted value when the field is omitted", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal("fetch", fetchMock)
+    vi.mocked(getGatewayConfig).mockResolvedValue({ secret_key: "persisted-value" })
+    await testGatewayConnection("paystack", {})
+    expect(getGatewayConfig).toHaveBeenCalledWith("paystack")
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.paystack.co/balance",
+      expect.objectContaining({ headers: { Authorization: "Bearer persisted-value" } }),
+    )
+  })
+
+  it("never persists — DB insert mock is never called", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal("fetch", fetchMock)
+    await testGatewayConnection("paystack", { secret_key: "x" })
+    expect(mockInsert).not.toHaveBeenCalled()
   })
 })
