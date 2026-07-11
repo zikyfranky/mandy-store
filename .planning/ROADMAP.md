@@ -15,6 +15,7 @@
 - [x] **Phase 6: Customer Accounts** - Repeat buyers can view their order history (completed 2026-07-11 — AUTH-04; 348 tests green; 2 browser-UX human-verify items in 06-HUMAN-UAT)
 - [ ] **Phase 7: Nigerian Payment Gateways** - Paystack + Flutterwave (the two NGN aggregators) behind a reusable gateway-adapter interface
 - [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface
+- [ ] **Phase 8: Admin-Managed Payment Credentials** - All 8 gateways' credentials configurable in the admin portal (DB-stored), encrypted at rest with one master key, DB-overrides-env with fallback
 
 ## Phase Details
 
@@ -200,6 +201,18 @@ Plans:
 - [~] 07.1-05-PLAN.md — Checkout UI (shared `RedirectLauncherPanel` — POST auto-submit vs GET), radio entries, `?error=` banner; PAY-07/08 satisfied-via-channel doc + REQUIREMENTS traceability; sandbox human-verify *(PAY-07/08/09/10/11)* *(CODE COMPLETE 2026-07-07 — tsc + build + 319 tests clean; **sandbox human-verify PENDING user creds**)*
 **UI hint**: yes
 
+### Phase 8: Admin-Managed Payment Credentials
+**Goal**: The store owner can configure every payment gateway's credentials directly in the admin portal instead of `.env` — secret keys, public/publishable keys, merchant IDs, hash/MAC keys, webhook signing secrets, and endpoint URLs — for all 8 gateways (Stripe, PayPal, bank transfer, Paystack, Flutterwave, Interswitch, GTPay, Remita). Secrets are encrypted at rest (AES-256-GCM) with a single `CREDENTIALS_ENCRYPTION_KEY` that stays in `.env`; the ~20 scattered gateway secrets move into the DB. Credentials resolve DB-first with `.env` fallback so existing deployments keep working and migration is gradual. Extends the Phase 5 `store_settings` + Settings UI and the Phase 7/7.1 gateway-adapter + webhook infrastructure.
+**Depends on**: Phase 5 (admin panel, `store_settings` table, Settings UI, dual-auth), Phase 7 + 7.1 (gateway-adapter interface, webhook routes for all 8 gateways)
+**Requirements**: ADMN-05, ADMN-06, ADMN-07
+**Success Criteria** (what must be TRUE):
+  1. An admin can enter and later replace each gateway's credentials from `/admin/settings`, persisted to the database (no code deploy / `.env` edit required)
+  2. Secret credentials are encrypted at rest (AES-256-GCM) with a single master key held in `.env`; stored secrets are never returned to the browser — the UI shows a masked "configured" state with a Replace action (write-only fields). Publishable/public keys may be shown
+  3. At runtime every gateway and webhook resolves credentials DB-first with `.env` fallback, so an unconfigured gateway keeps working from `.env` and gateways migrate one at a time
+  4. Webhook route signature verification uses the DB-resolved (decrypted) signing secret for all 8 gateways; a missing or invalid credential fails closed (the method is treated as not-configured, never bypassing verification)
+  5. Every credential read/write re-verifies the admin role server-side and stays server-only (no `NEXT_PUBLIC_`, no secret leakage into client bundles)
+**Plans**: Not planned yet
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -212,6 +225,7 @@ Plans:
 | 6. Customer Accounts | 0/0 | Not started | - |
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
+| 8. Admin-Managed Payment Credentials | 0/0 | Not started | - |
 
 ---
 *Roadmap created: 2026-06-10*

@@ -73,6 +73,14 @@ Direct-integration gateways added as new adapters against the Phase 7 gateway in
 - [x] **ADMN-03**: Admin can view all orders and update fulfillment status *(delivered: Plans 05-04/05-06 — orders list+filter, order detail, shared guarded updateOrderStatus (LEGAL_TRANSITIONS allowlist, sole status writer), D-09 bank-transfer confirm via confirmOrderPaid)*
 - [x] **ADMN-04**: Admin can toggle Stripe / PayPal / bank transfer on or off *(delivered: Plans 05-01/05-04/05-06 — DB-backed store_settings toggles (toggleStoreSetting), async isPaymentMethodEnabled dual-gate (DB flag AND env creds), enforced server-side in every payment action/route; Settings UI)*
 
+### Admin — Payment Credentials (Phase 8)
+
+Move all 8 payment gateways' credentials out of `.env` and into the admin portal, DB-stored and encrypted at rest with a single master key. Extends the Phase 5 `store_settings`/Settings UI and the Phase 7/7.1 gateway-adapter + webhook infrastructure.
+
+- [ ] **ADMN-05**: Admin can configure and replace each payment gateway's credentials (secret key, public key, merchant IDs, hash/MAC keys, webhook signing secret, endpoint URLs) from the admin portal, persisted to the database — no `.env` edit or redeploy required
+- [ ] **ADMN-06**: Payment gateway secrets are encrypted at rest (AES-256-GCM) with a single server-only master key; secret fields are write-only in the UI (masked "configured" state + Replace, never returned to the browser)
+- [ ] **ADMN-07**: Credentials resolve DB-first with `.env` fallback for all 8 gateways (including webhook signature verification), admin-gated and server-only; a missing/invalid credential fails closed (method treated as not-configured)
+
 ## v2 Requirements
 
 ### Promotions
@@ -141,15 +149,20 @@ Direct-integration gateways added as new adapters against the Phase 7 gateway in
 | PAY-09 | Phase 7.1 | Complete (sandbox — D-19) |
 | PAY-10 | Phase 7.1 | Complete (sandbox — D-19) |
 | PAY-11 | Phase 7.1 | Complete (sandbox — D-19) |
+| ADMN-05 | Phase 8 | Pending |
+| ADMN-06 | Phase 8 | Pending |
+| ADMN-07 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
 - Phase 7 (Paystack + Flutterwave) requirements: 3 (PAY-05, PAY-06, PAY-12)
 - Phase 7.1 (Additional NG Gateways, fast-follow) requirements: 5 (PAY-07..PAY-11)
-- Mapped to phases: 35
+- Phase 8 (Admin-Managed Payment Credentials) requirements: 3 (ADMN-05, ADMN-06, ADMN-07)
+- Mapped to phases: 38
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-06*
 *Last updated: 2026-07-02 — split Phase 7: Paystack+Flutterwave (PAY-05/06/12) stay in Phase 7; PAY-07..PAY-11 move to fast-follow Phase 7.1 (per Phase 7 CONTEXT D-01)*
 *2026-07-07 — Phase 7.1: PAY-09/10/11 built as Interswitch/GTPay/Remita redirect adapters (sandbox-verified, toggle OFF by default, D-19). PAY-07/08 satisfied-via-channel through the Phase 7 aggregators (D-11) — no standalone build.*
+*2026-07-11 — Phase 8 added: Admin-Managed Payment Credentials (ADMN-05/06/07). Move all 8 gateways' credentials from .env into the DB-backed admin portal, encrypted at rest with one master key, DB-overrides-env with fallback.*
