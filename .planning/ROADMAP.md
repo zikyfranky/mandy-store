@@ -211,7 +211,27 @@ Plans:
   3. At runtime every gateway and webhook resolves credentials DB-first with `.env` fallback, so an unconfigured gateway keeps working from `.env` and gateways migrate one at a time
   4. Webhook route signature verification uses the DB-resolved (decrypted) signing secret for all 8 gateways; a missing or invalid credential fails closed (the method is treated as not-configured, never bypassing verification)
   5. Every credential read/write re-verifies the admin role server-side and stays server-only (no `NEXT_PUBLIC_`, no secret leakage into client bundles)
-**Plans**: Not planned yet
+**Plans**: 9 plans (5 waves)
+Plans:
+**Wave 1**
+- [ ] 08-01-PLAN.md — gateway_credentials schema (D-01) + [BLOCKING] direct-SQL push (both DBs) + crypto.ts AES-256-GCM envelope (D-02, TDD) + CREDENTIALS_ENCRYPTION_KEY in .env.local.example
+
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 08-02-PLAN.md — FIELD_MANIFEST (30 fields/8 providers) + getGatewayConfig/getGatewayCredentialsMap DB-first/env-fallback/fail-closed resolver (D-03, TDD) + DB-gated env-only-regression integration test + truncateGatewayCredentialsTable helper
+
+**Wave 3** *(parallel, no file overlap; blocked on Wave 2)*
+- [ ] 08-03-PLAN.md — saveGatewayCredentials (D-05) + testGatewayConnection (D-06) Server Actions, admin-gated, closed per-provider Zod schema, encrypt-before-persist, empty-submit-preserves
+- [ ] 08-04-PLAN.md — config.ts hasEnvAndCredentials + stripe.ts getStripe() resolver migration (async), checkout.ts/Stripe-webhook call-site fix, 6 test files updated
+- [ ] 08-05-PLAN.md — Paystack/Flutterwave/Remita/Interswitch/GTPay gateway module migration (per-call resolved WebPayConfig for the WebPay pair, webpay-core.ts untouched), gateways.test.ts updated
+- [ ] 08-06-PLAN.md — Paystack + Flutterwave webhook signing-secret migration, fail-closed 400 guard, existing test files extended
+- [ ] 08-07-PLAN.md — GTPay + Remita webhook signing-secret migration, fail-closed guard, 2 NEW webhook test files (prior gap — only callback routes had coverage)
+
+**Wave 4** *(blocked on Wave 3, specifically 08-04)*
+- [ ] 08-08-PLAN.md — Stripe webhook webhook_secret resolver migration (needs 08-04's async getStripe() already in place), fail-closed test added
+
+**Wave 5** *(UI; blocked on Wave 3/4 completion)*
+- [ ] 08-09-PLAN.md — Settings UI: GatewayCredentialCard.tsx (write-only disclosure form, full UI-SPEC field-rendering/states/accessibility contract) + settings/page.tsx extension (8 gateway cards, resolver-backed presence, legacy 3-gateway helper fix) + human-verify checkpoint (write-only round-trip, no-leak DevTools check, test-connection)
+**UI hint**: yes
 
 ## Progress
 
@@ -225,7 +245,7 @@ Plans:
 | 6. Customer Accounts | 0/0 | Not started | - |
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
-| 8. Admin-Managed Payment Credentials | 0/0 | Not started | - |
+| 8. Admin-Managed Payment Credentials | 0/9 | Planned | - |
 
 ---
 *Roadmap created: 2026-06-10*
