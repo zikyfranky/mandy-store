@@ -24,15 +24,22 @@ vi.mock("@/lib/email/send-bank-transfer-instructions", () => ({
   sendBankTransferInstructionsEmail: vi.fn().mockResolvedValue(undefined),
 }))
 vi.mock("@/lib/payments/stripe", () => ({
-  stripe: {
+  getStripe: vi.fn().mockResolvedValue({
     paymentIntents: {
       create: vi.fn().mockResolvedValue({
         id: "pi_test_123",
         client_secret: "cs_test_abc",
       }),
     },
-  },
+  }),
 }))
+// Phase 8 (D-03 / ADMN-07): isPaymentMethodEnabled now touches getGatewayConfig /
+// getGatewayCredentialsMap for every method (not just the 3 DB-toggled ones) — stub the
+// DB round trip so these Server Action tests fall through to real env-fallback behavior.
+vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/payments/gateway-credentials")>()
+  return { ...actual, getGatewayCredentialsMap: vi.fn().mockResolvedValue({}) }
+})
 // Mock getCart at the module level — individual tests override via vi.mocked(getCart)
 vi.mock("@/lib/cart/queries", () => ({
   getCart: vi.fn(),
@@ -44,7 +51,7 @@ vi.mock("@/lib/cart/queries", () => ({
 import { getCart } from "@/lib/cart/queries"
 import { auth } from "@/lib/auth"
 import { sendBankTransferInstructionsEmail } from "@/lib/email/send-bank-transfer-instructions"
-import { stripe } from "@/lib/payments/stripe"
+import { getStripe } from "@/lib/payments/stripe"
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -470,7 +477,8 @@ describe("createStripePaymentIntent — DB integration", () => {
 
       // Server-recomputed amount in kobo, currency "ngn" (CLAUDE.md + A1)
       // subtotal 10_000_000 + shipping 200_000 = 10_200_000
-      expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
+      const stripeClient = await getStripe()
+      expect(stripeClient.paymentIntents.create).toHaveBeenCalledWith(
         expect.objectContaining({
           amount: 10_200_000,
           currency: "ngn",

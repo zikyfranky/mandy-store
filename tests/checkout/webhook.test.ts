@@ -24,10 +24,10 @@ const constructEvent = vi.fn()
 const refundsCreate = vi.fn().mockResolvedValue({ id: "re_1" })
 
 vi.mock("@/lib/payments/stripe", () => ({
-  stripe: {
+  getStripe: vi.fn().mockResolvedValue({
     webhooks: { constructEvent: (...a: unknown[]) => constructEvent(...a) },
     refunds: { create: (...a: unknown[]) => refundsCreate(...a) },
-  },
+  }),
 }))
 
 // ─── Env setup ────────────────────────────────────────────────────────────────

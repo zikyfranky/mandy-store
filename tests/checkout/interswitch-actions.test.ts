@@ -14,6 +14,13 @@ vi.mock("@/lib/cart/queries", () => ({ getCart: vi.fn() }))
 vi.mock("@/lib/payments/gateways/interswitch", () => ({
   interswitchAdapter: { provider: "interswitch", initPayment: vi.fn(), verifyTransaction: vi.fn(), refund: vi.fn() },
 }))
+// Phase 8 (D-03 / ADMN-07): isPaymentMethodEnabled now touches getGatewayConfig /
+// getGatewayCredentialsMap for every method (not just the 3 DB-toggled ones) — stub the
+// DB round trip so these Server Action tests fall through to real env-fallback behavior.
+vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/payments/gateway-credentials")>()
+  return { ...actual, getGatewayCredentialsMap: vi.fn().mockResolvedValue({}) }
+})
 
 import { getCart } from "@/lib/cart/queries"
 import { interswitchAdapter } from "@/lib/payments/gateways/interswitch"

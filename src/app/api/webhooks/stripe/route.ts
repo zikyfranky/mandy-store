@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import type Stripe from "stripe"
-import { stripe } from "@/lib/payments/stripe"
+import { getStripe } from "@/lib/payments/stripe"
 import { db } from "@/lib/db/client"
 import { orders } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
@@ -28,10 +28,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Any parse (req.json(), body consumption) before this will cause StripeSignatureVerificationError.
   const body = await req.text()
   const sig = req.headers.get("stripe-signature") ?? ""
+  const stripeClient = await getStripe()
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = stripeClient.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch {
     // Signature mismatch — this is either a forged request or a misconfigured secret. (T-04-16)
     return NextResponse.json({ error: "Signature verification failed" }, { status: 400 })
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // D-09: Trigger a Stripe refund for the full PaymentIntent amount.
     // confirmOrderPaid already set order to payment_failed + refundReason="oversold".
     try {
-      await stripe.refunds.create({ payment_intent: pi.id })
+      await stripeClient.refunds.create({ payment_intent: pi.id })
     } catch (refundErr) {
       // Refund failure must not suppress the order-failure status update.
       // Log and continue — the store owner must manually reconcile if this fires.

@@ -22,7 +22,7 @@ import { getCart } from "@/lib/cart/queries"
 import { computeOrderTotal } from "@/lib/orders/shipping"
 import { generateUniqueOrderRef, generateGuestToken } from "@/lib/orders/reference"
 import { isPaymentMethodEnabled } from "@/lib/payments/config"
-import { stripe } from "@/lib/payments/stripe"
+import { getStripe } from "@/lib/payments/stripe"
 import { sendBankTransferInstructionsEmail } from "@/lib/email/send-bank-transfer-instructions"
 
 // ─── Zod Schemas ─────────────────────────────────────────────────────────────
@@ -291,9 +291,11 @@ export async function createStripePaymentIntent(
   // unhandled Server Action rejection — that leaves the client's Place-order button stuck disabled
   // with no feedback. Catch it, roll back the orphaned pending order (order_items cascade via FK),
   // and return a user-facing { error }.
-  let paymentIntent: Awaited<ReturnType<typeof stripe.paymentIntents.create>>
+  let stripeClient: Awaited<ReturnType<typeof getStripe>>
+  let paymentIntent: Awaited<ReturnType<typeof stripeClient.paymentIntents.create>>
   try {
-    paymentIntent = await stripe.paymentIntents.create({
+    stripeClient = await getStripe()
+    paymentIntent = await stripeClient.paymentIntents.create({
       amount: totals.totalKobo,
       currency: "ngn",
       automatic_payment_methods: { enabled: true },
