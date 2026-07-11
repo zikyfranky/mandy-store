@@ -101,6 +101,25 @@ export const storeSettings = pgTable("store_settings", {
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 })
 
+// Phase 8 (D-01 / ADMN-05/06/07): gateway_credentials — field-level key/value rows per
+// provider. `value` holds the AES-256-GCM envelope for is_secret fields, plaintext for
+// public fields/URLs. Compound PK (provider, field). Ships empty — resolver falls back
+// to process.env until an admin saves a field (regression-safe, D-09).
+export const gatewayCredentials = pgTable(
+  "gateway_credentials",
+  {
+    provider:  text("provider").notNull(),
+    field:     text("field").notNull(),
+    value:     text("value").notNull(),
+    isSecret:  boolean("is_secret").notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+    updatedBy: text("updated_by"),
+  },
+  (table) => ({
+    compoundKey: primaryKey({ columns: [table.provider, table.field] }),
+  }),
+)
+
 // ─── Phase 2: Product Catalog Tables ─────────────────────────────────────────
 // Implements the flexible per-product variant model (D-01 through D-05, D-08)
 // All IDs: text UUID (crypto.randomUUID()); timestamps: { mode: "date" }
