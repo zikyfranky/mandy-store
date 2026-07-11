@@ -214,7 +214,7 @@ Plans:
 **Plans**: 9 plans (5 waves)
 Plans:
 **Wave 1**
-- [ ] 08-01-PLAN.md — gateway_credentials schema (D-01) + [BLOCKING] direct-SQL push (both DBs) + crypto.ts AES-256-GCM envelope (D-02, TDD) + CREDENTIALS_ENCRYPTION_KEY in .env.local.example
+- [x] 08-01-PLAN.md — gateway_credentials schema (D-01) + [BLOCKING] direct-SQL push (both DBs) + crypto.ts AES-256-GCM envelope (D-02, TDD) + CREDENTIALS_ENCRYPTION_KEY in .env.local.example *(COMPLETE 2026-07-11 — table live+empty in both Neon DBs; 8 crypto tests green)*
 
 **Wave 2** *(blocked on Wave 1)*
 - [ ] 08-02-PLAN.md — FIELD_MANIFEST (30 fields/8 providers) + getGatewayConfig/getGatewayCredentialsMap DB-first/env-fallback/fail-closed resolver (D-03, TDD) + DB-gated env-only-regression integration test + truncateGatewayCredentialsTable helper
