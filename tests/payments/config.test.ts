@@ -13,6 +13,15 @@ vi.mock("@/lib/payments/store-settings", () => ({
   getStoreSettingsMap: vi.fn(),
 }))
 
+// Phase 8 (D-03 / ADMN-07): hasEnvAndCredentials is now resolver-backed for all 8
+// methods. Stub out only the DB round trip (getGatewayCredentialsMap) so the REAL
+// getGatewayConfig/FIELD_MANIFEST logic runs — with an empty DB map it falls straight
+// through to process.env, exercising the genuine env-fallback path.
+vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/payments/gateway-credentials")>()
+  return { ...actual, getGatewayCredentialsMap: vi.fn().mockResolvedValue({}) }
+})
+
 // Import after mocking
 import { isPaymentMethodEnabled, enabledPaymentMethods } from "@/lib/payments/config"
 import { getStoreSettingsMap } from "@/lib/payments/store-settings"
