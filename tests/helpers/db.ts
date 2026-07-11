@@ -110,3 +110,17 @@ export async function truncateStoreSettingsTable() {
 
   await db.delete(schema.storeSettings)
 }
+
+/**
+ * Truncate the gateway_credentials table (Phase 8 / D-01).
+ * No FK dependents — safe to delete standalone. Integration tests MUST call this in afterEach
+ * so the table returns to empty, preserving every other test file's assumption that an
+ * unconfigured gateway resolves purely from process.env (D-09).
+ */
+export async function truncateGatewayCredentialsTable() {
+  assertTestDatabase()
+  const { db } = await import("@/lib/db/client")
+  const schema = await import("@/lib/db/schema")
+
+  await db.delete(schema.gatewayCredentials)
+}
