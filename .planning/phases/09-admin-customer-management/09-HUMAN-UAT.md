@@ -59,8 +59,8 @@ Steps:
 
 ## Sign-off
 
-- [ ] Item 1 — live reset email round-trip verified
+- [ ] Item 1 — live reset email round-trip verified *(owner: "Resend can happen" — will verify with live key)*
 - [ ] Item 1b — admin-set password verified (ADMN-11)
-- [ ] Item 2 — admin customers UI verified
+- [x] Item 2 — admin customers UI verified *(APPROVED by owner 2026-07-12)*
 
 Reply **"approved"** once both are confirmed, or describe any issues found.
