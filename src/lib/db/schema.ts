@@ -129,6 +129,7 @@ export const gatewayCredentials = pgTable(
 export const brands = pgTable("brand", {
   id:        text("id").primaryKey(),              // crypto.randomUUID()
   name:      text("name").notNull().unique(),
+  isActive:  boolean("is_active").default(true).notNull(),   // NEW (D-01) soft-delete
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 })
 
@@ -137,6 +138,7 @@ export const categories = pgTable("category", {
   id:        text("id").primaryKey(),
   name:      text("name").notNull().unique(),
   slug:      text("slug").notNull().unique(),       // "electronics", "watches", "phones"
+  isActive:  boolean("is_active").default(true).notNull(),   // NEW (D-01) soft-delete
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 })
 
