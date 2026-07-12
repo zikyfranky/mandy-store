@@ -15,6 +15,7 @@ import { isPaymentMethodEnabled } from "@/lib/payments/config"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { gtpayAdapter } from "@/lib/payments/gateways/gtpay"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── Toggle FIRST — 200 so the gateway stops retrying a disabled endpoint ──
@@ -34,7 +35,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // ── Plain SHA-512 notify-hash verify BEFORE confirm (RESEARCH Pattern 4, T-71-12) ──
   // Order: tranx_id + amt + status_code + curr + hashkey (confirm exact field set at sandbox).
-  const hashKey = (process.env.GTPAY_HASH_KEY ?? "").trim()
+  // Resolver-backed (D-03/ADMN-07) — fail closed (400) if hash_key resolves empty, BEFORE
+  // any hash compute is attempted.
+  const hashKeyResolved = (await getGatewayConfig("gtpay")).hash_key
+  if (!hashKeyResolved) {
+    return NextResponse.json({ error: "Gateway not configured" }, { status: 400 })
+  }
+  const hashKey = hashKeyResolved.trim()
   const expected = crypto
     .createHash("sha512")
     .update(tranxId + amt + statusCode + curr + hashKey)

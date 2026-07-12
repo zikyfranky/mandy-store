@@ -16,6 +16,7 @@ import { isPaymentMethodEnabled } from "@/lib/payments/config"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { remitaAdapter } from "@/lib/payments/gateways/remita"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── Toggle FIRST — 200 so a disabled endpoint stops retries ───────────────
@@ -37,9 +38,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // ── Plain SHA-512 notify-hash verify BEFORE confirm (T-71-12) ──────────────
   // A-uncertain: exact Remita notification hash scheme is confirm-at-sandbox (D-19).
-  const merchantId = process.env.REMITA_MERCHANT_ID ?? ""
-  const apiKey = process.env.REMITA_API_KEY ?? ""
-  const expected = crypto.createHash("sha512").update(rrr + apiKey + merchantId).digest("hex")
+  // Resolver-backed (D-03/ADMN-07) — fail closed (400) if api_key/merchant_id resolve empty,
+  // BEFORE any hash compute is attempted.
+  const cfg = await getGatewayConfig("remita")
+  if (!cfg.api_key || !cfg.merchant_id) {
+    return NextResponse.json({ error: "Gateway not configured" }, { status: 400 })
+  }
+  const expected = crypto.createHash("sha512").update(rrr + cfg.api_key + cfg.merchant_id).digest("hex")
 
   if (expected !== receivedHash) {
     return NextResponse.json({ error: "Signature verification failed" }, { status: 400 })
