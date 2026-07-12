@@ -90,6 +90,13 @@ Give the store owner a customer administration surface in the existing admin pan
 - [x] **ADMN-10**: Admin can change a customer's role — promote a customer to admin or revoke admin back to customer — with server-side guards that refuse to demote the last remaining admin or the acting admin's own account *(delivered: Plans 09-02/09-03 — updateCustomerRole with self-lockout + atomic last-admin guards; confirm-gated toggle with self-row disable)*
 - [x] **ADMN-11**: Admin can directly set a new password for any customer (support path alongside the email reset link) — argon2id-hashed server-side, admin-gated; setting a password invalidates any outstanding reset link and revokes the target's live sessions (never the acting admin's own) *(delivered 2026-07-12: adminSetCustomerPassword action + "Set password" dialog in CustomerRowActions; added post-UAT at owner request)*
 
+### Admin — Categories & Brands CRUD (Phase 10)
+
+Give the store owner CRUD control over the two catalog taxonomy entities (categories, brands) in the existing admin panel. Post-v1 scope added 2026-07-12. Reuses the Phase 5 admin shell + `verifyAdminSession()` dual-auth and product-CRUD conventions (soft-delete via `isActive`, `ActionResult` DTOs, `uniqueSlug`, cache invalidation).
+
+- [ ] **ADMN-12**: Admin can create, rename, and soft-delete/restore **product categories** (name + immutable slug) with a per-category product count shown; the storefront taxonomy is DB-driven so active categories are browsable at `/<slug>` and appear in nav, while soft-deleted (`isActive=false`) categories 404 and disappear from nav/filters (replaces the hardcoded `VALID_CATEGORY_SLUGS`).
+- [ ] **ADMN-13**: Admin can create, rename, and soft-delete/restore **brands** with a per-brand product count shown; only active brands appear in storefront brand filters. Deactivating a category/brand never cascades to (or hard-deletes) its products — the `product.categoryId`/`brandId` FKs are preserved.
+
 ## v2 Requirements
 
 ### Promotions
@@ -165,6 +172,8 @@ Give the store owner a customer administration surface in the existing admin pan
 | ADMN-09 | Phase 9 | Complete (09-02/09-04 — live-email go-live human-verify) |
 | ADMN-10 | Phase 9 | Complete (09-02/09-03) |
 | ADMN-11 | Phase 9 | Complete (09-02/09-03 — added post-UAT) |
+| ADMN-12 | Phase 10 | Pending |
+| ADMN-13 | Phase 10 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
@@ -181,3 +190,4 @@ Give the store owner a customer administration surface in the existing admin pan
 *2026-07-07 — Phase 7.1: PAY-09/10/11 built as Interswitch/GTPay/Remita redirect adapters (sandbox-verified, toggle OFF by default, D-19). PAY-07/08 satisfied-via-channel through the Phase 7 aggregators (D-11) — no standalone build.*
 *2026-07-11 — Phase 8 added: Admin-Managed Payment Credentials (ADMN-05/06/07). Move all 8 gateways' credentials from .env into the DB-backed admin portal, encrypted at rest with one master key, DB-overrides-env with fallback.*
 *2026-07-12 — Phase 9 added: Admin Customer Management (ADMN-08/09/10). View all customers, admin-triggered password reset (email link), and role promote/demote with last-admin/self-lockout guards. Extends Phase 1 role model + Phase 5 admin dual-auth.*
+*2026-07-12 — Phase 10 added (post-v1): Categories & Brands CRUD (ADMN-12/13). Admin CRUD over catalog taxonomy with soft-delete; storefront category taxonomy decoupled from hardcoded slug lists. Delete semantics locked to soft-delete by owner.*

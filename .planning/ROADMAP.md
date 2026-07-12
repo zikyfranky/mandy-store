@@ -17,6 +17,7 @@
 - [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface
 - [~] **Phase 8: Admin-Managed Payment Credentials** - All 8 gateways' credentials configurable in the admin portal (DB-stored), encrypted at rest with one master key, DB-overrides-env with fallback (code complete 2026-07-11 — browser human-verify pending)
 - [~] **Phase 9: Admin Customer Management** - Store owner can see all customers, reset their passwords, and upgrade a customer to admin status (code complete 2026-07-12 — 415 tests green; browser + live-email human-verify pending)
+- [ ] **Phase 10: Categories & Brands CRUD** - CRUD operation for Categories and Brands
 
 ## Phase Details
 
@@ -251,6 +252,20 @@ Plans:
 - [x] 09-04-PLAN.md — Public /reset-password consume page + form island (ADMN-09) *(COMPLETE 2026-07-12 — consume-on-submit; generic errors)*
 - [~] 09-05-PLAN.md — Full automated gate + go-live human-verify checkpoint (ADMN-08/09/10) *(CODE COMPLETE 2026-07-12 — full suite 415 green + build clean; **browser + live-email human-verify PENDING** in 09-HUMAN-UAT.md)*
 
+### Phase 10: Categories & Brands CRUD
+**Goal**: The store owner can fully manage the catalog taxonomy — creating, renaming, and soft-deleting/restoring both categories and brands from the admin panel — with the storefront category taxonomy DB-driven so new categories become browsable and soft-deleted ones disappear, all reusing the Phase 5 admin shell + dual-auth and product-CRUD conventions.
+**Depends on**: Phase 2 (catalog schema — brand/category/product tables, catalog queries, `[categorySlug]` route), Phase 5 (admin panel shell/sidebar, `verifyAdminSession()` dual-auth, admin-products soft-delete + list-page patterns)
+**Requirements**: ADMN-12, ADMN-13
+**Success Criteria** (what must be TRUE):
+  1. An admin can create a category (name → auto slug) and a brand from `/admin/categories` and `/admin/brands`, seeing a per-entity product count
+  2. An admin can rename a category/brand and soft-delete (deactivate) then restore (reactivate) it — never a hard row delete; `product.categoryId`/`brandId` FKs are preserved and products are not cascaded
+  3. The storefront category taxonomy is DB-driven: a newly-created active category is browsable at `/<slug>` and shown in nav; a soft-deleted category 404s and disappears from nav/filters (hardcoded `VALID_CATEGORY_SLUGS` removed); only active brands appear in filters
+  4. Every taxonomy read/write enforces dual-auth (proxy redirect + in-action `verifyAdminSession()`), validates input server-side, handles unique-name/slug collisions gracefully, and invalidates the affected catalog caches
+  5. The new `isActive` columns on `brand` and `category` are pushed to both the dev and test databases before verification (`[BLOCKING]`)
+**Plans**: Not planned yet
+Plans:
+- Not planned yet
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -265,6 +280,7 @@ Plans:
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
 | 9. Admin Customer Management | 5/5 | Code complete — browser + live-email human-verify pending (09-HUMAN-UAT) | - |
+| 10. Categories & Brands CRUD | 0/0 | Not planned yet | - |
 
 ---
 *Roadmap created: 2026-06-10*
