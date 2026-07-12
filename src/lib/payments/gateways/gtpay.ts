@@ -16,77 +16,83 @@ import {
   type WebPayConfig,
   type WebPayInitParams,
 } from "./webpay-core"
+import { getGatewayConfig } from "../gateway-credentials"
 
-const PAY_URL = () =>
-  process.env.GTPAY_PAY_URL ?? "https://ibank.gtbank.com/GTPay/Tranx.aspx"
-const REQUERY_URL = () =>
-  process.env.GTPAY_REQUERY_URL ??
-  "https://ibank.gtbank.com/GTPayService/gettransactionstatus.json"
-const NOTI_URL = () =>
-  process.env.GTPAY_NOTI_URL ??
-  `${process.env.APP_URL ?? "http://localhost:3000"}/api/webhooks/gtpay`
+// Phase 8 (08-05, Pitfall 1): webpay-core.ts's WebPayConfig hooks MUST stay synchronous
+// and MUST NOT read process.env or the resolver themselves. So credentials are resolved
+// here (in the already-async adapter methods) via getGatewayConfig, then a FRESH
+// WebPayConfig object is built per call, closing over the resolved plain-data values —
+// never a module-scope config, never an async hook. Mirrors interswitch.ts's
+// buildInterswitchConfig — same shape, different field names + concat order.
+function buildGtpayConfig(cfg: Record<string, string>): WebPayConfig {
+  const payUrl = cfg.pay_url ?? "https://ibank.gtbank.com/GTPay/Tranx.aspx"
+  const requeryUrl = cfg.requery_url ?? "https://ibank.gtbank.com/GTPayService/gettransactionstatus.json"
+  const mertId = cfg.merchant_id ?? ""
+  const hashKey = (cfg.hash_key ?? "").trim() // Pitfall 2: trim
+  const notiUrl = cfg.noti_url ?? `${process.env.APP_URL ?? "http://localhost:3000"}/api/webhooks/gtpay`
 
-const gtpayConfig: WebPayConfig = {
-  provider: "gtpay",
-  get payUrl() {
-    return PAY_URL()
-  },
-  successCode: "00",
+  return {
+    provider: "gtpay",
+    payUrl,
+    successCode: "00",
 
-  // RESEARCH Pattern 4 — request hash concat order (Pitfall 2):
-  // mert_id + tranx_id + amt + curr + cust_id + noti_url + hashkey
-  buildRequestHash(p: WebPayInitParams): string {
-    const mertId = process.env.GTPAY_MERCHANT_ID ?? ""
-    const hashKey = (process.env.GTPAY_HASH_KEY ?? "").trim() // Pitfall 2: trim
-    return sha512(mertId + p.txnRef + p.amountKobo + NGN_NUMERIC + p.custId + NOTI_URL() + hashKey)
-  },
+    // RESEARCH Pattern 4 — request hash concat order (Pitfall 2):
+    // mert_id + tranx_id + amt + curr + cust_id + noti_url + hashkey
+    buildRequestHash(p: WebPayInitParams): string {
+      return sha512(mertId + p.txnRef + p.amountKobo + NGN_NUMERIC + p.custId + notiUrl + hashKey)
+    },
 
-  buildFields(p: WebPayInitParams, requestHash: string): Record<string, string> {
-    return {
-      gtpay_mert_id: process.env.GTPAY_MERCHANT_ID ?? "",
-      gtpay_tranx_id: p.txnRef,
-      gtpay_tranx_amt: String(p.amountKobo), // kobo passthrough (Pitfall 1)
-      gtpay_tranx_curr: NGN_NUMERIC,
-      gtpay_cust_id: p.custId,
-      gtpay_tranx_noti_url: NOTI_URL(),
-      gtpay_hash: requestHash, // current field name (NOT deprecated gtpay_tranx_hash)
-    }
-  },
+    buildFields(p: WebPayInitParams, requestHash: string): Record<string, string> {
+      return {
+        gtpay_mert_id: mertId,
+        gtpay_tranx_id: p.txnRef,
+        gtpay_tranx_amt: String(p.amountKobo), // kobo passthrough (Pitfall 1)
+        gtpay_tranx_curr: NGN_NUMERIC,
+        gtpay_cust_id: p.custId,
+        gtpay_tranx_noti_url: notiUrl,
+        gtpay_hash: requestHash, // current field name (NOT deprecated gtpay_tranx_hash)
+      }
+    },
 
-  // Requery hash: mert_id + tranx_id + hashkey
-  buildRequeryRequest(reference: string): { url: string; headers: Record<string, string> } {
-    const mertId = process.env.GTPAY_MERCHANT_ID ?? ""
-    const hashKey = (process.env.GTPAY_HASH_KEY ?? "").trim()
-    const requeryHash = sha512(mertId + reference + hashKey)
-    const url = `${REQUERY_URL()}?mertid=${encodeURIComponent(mertId)}&tranxid=${encodeURIComponent(
-      reference,
-    )}`
-    return { url, headers: { Hash: requeryHash } }
-  },
+    // Requery hash: mert_id + tranx_id + hashkey
+    buildRequeryRequest(reference: string): { url: string; headers: Record<string, string> } {
+      const requeryHash = sha512(mertId + reference + hashKey)
+      const url = `${requeryUrl}?mertid=${encodeURIComponent(mertId)}&tranxid=${encodeURIComponent(
+        reference,
+      )}`
+      return { url, headers: { Hash: requeryHash } }
+    },
 
-  parseRequery(json: unknown): { statusCode: string; amountKobo: number } {
-    const j = json as { gtpay_tranx_status_code?: string; gtpay_tranx_amt?: number | string }
-    return {
-      statusCode: String(j.gtpay_tranx_status_code ?? ""),
-      amountKobo: Number(j.gtpay_tranx_amt ?? 0),
-    }
-  },
+    parseRequery(json: unknown): { statusCode: string; amountKobo: number } {
+      const j = json as { gtpay_tranx_status_code?: string; gtpay_tranx_amt?: number | string }
+      return {
+        statusCode: String(j.gtpay_tranx_status_code ?? ""),
+        amountKobo: Number(j.gtpay_tranx_amt ?? 0),
+      }
+    },
+  }
+}
+
+function notiUrl(cfg: Record<string, string>): string {
+  return cfg.noti_url ?? `${process.env.APP_URL ?? "http://localhost:3000"}/api/webhooks/gtpay`
 }
 
 export const gtpayAdapter: GatewayAdapter = {
   provider: "gtpay",
 
   async initPayment(params): Promise<InitResult> {
-    return buildWebPayRedirect(gtpayConfig, {
+    const cfg = await getGatewayConfig("gtpay")
+    return buildWebPayRedirect(buildGtpayConfig(cfg), {
       txnRef: params.reference,
       amountKobo: params.amountKobo,
-      redirectUrl: NOTI_URL(),
+      redirectUrl: notiUrl(cfg),
       custId: params.email,
     })
   },
 
   async verifyTransaction(reference: string): Promise<VerifyResult> {
-    return verifyWebPay(gtpayConfig, reference)
+    const cfg = await getGatewayConfig("gtpay")
+    return verifyWebPay(buildGtpayConfig(cfg), reference)
   },
 
   // A5: GTPay refund automation unconfirmed at sandbox — degrade to log + manual until go-live.
