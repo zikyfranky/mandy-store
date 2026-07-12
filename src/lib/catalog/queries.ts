@@ -26,6 +26,7 @@ import {
   sql,
   count,
 } from "drizzle-orm"
+import { cacheLife, cacheTag } from "next/cache"
 import type { SortKey } from "@/lib/validation/catalog-params"
 
 export const PAGE_SIZE = 24
@@ -65,11 +66,13 @@ export async function getCatalog(opts: {
   // Resolve category if a slug was provided
   let categoryId: string | undefined
   if (categorySlug) {
+    // Pitfall 4 / D-03 defense-in-depth: resolve ACTIVE categories only, so a soft-deleted
+    // category's slug returns the empty result (beyond the page's getActiveCategoryBySlug 404 gate).
     const cat = await db.query.categories.findFirst({
-      where: eq(categories.slug, categorySlug),
+      where: and(eq(categories.slug, categorySlug), eq(categories.isActive, true)),
     })
     if (!cat) {
-      // Category not found — return empty result (caller may call notFound())
+      // Category not found or inactive — return empty result (caller may call notFound())
       return { products: [], total: 0, page, pageCount: 0 }
     }
     categoryId = cat.id
@@ -233,8 +236,9 @@ export async function getBrandsForCategory(
 ): Promise<string[]> {
   let categoryId: string | undefined
   if (categorySlug) {
+    // D-03: active categories only
     const cat = await db.query.categories.findFirst({
-      where: eq(categories.slug, categorySlug),
+      where: and(eq(categories.slug, categorySlug), eq(categories.isActive, true)),
     })
     categoryId = cat?.id
   }
@@ -247,11 +251,41 @@ export async function getBrandsForCategory(
   const rows = await db
     .selectDistinct({ brandName: brands.name })
     .from(products)
-    .innerJoin(brands, eq(products.brandId, brands.id))
+    // D-03/ADMN-13: exclude inactive brands from the facet list
+    .innerJoin(brands, and(eq(products.brandId, brands.id), eq(brands.isActive, true)))
     .where(and(...filters))
     .orderBy(asc(brands.name))
 
   return rows.map((r) => r.brandName)
+}
+
+// ─── Active-only taxonomy resolution (Phase 10, D-03) ─────────────────────────
+
+// Resolve a category by slug, ACTIVE only. Returns null for an unknown OR soft-deleted
+// slug — this is the 404 gate the [categorySlug] route uses. Deliberately NOT cached: it
+// must reflect a soft-delete immediately, and it runs inside the page's existing Suspense.
+export async function getActiveCategoryBySlug(slug: string) {
+  const cat = await db.query.categories.findFirst({
+    where: and(eq(categories.slug, slug), eq(categories.isActive, true)),
+  })
+  return cat ?? null
+}
+
+export type NavCategory = { slug: string; name: string }
+
+// Active categories for the storefront nav / home rails. 'use cache'-tagged so a DB-driven
+// nav does NOT regress the PPR static shell (Pitfall 3). CONTRACT: admin-taxonomy category
+// mutations fire updateTag("categories-nav") to expire this.
+export async function listActiveCategoriesForNav(): Promise<NavCategory[]> {
+  "use cache"
+  cacheLife("hours")
+  cacheTag("categories-nav")
+  const rows = await db.query.categories.findMany({
+    where: eq(categories.isActive, true),
+    columns: { slug: true, name: true },
+    orderBy: (c, { asc: a }) => [a(c.name)],
+  })
+  return rows.map((c) => ({ slug: c.slug, name: c.name }))
 }
 
 // ─── Re-export types for Plan 03 convenience ──────────────────────────────────

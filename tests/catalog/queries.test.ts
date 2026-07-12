@@ -7,6 +7,10 @@ import { hasDatabase, truncateCatalogTables } from "../helpers/db"
 
 // server-only is a no-op in Node test environment
 vi.mock("server-only", () => ({}))
+// 'use cache' is not compiled by vitest — stub the cache directives so listActiveCategoriesForNav
+// (a 'use cache' function) runs as a plain query in tests instead of throwing "cacheLife() is only
+// available with the cacheComponents config".
+vi.mock("next/cache", () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }))
 
 const skip = !hasDatabase
 
@@ -302,6 +306,12 @@ describe("getBrandsForCategory()", () => {
 // makes getBrandsForCategory exclude inactive brands.
 
 describe("active-only taxonomy resolution", () => {
+  beforeEach(async () => {
+    if (!hasDatabase) return
+    await truncateCatalogTables()
+    vi.clearAllMocks()
+  })
+
   async function deactivateCategoryRow(slug: string) {
     const { db } = await import("@/lib/db/client")
     const schema = await import("@/lib/db/schema")

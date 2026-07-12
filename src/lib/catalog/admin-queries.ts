@@ -15,6 +15,8 @@ import {
   orders,
   orderStatusEnum,
   users,
+  categories,
+  brands,
 } from "@/lib/db/schema"
 import { and, desc, eq, ilike, or, isNotNull, count, sql } from "drizzle-orm"
 
@@ -324,4 +326,74 @@ export async function getOrderForAdmin(id: string) {
     with: { items: true },
   })
   return order ?? null
+}
+
+// ─── Taxonomy admin lists (Phase 10, ADMN-12/13) ────────────────────────────────
+// Product-count aggregates. Like the rest of this file (T-05-06), these intentionally
+// count ALL referencing products regardless of products.isActive — the owner must see the
+// FULL reference impact before deactivating a category/brand (D-02 no-cascade). No pagination
+// (small bounded lists — matches listOrdersForAdmin scale).
+
+export type AdminCategoryRow = {
+  id: string
+  name: string
+  slug: string
+  isActive: boolean
+  productCount: number
+}
+
+export async function listCategoriesForAdmin(): Promise<AdminCategoryRow[]> {
+  const productCountSq = db
+    .select({
+      categoryId: products.categoryId,
+      productCount: sql<number>`COUNT(*)`.as("product_count"),
+    })
+    .from(products)
+    .groupBy(products.categoryId)
+    .as("category_product_count_sq")
+
+  const rows = await db
+    .select({
+      id: categories.id,
+      name: categories.name,
+      slug: categories.slug,
+      isActive: categories.isActive,
+      productCount: productCountSq.productCount,
+    })
+    .from(categories)
+    .leftJoin(productCountSq, eq(categories.id, productCountSq.categoryId))
+    .orderBy(categories.name)
+
+  return rows.map((r) => ({ ...r, productCount: Number(r.productCount ?? 0) }))
+}
+
+export type AdminBrandRow = {
+  id: string
+  name: string
+  isActive: boolean
+  productCount: number
+}
+
+export async function listBrandsForAdmin(): Promise<AdminBrandRow[]> {
+  const productCountSq = db
+    .select({
+      brandId: products.brandId,
+      productCount: sql<number>`COUNT(*)`.as("product_count"),
+    })
+    .from(products)
+    .groupBy(products.brandId)
+    .as("brand_product_count_sq")
+
+  const rows = await db
+    .select({
+      id: brands.id,
+      name: brands.name,
+      isActive: brands.isActive,
+      productCount: productCountSq.productCount,
+    })
+    .from(brands)
+    .leftJoin(productCountSq, eq(brands.id, productCountSq.brandId))
+    .orderBy(brands.name)
+
+  return rows.map((r) => ({ ...r, productCount: Number(r.productCount ?? 0) }))
 }
