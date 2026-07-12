@@ -81,6 +81,14 @@ Move all 8 payment gateways' credentials out of `.env` and into the admin portal
 - [ ] **ADMN-06**: Payment gateway secrets are encrypted at rest (AES-256-GCM) with a single server-only master key; secret fields are write-only in the UI (masked "configured" state + Replace, never returned to the browser)
 - [ ] **ADMN-07**: Credentials resolve DB-first with `.env` fallback for all 8 gateways (including webhook signature verification), admin-gated and server-only; a missing/invalid credential fails closed (method treated as not-configured)
 
+### Admin — Customer Management (Phase 9)
+
+Give the store owner a customer administration surface in the existing admin panel. Extends the Phase 1 auth/role model (`users.role` enum) and the Phase 5 admin shell + `verifyAdminSession()` dual-auth pattern. All reads/writes are admin-gated and server-only; no password hashes or tokens ever reach the browser.
+
+- [ ] **ADMN-08**: Admin can view a searchable, paginated list of all registered customers (name, email, role, email-verification status, join date, and order count)
+- [ ] **ADMN-09**: Admin can trigger a password reset for a customer via a one-time, time-limited email link (reuses the `verificationTokens` + Resend seam); the admin never sees or sets the plaintext password
+- [ ] **ADMN-10**: Admin can change a customer's role — promote a customer to admin or revoke admin back to customer — with server-side guards that refuse to demote the last remaining admin or the acting admin's own account
+
 ## v2 Requirements
 
 ### Promotions
@@ -152,13 +160,17 @@ Move all 8 payment gateways' credentials out of `.env` and into the admin portal
 | ADMN-05 | Phase 8 | Pending |
 | ADMN-06 | Phase 8 | Pending |
 | ADMN-07 | Phase 8 | Pending |
+| ADMN-08 | Phase 9 | Pending |
+| ADMN-09 | Phase 9 | Pending |
+| ADMN-10 | Phase 9 | Pending |
 
 **Coverage:**
 - v1 requirements: 27 total
 - Phase 7 (Paystack + Flutterwave) requirements: 3 (PAY-05, PAY-06, PAY-12)
 - Phase 7.1 (Additional NG Gateways, fast-follow) requirements: 5 (PAY-07..PAY-11)
 - Phase 8 (Admin-Managed Payment Credentials) requirements: 3 (ADMN-05, ADMN-06, ADMN-07)
-- Mapped to phases: 38
+- Phase 9 (Admin Customer Management) requirements: 3 (ADMN-08, ADMN-09, ADMN-10)
+- Mapped to phases: 41
 - Unmapped: 0 ✓
 
 ---
@@ -166,3 +178,4 @@ Move all 8 payment gateways' credentials out of `.env` and into the admin portal
 *Last updated: 2026-07-02 — split Phase 7: Paystack+Flutterwave (PAY-05/06/12) stay in Phase 7; PAY-07..PAY-11 move to fast-follow Phase 7.1 (per Phase 7 CONTEXT D-01)*
 *2026-07-07 — Phase 7.1: PAY-09/10/11 built as Interswitch/GTPay/Remita redirect adapters (sandbox-verified, toggle OFF by default, D-19). PAY-07/08 satisfied-via-channel through the Phase 7 aggregators (D-11) — no standalone build.*
 *2026-07-11 — Phase 8 added: Admin-Managed Payment Credentials (ADMN-05/06/07). Move all 8 gateways' credentials from .env into the DB-backed admin portal, encrypted at rest with one master key, DB-overrides-env with fallback.*
+*2026-07-12 — Phase 9 added: Admin Customer Management (ADMN-08/09/10). View all customers, admin-triggered password reset (email link), and role promote/demote with last-admin/self-lockout guards. Extends Phase 1 role model + Phase 5 admin dual-auth.*

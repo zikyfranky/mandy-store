@@ -16,6 +16,7 @@
 - [ ] **Phase 7: Nigerian Payment Gateways** - Paystack + Flutterwave (the two NGN aggregators) behind a reusable gateway-adapter interface
 - [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface
 - [~] **Phase 8: Admin-Managed Payment Credentials** - All 8 gateways' credentials configurable in the admin portal (DB-stored), encrypted at rest with one master key, DB-overrides-env with fallback (code complete 2026-07-11 — browser human-verify pending)
+- [ ] **Phase 9: Admin Customer Management** - Store owner can see all customers, reset their passwords, and upgrade a customer to admin status
 
 ## Phase Details
 
@@ -233,6 +234,19 @@ Plans:
 - [~] 08-09-PLAN.md — Settings UI: GatewayCredentialCard.tsx (write-only disclosure form, full UI-SPEC field-rendering/states/accessibility contract) + settings/page.tsx extension (8 gateway cards, resolver-backed presence, legacy 3-gateway helper fix) + human-verify checkpoint (write-only round-trip, no-leak DevTools check, test-connection) *(CODE COMPLETE 2026-07-11 — suite 394; build clean; **browser human-verify PENDING** in 08-HUMAN-UAT.md)*
 **UI hint**: yes
 
+### Phase 9: Admin Customer Management
+**Goal**: The store owner can administer customer accounts from the existing admin panel — viewing every registered customer, triggering a secure password reset, and changing a customer's role (promote to admin / revoke) — reusing the Phase 1 role model and the Phase 5 admin shell + `verifyAdminSession()` dual-auth pattern, with no password hashes or tokens ever reaching the browser.
+**Depends on**: Phase 1 (auth, sessions, `users.role` enum, `verificationTokens` + Resend seam, argon2id hashing), Phase 5 (admin panel shell/sidebar, `verifyAdminSession()` dual-auth, admin list-query + list-page patterns)
+**Requirements**: ADMN-08, ADMN-09, ADMN-10
+**Success Criteria** (what must be TRUE):
+  1. An admin can open `/admin/customers` and see every registered user — name, email, role, email-verification status, join date, and order count — with server-side search and pagination
+  2. An admin can trigger a password reset for a customer; the customer receives a one-time, time-limited email link to set a new password, and the admin never sees or sets the plaintext password
+  3. An admin can promote a customer to admin or revoke admin back to customer; the action re-verifies the admin role server-side and refuses to demote the last remaining admin or the acting admin's own account
+  4. Every customer read/write enforces dual-auth (proxy redirect + in-action `verifyAdminSession()`), validates role input server-side, and returns no password hashes or tokens to the browser
+**Plans**: Not planned yet
+Plans:
+- Not planned yet — run `/gsd-plan-phase 9`
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
@@ -246,6 +260,7 @@ Plans:
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
+| 9. Admin Customer Management | 0/0 | Not planned yet | - |
 
 ---
 *Roadmap created: 2026-06-10*

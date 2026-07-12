@@ -43,6 +43,7 @@ Plan: 6 of 6
 
 ### Roadmap Evolution
 
+- 2026-07-12 — Phase 9 added: **Admin Customer Management**. Store owner can see all registered customers, reset a customer's password, and upgrade a customer to admin status. Extends the Phase 5 admin panel (shell + dual-auth pattern) and the Phase 1 auth/role model. Requirements + success criteria TBD during `/gsd-plan-phase 9`.
 - 2026-07-11 — Phase 8 added: **Admin-Managed Payment Credentials** (ADMN-05/06/07). Move all 8 gateways' credentials out of `.env` into the DB-backed admin portal at `/admin/settings`. Secrets encrypted at rest (AES-256-GCM) with a single `CREDENTIALS_ENCRYPTION_KEY` kept in `.env`; DB-overrides-env with fallback; write-only secret fields; webhook signature verification resolves the signing secret from the DB. Depends on Phase 5 (`store_settings`/Settings UI) + Phase 7/7.1 (gateway adapters + webhook routes). NOTE: STATE.md frontmatter/position below is stale — it predates Phases 7/7.1/8; ROADMAP.md is authoritative.
 - 2026-07-01 — Phase 7 added: **Nigerian Payment Gateways** (PAY-05..PAY-12). NGN-native gateways as additional server-toggleable payment methods reusing the Phase 4 order/webhook/idempotency/atomic-decrement infrastructure. Scope: Paystack + Flutterwave first (aggregators covering cards/bank/USSD/Opay/Palmpay channels), then Opay, Palmpay, Interswitch, GTPay, Remita as direct integrations. Depends on Phase 4. Stripe + bank transfer stay; PayPal stays deferred (no NGN).
 
