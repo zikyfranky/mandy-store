@@ -110,6 +110,12 @@ Plan: 6 of 6
 - Split product caching: content vs stock/price — Phases 2 and 5.
 - Drizzle ExtraConfigBuilder uses symbol-keyed API (not `._`) for accessing unique constraint names — documented in 01-01-SUMMARY.md.
 
+### Quick Tasks Completed
+
+| Date | Slug | Summary |
+|------|------|---------|
+| 2026-07-12 | rebrand-yesbuy | Renamed customer-facing brand "Mandy Store" → **YesBuy** (domain yesbuy.store) across 20 source files — metadata, emails, payment panels, storefront + admin wordmarks. package.json/repo-dir/.planning left as internal identifiers. tsc + build clean. |
+
 ### Todos
 
 - (none yet)
