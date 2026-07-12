@@ -65,7 +65,10 @@ export const FIELD_MANIFEST: Record<string, FieldSpec[]> = {
   ],
 }
 
-type RawRow = { provider: string; field: string; value: string; isSecret: boolean }
+// Includes updatedAt/updatedBy (Phase 8 Plan 09) — the Settings UI needs these two metadata
+// fields per secret for the "Last updated {relative date} by {email}" caption; the resolved
+// VALUE is never exposed past this module for isSecret fields (see getGatewayConfig below).
+type RawRow = { provider: string; field: string; value: string; isSecret: boolean; updatedAt: Date; updatedBy: string | null }
 
 // Request-scoped batched read — ONE query regardless of how many fields/providers are checked
 // this request (mirrors getStoreSettingsMap). React.cache is request-scoped only — no
