@@ -146,6 +146,12 @@ export async function verifyEmail(
   token: string,
   email: string,
 ): Promise<{ error: string } | { success: true }> {
+  // D-07.3 / T-09-04: reset tokens live in the same table (no type column). A pwreset_
+  // token must never be consumable as an email-verify token (and vice-versa in resetPassword).
+  if (token.startsWith("pwreset_")) {
+    return { error: "Invalid token" }
+  }
+
   // Look up the token row by identifier + token (compound PK)
   const tokenRow = await db.query.verificationTokens.findFirst({
     where: and(
