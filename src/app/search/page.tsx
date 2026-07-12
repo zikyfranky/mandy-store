@@ -15,7 +15,7 @@ import { SortSelect } from "@/components/catalog/SortSelect"
 import { Pagination } from "@/components/catalog/Pagination"
 
 export const metadata: Metadata = {
-  title: "Search — Mandy Store",
+  title: "Search — YesBuy",
 }
 
 interface SearchPageProps {

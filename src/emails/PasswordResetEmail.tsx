@@ -20,13 +20,13 @@ interface PasswordResetEmailProps {
 export function PasswordResetEmail({ resetUrl }: PasswordResetEmailProps) {
   return (
     <Html lang="en">
-      <Preview>Reset your Mandy Store password</Preview>
+      <Preview>Reset your YesBuy password</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
           <Heading style={headingStyle}>Reset your password</Heading>
 
           <Text style={textStyle}>
-            A Mandy Store administrator initiated a password reset for your
+            A YesBuy administrator initiated a password reset for your
             account. Click the button below to set a new password.
           </Text>
 

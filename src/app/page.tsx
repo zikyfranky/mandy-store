@@ -12,7 +12,7 @@ import { ProductCard } from "@/components/catalog/ProductCard"
 import type { CatalogCard } from "@/lib/catalog/queries"
 
 export const metadata: Metadata = {
-  title: "Mandy Store — Electronics, Watches & Phones",
+  title: "YesBuy — Electronics, Watches & Phones",
   description: "Shop the best electronics, watches, and phones in Nigeria. Free delivery on orders over ₦50,000.",
 }
 

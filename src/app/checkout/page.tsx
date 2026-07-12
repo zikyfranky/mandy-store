@@ -16,7 +16,7 @@ import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary
 import { OOSWarningBanner } from "@/components/checkout/OOSWarningBanner"
 
 export const metadata: Metadata = {
-  title: "Checkout — Mandy Store",
+  title: "Checkout — YesBuy",
   description: "Review your order and complete your purchase.",
 }
 

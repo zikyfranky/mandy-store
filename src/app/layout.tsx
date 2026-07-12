@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mandy Store",
+  title: "YesBuy",
   description: "Electronics, Watches & Phones — best prices in Nigeria",
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? "https://mandy-store.vercel.app"),
 };

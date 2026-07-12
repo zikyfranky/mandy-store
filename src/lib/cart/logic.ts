@@ -5,7 +5,7 @@
 
 // ─── Cookie Constants (D-08) ──────────────────────────────────────────────────
 
-/** Cookie name for the guest cart. "ms" = Mandy Store; short name saves cookie bytes. */
+/** Cookie name for the guest cart ("ms" is a legacy prefix, kept to preserve existing carts). */
 export const CART_COOKIE = "ms_cart"
 
 /** Guest cart cookie lifetime: 30 days in seconds (D-08). */

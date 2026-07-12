@@ -36,7 +36,7 @@ export async function sendOrderConfirmationEmail(order: OrderConfirmationInput):
   }
 
   const { error } = await resend.emails.send({
-    from: "Mandy Store <onboarding@resend.dev>",
+    from: "YesBuy <onboarding@resend.dev>",
     to: order.customerEmail,
     subject: `Order confirmed — ${order.reference}`,
     react: OrderConfirmationEmail({

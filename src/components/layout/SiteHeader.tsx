@@ -34,7 +34,7 @@ export async function SiteHeader({ initialCount = 0 }: SiteHeaderProps) {
             </svg>
           </span>
           <span className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Mandy<span className="text-indigo-600 dark:text-indigo-400">Store</span>
+            Yes<span className="text-indigo-600 dark:text-indigo-400">Buy</span>
           </span>
         </Link>
 

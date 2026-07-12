@@ -25,7 +25,7 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
 
   const { error } = await resend.emails.send({
     // TODO: replace with verified domain before production
-    from: "Mandy Store <onboarding@resend.dev>",
+    from: "YesBuy <onboarding@resend.dev>",
     to: email,
     subject: "Reset your password",
     react: PasswordResetEmail({ resetUrl }),

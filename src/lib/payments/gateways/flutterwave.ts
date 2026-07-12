@@ -60,7 +60,7 @@ export function flutterwaveBuildParams(params: {
     },
     meta: { orderId: params.orderId },
     customizations: {
-      title: "Mandy Store",
+      title: "YesBuy",
       description: "Payment for your order",
     },
   }

@@ -27,7 +27,7 @@ function BrandMark() {
         </svg>
       </span>
       <span className="text-base font-semibold tracking-tight text-foreground">
-        Mandy<span className="text-brand">Store</span> Admin
+        Yes<span className="text-brand">Buy</span> Admin
       </span>
     </Link>
   )

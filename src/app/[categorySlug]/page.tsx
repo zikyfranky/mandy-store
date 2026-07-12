@@ -37,8 +37,8 @@ export async function generateMetadata({ params }: { params: Promise<{ categoryS
   const category = await getActiveCategoryBySlug(categorySlug)
   const name = category?.name ?? categorySlug
   return {
-    title: `${name} — Mandy Store`,
-    description: `Browse ${name.toLowerCase()} at Mandy Store. Best prices in Nigeria.`,
+    title: `${name} — YesBuy`,
+    description: `Browse ${name.toLowerCase()} at YesBuy. Best prices in Nigeria.`,
   }
 }
 

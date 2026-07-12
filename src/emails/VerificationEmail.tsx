@@ -20,13 +20,13 @@ interface VerificationEmailProps {
 export function VerificationEmail({ verifyUrl }: VerificationEmailProps) {
   return (
     <Html lang="en">
-      <Preview>Verify your Mandy Store email address</Preview>
+      <Preview>Verify your YesBuy email address</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
           <Heading style={headingStyle}>Verify your email address</Heading>
 
           <Text style={textStyle}>
-            Thanks for signing up to Mandy Store! Please verify your email
+            Thanks for signing up to YesBuy! Please verify your email
             address to activate your account.
           </Text>
 
