@@ -8,21 +8,12 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getCatalog, getBrandsForCategory } from "@/lib/catalog/queries"
+import { getCatalog, getBrandsForCategory, getActiveCategoryBySlug, listActiveCategoriesForNav } from "@/lib/catalog/queries"
 import { parseCatalogParams } from "@/lib/validation/catalog-params"
 import { ProductGrid } from "@/components/catalog/ProductGrid"
 import { ProductFilters } from "@/components/catalog/ProductFilters"
 import { SortSelect } from "@/components/catalog/SortSelect"
 import { Pagination } from "@/components/catalog/Pagination"
-
-const VALID_CATEGORY_SLUGS = ["electronics", "watches", "phones"] as const
-const CATEGORY_NAMES: Record<string, string> = {
-  electronics: "Electronics",
-  watches: "Watches",
-  phones: "Phones",
-}
-
-type CategorySlug = (typeof VALID_CATEGORY_SLUGS)[number]
 
 interface CategoryPageProps {
   params: Promise<{ categorySlug: string }>
@@ -37,12 +28,14 @@ interface CategoryPageProps {
 }
 
 export async function generateStaticParams() {
-  return VALID_CATEGORY_SLUGS.map((categorySlug) => ({ categorySlug }))
+  const cats = await listActiveCategoriesForNav()
+  return cats.map((c) => ({ categorySlug: c.slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ categorySlug: string }> }): Promise<Metadata> {
   const { categorySlug } = await params
-  const name = CATEGORY_NAMES[categorySlug] ?? categorySlug
+  const category = await getActiveCategoryBySlug(categorySlug)
+  const name = category?.name ?? categorySlug
   return {
     title: `${name} — Mandy Store`,
     description: `Browse ${name.toLowerCase()} at Mandy Store. Best prices in Nigeria.`,
@@ -57,21 +50,18 @@ async function CategoryContent({
   const { categorySlug } = await params
   const sp = await searchParams
 
-  // Validate: only the 3 known category slugs are valid (D-06)
-  if (!(VALID_CATEGORY_SLUGS as readonly string[]).includes(categorySlug)) {
-    notFound()
-  }
-
-  const validSlug = categorySlug as CategorySlug
-  const categoryName = CATEGORY_NAMES[validSlug]
+  // Resolve the category from the DB, active-only (D-03). Unknown OR soft-deleted → 404.
+  const category = await getActiveCategoryBySlug(categorySlug)
+  if (!category) notFound()
+  const categoryName = category.name
 
   // Parse + clamp searchParams (T-02-04, T-02-06)
   const parsed = parseCatalogParams(sp)
 
   // Fetch data in parallel
   const [result, brands] = await Promise.all([
-    getCatalog({ categorySlug: validSlug, ...parsed }),
-    getBrandsForCategory(validSlug),
+    getCatalog({ categorySlug, ...parsed }),
+    getBrandsForCategory(categorySlug),
   ])
 
   const hasActiveFilters = !!(parsed.q || parsed.brand || parsed.minPrice !== undefined || parsed.maxPrice !== undefined)
@@ -112,7 +102,7 @@ async function CategoryContent({
           <ProductGrid
             products={result.products}
             hasFilters={hasActiveFilters}
-            basePath={`/${validSlug}`}
+            basePath={`/${categorySlug}`}
           />
 
           <Pagination

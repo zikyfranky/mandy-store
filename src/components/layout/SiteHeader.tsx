@@ -6,21 +6,22 @@
 import Link from "next/link"
 import { SearchBar } from "@/components/catalog/SearchBar"
 import { CartIconButton } from "@/components/layout/CartIconButton"
-
-const NAV = [
-  { href: "/electronics", label: "Electronics" },
-  { href: "/watches", label: "Watches" },
-  { href: "/phones", label: "Phones" },
-  { href: "/products", label: "All Products" },
-]
+import { listActiveCategoriesForNav } from "@/lib/catalog/queries"
 
 interface SiteHeaderProps {
   /** Server-read cart count — passed through to CartIconButton via CartProvider (D-13) */
   initialCount?: number
 }
 
-export function SiteHeader({ initialCount = 0 }: SiteHeaderProps) {
+// Async Server Component: the nav categories come from the cached (`'use cache'` +
+// cacheTag("categories-nav")) query, so this stays in the static PPR shell (Pitfall 3, D-03).
+export async function SiteHeader({ initialCount = 0 }: SiteHeaderProps) {
   void initialCount // CartIconButton reads optimisticCount from CartProvider (seeded by layout)
+  const categories = await listActiveCategoriesForNav()
+  const nav = [
+    ...categories.map((c) => ({ href: `/${c.slug}`, label: c.name })),
+    { href: "/products", label: "All Products" },
+  ]
   return (
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#0c0c16]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-sm">
       <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center gap-4">
@@ -44,7 +45,7 @@ export function SiteHeader({ initialCount = 0 }: SiteHeaderProps) {
 
         {/* Nav links — desktop only */}
         <nav className="hidden lg:flex items-center gap-1">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}

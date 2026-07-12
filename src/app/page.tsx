@@ -7,7 +7,7 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import Link from "next/link"
-import { getCatalog } from "@/lib/catalog/queries"
+import { getCatalog, listActiveCategoriesForNav } from "@/lib/catalog/queries"
 import { ProductCard } from "@/components/catalog/ProductCard"
 import type { CatalogCard } from "@/lib/catalog/queries"
 
@@ -15,13 +15,6 @@ export const metadata: Metadata = {
   title: "Mandy Store — Electronics, Watches & Phones",
   description: "Shop the best electronics, watches, and phones in Nigeria. Free delivery on orders over ₦50,000.",
 }
-
-// Rails shown on the landing page, in order.
-const RAILS = [
-  { title: "Latest Phones", slug: "phones" },
-  { title: "Top Watches", slug: "watches" },
-  { title: "New in Electronics", slug: "electronics" },
-] as const
 
 const VALUE_PROPS = [
   {
@@ -78,11 +71,16 @@ function ProductRail({ title, slug, products }: { title: string; slug: string; p
 }
 
 async function CategoryRails() {
+  // D-03: rails are DB-driven from active categories (the bespoke "Latest Phones"/"Top Watches"
+  // copy is intentionally replaced by a generic "New in ${name}" template — flagged for UAT).
+  const activeCategories = await listActiveCategoriesForNav()
+  const railDefs = activeCategories.map((c) => ({ title: `New in ${c.name}`, slug: c.slug }))
+
   const results = await Promise.all(
-    RAILS.map((rail) => getCatalog({ categorySlug: rail.slug, sort: "newest", page: 1 }))
+    railDefs.map((rail) => getCatalog({ categorySlug: rail.slug, sort: "newest", page: 1 }))
   )
 
-  const rails = RAILS.map((rail, i) => ({
+  const rails = railDefs.map((rail, i) => ({
     ...rail,
     products: results[i].products.slice(0, 8),
   }))
