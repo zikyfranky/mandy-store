@@ -15,7 +15,7 @@
 - [x] **Phase 6: Customer Accounts** - Repeat buyers can view their order history (completed 2026-07-11 — AUTH-04; 348 tests green; 2 browser-UX human-verify items in 06-HUMAN-UAT)
 - [ ] **Phase 7: Nigerian Payment Gateways** - Paystack + Flutterwave (the two NGN aggregators) behind a reusable gateway-adapter interface
 - [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface
-- [ ] **Phase 8: Admin-Managed Payment Credentials** - All 8 gateways' credentials configurable in the admin portal (DB-stored), encrypted at rest with one master key, DB-overrides-env with fallback
+- [~] **Phase 8: Admin-Managed Payment Credentials** - All 8 gateways' credentials configurable in the admin portal (DB-stored), encrypted at rest with one master key, DB-overrides-env with fallback (code complete 2026-07-11 — browser human-verify pending)
 
 ## Phase Details
 
@@ -220,17 +220,17 @@ Plans:
 - [x] 08-02-PLAN.md — FIELD_MANIFEST (30 fields/8 providers) + getGatewayConfig/getGatewayCredentialsMap DB-first/env-fallback/fail-closed resolver (D-03, TDD) + DB-gated env-only-regression integration test + truncateGatewayCredentialsTable helper *(COMPLETE 2026-07-11 — 10 tests green; test DB left empty)*
 
 **Wave 3** *(parallel, no file overlap; blocked on Wave 2)*
-- [ ] 08-03-PLAN.md — saveGatewayCredentials (D-05) + testGatewayConnection (D-06) Server Actions, admin-gated, closed per-provider Zod schema, encrypt-before-persist, empty-submit-preserves
-- [ ] 08-04-PLAN.md — config.ts hasEnvAndCredentials + stripe.ts getStripe() resolver migration (async), checkout.ts/Stripe-webhook call-site fix, 6 test files updated
-- [ ] 08-05-PLAN.md — Paystack/Flutterwave/Remita/Interswitch/GTPay gateway module migration (per-call resolved WebPayConfig for the WebPay pair, webpay-core.ts untouched), gateways.test.ts updated
-- [ ] 08-06-PLAN.md — Paystack + Flutterwave webhook signing-secret migration, fail-closed 400 guard, existing test files extended
-- [ ] 08-07-PLAN.md — GTPay + Remita webhook signing-secret migration, fail-closed guard, 2 NEW webhook test files (prior gap — only callback routes had coverage)
+- [x] 08-03-PLAN.md — saveGatewayCredentials (D-05) + testGatewayConnection (D-06) Server Actions, admin-gated, closed per-provider Zod schema, encrypt-before-persist, empty-submit-preserves *(COMPLETE 2026-07-11 — 17 tests green; full suite 383)*
+- [x] 08-04-PLAN.md — config.ts hasEnvAndCredentials + stripe.ts getStripe() resolver migration (async), checkout.ts/Stripe-webhook call-site fix, 6 test files updated *(COMPLETE 2026-07-11 — async getStripe() landmine handled; suite 383 green; build clean)*
+- [x] 08-05-PLAN.md — Paystack/Flutterwave/Remita/Interswitch/GTPay gateway module migration (per-call resolved WebPayConfig for the WebPay pair, webpay-core.ts untouched), gateways.test.ts updated *(COMPLETE 2026-07-11 — 32/32 gateway tests; suite 383; webpay-core.ts unchanged; flagged latent test-mock DB-leak for verify)*
+- [x] 08-06-PLAN.md — Paystack + Flutterwave webhook signing-secret migration, fail-closed 400 guard, existing test files extended *(COMPLETE 2026-07-11 — fail-closed before HMAC; suite 385; tsc clean)*
+- [x] 08-07-PLAN.md — GTPay + Remita webhook signing-secret migration, fail-closed guard, 2 NEW webhook test files (prior gap — only callback routes had coverage) *(COMPLETE 2026-07-11 — 8/8 targeted; suite 393)*
 
 **Wave 4** *(blocked on Wave 3, specifically 08-04)*
-- [ ] 08-08-PLAN.md — Stripe webhook webhook_secret resolver migration (needs 08-04's async getStripe() already in place), fail-closed test added
+- [x] 08-08-PLAN.md — Stripe webhook webhook_secret resolver migration (needs 08-04's async getStripe() already in place), fail-closed test added *(COMPLETE 2026-07-11 — all 6 webhooks resolver-backed; suite 394; build clean)*
 
 **Wave 5** *(UI; blocked on Wave 3/4 completion)*
-- [ ] 08-09-PLAN.md — Settings UI: GatewayCredentialCard.tsx (write-only disclosure form, full UI-SPEC field-rendering/states/accessibility contract) + settings/page.tsx extension (8 gateway cards, resolver-backed presence, legacy 3-gateway helper fix) + human-verify checkpoint (write-only round-trip, no-leak DevTools check, test-connection)
+- [~] 08-09-PLAN.md — Settings UI: GatewayCredentialCard.tsx (write-only disclosure form, full UI-SPEC field-rendering/states/accessibility contract) + settings/page.tsx extension (8 gateway cards, resolver-backed presence, legacy 3-gateway helper fix) + human-verify checkpoint (write-only round-trip, no-leak DevTools check, test-connection) *(CODE COMPLETE 2026-07-11 — suite 394; build clean; **browser human-verify PENDING** in 08-HUMAN-UAT.md)*
 **UI hint**: yes
 
 ## Progress
@@ -245,7 +245,7 @@ Plans:
 | 6. Customer Accounts | 0/0 | Not started | - |
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
-| 8. Admin-Managed Payment Credentials | 0/9 | Planned | - |
+| 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
 
 ---
 *Roadmap created: 2026-06-10*
