@@ -332,16 +332,18 @@ export async function sendCustomerPasswordReset(userId: string) {
 
 **No other assumptions** — auth/session, token consume, argon2 options, email null-safety, query pattern, and test isolation were all read directly from installed source.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `verifyEmail` be hardened to reject `pwreset_` tokens as part of this phase?**
    - What we know: it currently accepts any exact `(identifier, token)` match with no prefix check (Pitfall 2).
    - What's unclear: whether touching `verifyEmail` is in-scope (CONTEXT says customer-facing auth flows "stay as-is").
    - Recommendation: add the one-line prefix rejection — it hardens an existing flow without changing its behavior for legitimate verify tokens. Flag to the planner as a small, low-risk addition.
+   - **RESOLVED:** LOCKED as CONTEXT D-07.3; implemented by 09-02 Task 3 (in-scope, low-risk hardening of the existing flow).
 
 2. **From-address / live email deliverability.**
    - What we know: sender still uses `onboarding@resend.dev` and `RESEND_API_KEY` may be unset in dev [VERIFIED: send-verification.ts:27].
    - Recommendation: live reset-email round-trip is a go-live human-verify item (same posture as email verification), not a blocker for this phase.
+   - **RESOLVED:** go-live human-verify item in 09-05 (09-HUMAN-UAT.md); not a phase blocker.
 
 ## Environment Availability
 
