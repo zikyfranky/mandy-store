@@ -268,8 +268,8 @@ Plans:
 - [x] 10-01-PLAN.md — Foundation: add `isActive` to brands+categories schema, [BLOCKING] dual-DB direct-SQL push (D-11), Wave 0 RED test scaffolds (admin-taxonomy + admin-queries + queries/schema extensions) *(COMPLETE 2026-07-12 — is_active live in both Neon DBs; 4 test files; scaffolds RED-by-design)*
 
 **Wave 2** *(blocked on Wave 1)*
-- [ ] 10-02-PLAN.md — admin-taxonomy.ts Server Actions: create/rename/deactivate/reactivate for categories + brands (verifyAdminSession-first, D-05 friendly uniqueness, D-04 immutable slug, D-02 no-cascade, D-09 invalidation incl. `categories-nav` tag)
-- [ ] 10-03-PLAN.md — Read queries: listCategoriesForAdmin/listBrandsForAdmin (product-count aggregate) + getActiveCategoryBySlug + `'use cache'` listActiveCategoriesForNav + active-filter hardening of getCatalog/getBrandsForCategory (Pitfall 4)
+- [x] 10-02-PLAN.md — admin-taxonomy.ts Server Actions: create/rename/deactivate/reactivate for categories + brands (verifyAdminSession-first, D-05 friendly uniqueness, D-04 immutable slug, D-02 no-cascade, D-09 invalidation incl. `categories-nav` tag) *(COMPLETE 2026-07-12 — 8/8 action tests green)*
+- [x] 10-03-PLAN.md — Read queries: listCategoriesForAdmin/listBrandsForAdmin (product-count aggregate) + getActiveCategoryBySlug + `'use cache'` listActiveCategoriesForNav + active-filter hardening of getCatalog/getBrandsForCategory (Pitfall 4) *(COMPLETE 2026-07-12 — 19/19 query tests green)*
 
 **Wave 3** *(blocked on Wave 2)*
 - [ ] 10-04-PLAN.md — Storefront decouple (D-03): DB-drive `[categorySlug]` route (active-only 404 + generateStaticParams/metadata), SiteHeader nav, home rails — remove VALID_CATEGORY_SLUGS/CATEGORY_NAMES/NAV/RAILS; PPR shell preserved
@@ -292,7 +292,7 @@ Plans:
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
 | 9. Admin Customer Management | 5/5 | Code complete — browser + live-email human-verify pending (09-HUMAN-UAT) | - |
-| 10. Categories & Brands CRUD | 1/6 | Executing (Wave 1 done) | - |
+| 10. Categories & Brands CRUD | 3/6 | Executing (Waves 1-2 done) | - |
 
 ---
 *Roadmap created: 2026-06-10*
