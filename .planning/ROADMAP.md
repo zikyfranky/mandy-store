@@ -265,7 +265,7 @@ Plans:
 **Plans**: 6 plans (4 waves)
 Plans:
 **Wave 1**
-- [ ] 10-01-PLAN.md — Foundation: add `isActive` to brands+categories schema, [BLOCKING] dual-DB direct-SQL push (D-11), Wave 0 RED test scaffolds (admin-taxonomy + admin-queries + queries/schema extensions)
+- [x] 10-01-PLAN.md — Foundation: add `isActive` to brands+categories schema, [BLOCKING] dual-DB direct-SQL push (D-11), Wave 0 RED test scaffolds (admin-taxonomy + admin-queries + queries/schema extensions) *(COMPLETE 2026-07-12 — is_active live in both Neon DBs; 4 test files; scaffolds RED-by-design)*
 
 **Wave 2** *(blocked on Wave 1)*
 - [ ] 10-02-PLAN.md — admin-taxonomy.ts Server Actions: create/rename/deactivate/reactivate for categories + brands (verifyAdminSession-first, D-05 friendly uniqueness, D-04 immutable slug, D-02 no-cascade, D-09 invalidation incl. `categories-nav` tag)
@@ -292,7 +292,7 @@ Plans:
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
 | 9. Admin Customer Management | 5/5 | Code complete — browser + live-email human-verify pending (09-HUMAN-UAT) | - |
-| 10. Categories & Brands CRUD | 0/6 | Planned (6 plans, 4 waves) | - |
+| 10. Categories & Brands CRUD | 1/6 | Executing (Wave 1 done) | - |
 
 ---
 *Roadmap created: 2026-06-10*
