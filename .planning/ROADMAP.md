@@ -16,7 +16,7 @@
 - [ ] **Phase 7: Nigerian Payment Gateways** - Paystack + Flutterwave (the two NGN aggregators) behind a reusable gateway-adapter interface
 - [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface
 - [~] **Phase 8: Admin-Managed Payment Credentials** - All 8 gateways' credentials configurable in the admin portal (DB-stored), encrypted at rest with one master key, DB-overrides-env with fallback (code complete 2026-07-11 — browser human-verify pending)
-- [ ] **Phase 9: Admin Customer Management** - Store owner can see all customers, reset their passwords, and upgrade a customer to admin status
+- [~] **Phase 9: Admin Customer Management** - Store owner can see all customers, reset their passwords, and upgrade a customer to admin status (code complete 2026-07-12 — 415 tests green; browser + live-email human-verify pending)
 
 ## Phase Details
 
@@ -245,11 +245,11 @@ Plans:
   4. Every customer read/write enforces dual-auth (proxy redirect + in-action `verifyAdminSession()`), validates role input server-side, and returns no password hashes or tokens to the browser
 **Plans**: 5 plans, 4 waves
 Plans:
-- [ ] 09-01-PLAN.md — Foundation: users.createdAt + [BLOCKING] dual-DB push, listCustomersForAdmin query, Wave 0 test scaffolds (ADMN-08)
-- [ ] 09-02-PLAN.md — Server logic: sendCustomerPasswordReset/resetPassword/updateCustomerRole + reset-email seam + verifyEmail hardening (ADMN-09/10)
-- [ ] 09-03-PLAN.md — Admin UI: /admin/customers list page, CustomerRowActions island, RoleBadge, Customers nav (ADMN-08/10)
-- [ ] 09-04-PLAN.md — Public /reset-password consume page + form island (ADMN-09)
-- [ ] 09-05-PLAN.md — Full automated gate + go-live human-verify checkpoint (ADMN-08/09/10)
+- [x] 09-01-PLAN.md — Foundation: users.createdAt + [BLOCKING] dual-DB push, listCustomersForAdmin query, Wave 0 test scaffolds (ADMN-08) *(COMPLETE 2026-07-12 — created_at live in both DBs; customers.test.ts 6/6 green)*
+- [x] 09-02-PLAN.md — Server logic: sendCustomerPasswordReset/resetPassword/updateCustomerRole + reset-email seam + verifyEmail hardening (ADMN-09/10) *(COMPLETE 2026-07-12 — 15/15 action tests green; all D-07 hardening; verify-email no regression)*
+- [x] 09-03-PLAN.md — Admin UI: /admin/customers list page, CustomerRowActions island, RoleBadge, Customers nav (ADMN-08/10) *(COMPLETE 2026-07-12 — build clean; self-row guard; no PII to client)*
+- [x] 09-04-PLAN.md — Public /reset-password consume page + form island (ADMN-09) *(COMPLETE 2026-07-12 — consume-on-submit; generic errors)*
+- [~] 09-05-PLAN.md — Full automated gate + go-live human-verify checkpoint (ADMN-08/09/10) *(CODE COMPLETE 2026-07-12 — full suite 415 green + build clean; **browser + live-email human-verify PENDING** in 09-HUMAN-UAT.md)*
 
 ## Progress
 
@@ -264,7 +264,7 @@ Plans:
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
-| 9. Admin Customer Management | 0/5 | Planned | - |
+| 9. Admin Customer Management | 5/5 | Code complete — browser + live-email human-verify pending (09-HUMAN-UAT) | - |
 
 ---
 *Roadmap created: 2026-06-10*

@@ -85,9 +85,9 @@ Move all 8 payment gateways' credentials out of `.env` and into the admin portal
 
 Give the store owner a customer administration surface in the existing admin panel. Extends the Phase 1 auth/role model (`users.role` enum) and the Phase 5 admin shell + `verifyAdminSession()` dual-auth pattern. All reads/writes are admin-gated and server-only; no password hashes or tokens ever reach the browser.
 
-- [ ] **ADMN-08**: Admin can view a searchable, paginated list of all registered customers (name, email, role, email-verification status, join date, and order count)
-- [ ] **ADMN-09**: Admin can trigger a password reset for a customer via a one-time, time-limited email link (reuses the `verificationTokens` + Resend seam); the admin never sees or sets the plaintext password
-- [ ] **ADMN-10**: Admin can change a customer's role — promote a customer to admin or revoke admin back to customer — with server-side guards that refuse to demote the last remaining admin or the acting admin's own account
+- [x] **ADMN-08**: Admin can view a searchable, paginated list of all registered customers (name, email, role, email-verification status, join date, and order count) *(delivered: Plans 09-01/09-03 — listCustomersForAdmin no-PII DTO + order-count aggregate; /admin/customers list with search/pagination/RoleBadge)*
+- [x] **ADMN-09**: Admin can trigger a password reset for a customer via a one-time, time-limited email link (reuses the `verificationTokens` + Resend seam); the admin never sees or sets the plaintext password *(delivered: Plans 09-02/09-04 — sendCustomerPasswordReset (1h pwreset_ link, one live link, token never returned), resetPassword (single-use, argon2id, session revoke, generic errors), public /reset-password page; live-email round-trip is a go-live human-verify)*
+- [x] **ADMN-10**: Admin can change a customer's role — promote a customer to admin or revoke admin back to customer — with server-side guards that refuse to demote the last remaining admin or the acting admin's own account *(delivered: Plans 09-02/09-03 — updateCustomerRole with self-lockout + atomic last-admin guards; confirm-gated toggle with self-row disable)*
 
 ## v2 Requirements
 
@@ -160,9 +160,9 @@ Give the store owner a customer administration surface in the existing admin pan
 | ADMN-05 | Phase 8 | Pending |
 | ADMN-06 | Phase 8 | Pending |
 | ADMN-07 | Phase 8 | Pending |
-| ADMN-08 | Phase 9 | Pending |
-| ADMN-09 | Phase 9 | Pending |
-| ADMN-10 | Phase 9 | Pending |
+| ADMN-08 | Phase 9 | Complete (09-01/09-03) |
+| ADMN-09 | Phase 9 | Complete (09-02/09-04 — live-email go-live human-verify) |
+| ADMN-10 | Phase 9 | Complete (09-02/09-03) |
 
 **Coverage:**
 - v1 requirements: 27 total
