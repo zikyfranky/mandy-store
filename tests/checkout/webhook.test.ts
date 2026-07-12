@@ -30,6 +30,27 @@ vi.mock("@/lib/payments/stripe", () => ({
   }),
 }))
 
+// Resolver mock: mock the PUBLIC getGatewayConfig function directly (NOT
+// getGatewayCredentialsMap — spreading `actual` and overriding only the internal DB-map
+// fetch does not intercept getGatewayConfig's same-module self-reference call; see 08-06
+// Key Decisions). DB is always empty here, so this reimplements the env-fallback half of
+// the real resolver, keyed off whatever process.env.STRIPE_WEBHOOK_SECRET is per test.
+vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/payments/gateway-credentials")>()
+  return {
+    ...actual,
+    getGatewayConfig: vi.fn(async (provider: string) => {
+      if (provider !== "stripe") return {}
+      const result: Record<string, string> = {}
+      if (process.env.STRIPE_WEBHOOK_SECRET) {
+        result.webhook_secret = process.env.STRIPE_WEBHOOK_SECRET
+      }
+      return result
+    }),
+  }
+})
+
 // ─── Env setup ────────────────────────────────────────────────────────────────
 process.env.STRIPE_WEBHOOK_SECRET = "whsec_test"
 
@@ -82,6 +103,23 @@ describe("Stripe webhook handler", () => {
     expect(res.status).toBe(400)
     const json = await res.json()
     expect(json).toHaveProperty("error")
+  })
+
+  // ── Test 1b: Not configured — fail closed before constructEvent is ever called ──
+  it("returns 400 when webhook_secret resolves empty (not configured)", async () => {
+    delete process.env.STRIPE_WEBHOOK_SECRET
+
+    const { POST } = await import("@/app/api/webhooks/stripe/route")
+    const req = makeRequest("{}", "t=1,v1=abc")
+    const res = await POST(req)
+
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json).toHaveProperty("error")
+    expect(constructEvent).not.toHaveBeenCalled()
+
+    // Restore for subsequent tests.
+    process.env.STRIPE_WEBHOOK_SECRET = "whsec_test"
   })
 
   // ── Test 2: Happy path — DB-gated ─────────────────────────────────────────

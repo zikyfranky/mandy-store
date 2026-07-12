@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import type Stripe from "stripe"
 import { getStripe } from "@/lib/payments/stripe"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
 import { db } from "@/lib/db/client"
 import { orders } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
@@ -30,9 +31,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const sig = req.headers.get("stripe-signature") ?? ""
   const stripeClient = await getStripe()
 
+  // Resolve the webhook signing secret DB-first with env fallback (ADMN-07); fail closed
+  // (400, no constructEvent attempt) if it resolves empty (T-08-23).
+  const { webhook_secret: webhookSecret } = await getGatewayConfig("stripe")
+  if (!webhookSecret) {
+    return NextResponse.json({ error: "Gateway not configured" }, { status: 400 })
+  }
+
   let event: Stripe.Event
   try {
-    event = stripeClient.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = stripeClient.webhooks.constructEvent(body, sig, webhookSecret)
   } catch {
     // Signature mismatch — this is either a forged request or a misconfigured secret. (T-04-16)
     return NextResponse.json({ error: "Signature verification failed" }, { status: 400 })
