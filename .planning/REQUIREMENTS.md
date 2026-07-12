@@ -88,6 +88,7 @@ Give the store owner a customer administration surface in the existing admin pan
 - [x] **ADMN-08**: Admin can view a searchable, paginated list of all registered customers (name, email, role, email-verification status, join date, and order count) *(delivered: Plans 09-01/09-03 — listCustomersForAdmin no-PII DTO + order-count aggregate; /admin/customers list with search/pagination/RoleBadge)*
 - [x] **ADMN-09**: Admin can trigger a password reset for a customer via a one-time, time-limited email link (reuses the `verificationTokens` + Resend seam); the admin never sees or sets the plaintext password *(delivered: Plans 09-02/09-04 — sendCustomerPasswordReset (1h pwreset_ link, one live link, token never returned), resetPassword (single-use, argon2id, session revoke, generic errors), public /reset-password page; live-email round-trip is a go-live human-verify)*
 - [x] **ADMN-10**: Admin can change a customer's role — promote a customer to admin or revoke admin back to customer — with server-side guards that refuse to demote the last remaining admin or the acting admin's own account *(delivered: Plans 09-02/09-03 — updateCustomerRole with self-lockout + atomic last-admin guards; confirm-gated toggle with self-row disable)*
+- [x] **ADMN-11**: Admin can directly set a new password for any customer (support path alongside the email reset link) — argon2id-hashed server-side, admin-gated; setting a password invalidates any outstanding reset link and revokes the target's live sessions (never the acting admin's own) *(delivered 2026-07-12: adminSetCustomerPassword action + "Set password" dialog in CustomerRowActions; added post-UAT at owner request)*
 
 ## v2 Requirements
 
@@ -163,14 +164,15 @@ Give the store owner a customer administration surface in the existing admin pan
 | ADMN-08 | Phase 9 | Complete (09-01/09-03) |
 | ADMN-09 | Phase 9 | Complete (09-02/09-04 — live-email go-live human-verify) |
 | ADMN-10 | Phase 9 | Complete (09-02/09-03) |
+| ADMN-11 | Phase 9 | Complete (09-02/09-03 — added post-UAT) |
 
 **Coverage:**
 - v1 requirements: 27 total
 - Phase 7 (Paystack + Flutterwave) requirements: 3 (PAY-05, PAY-06, PAY-12)
 - Phase 7.1 (Additional NG Gateways, fast-follow) requirements: 5 (PAY-07..PAY-11)
 - Phase 8 (Admin-Managed Payment Credentials) requirements: 3 (ADMN-05, ADMN-06, ADMN-07)
-- Phase 9 (Admin Customer Management) requirements: 3 (ADMN-08, ADMN-09, ADMN-10)
-- Mapped to phases: 41
+- Phase 9 (Admin Customer Management) requirements: 4 (ADMN-08, ADMN-09, ADMN-10, ADMN-11)
+- Mapped to phases: 42
 - Unmapped: 0 ✓
 
 ---

@@ -9,7 +9,11 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { sendCustomerPasswordReset, updateCustomerRole } from "@/lib/actions/admin-customers"
+import {
+  sendCustomerPasswordReset,
+  updateCustomerRole,
+  adminSetCustomerPassword,
+} from "@/lib/actions/admin-customers"
 
 interface CustomerRowActionsProps {
   customerId: string
@@ -21,12 +25,39 @@ interface CustomerRowActionsProps {
 export function CustomerRowActions({ customerId, email, role, isSelf }: CustomerRowActionsProps) {
   const router = useRouter()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [setPwOpen, setSetPwOpen] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const nextRole = role === "admin" ? "customer" : "admin"
   const toggleLabel = role === "admin" ? "Revoke admin" : "Make admin"
+
+  function handleSetPassword() {
+    setError(null)
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters")
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+    startTransition(async () => {
+      const r = await adminSetCustomerPassword(customerId, newPassword)
+      if (!r.success) {
+        setError(r.error ?? "Could not set password")
+      } else {
+        setSetPwOpen(false)
+        setNewPassword("")
+        setConfirmPassword("")
+        setNotice("Password set")
+        setTimeout(() => setNotice(null), 4000)
+      }
+    })
+  }
 
   function handleSendReset() {
     setError(null)
@@ -70,6 +101,14 @@ export function CustomerRowActions({ customerId, email, role, isSelf }: Customer
         className="text-sm font-semibold text-brand hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded disabled:opacity-50"
       >
         Send password reset
+      </button>
+
+      <button
+        type="button"
+        onClick={() => { setError(null); setSetPwOpen(true) }}
+        className="text-sm font-semibold text-foreground hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded"
+      >
+        Set password
       </button>
 
       <button
@@ -128,6 +167,77 @@ export function CustomerRowActions({ customerId, email, role, isSelf }: Customer
                 className="rounded-lg bg-brand hover:bg-brand-strong text-white px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50"
               >
                 {isPending ? "Saving…" : toggleLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {setPwOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSetPwOpen(false)} aria-hidden="true" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="setpw-dialog-title"
+            className="relative w-full max-w-md rounded-2xl bg-surface border border-border p-6 shadow-xl"
+          >
+            <h2 id="setpw-dialog-title" className="text-2xl font-semibold text-foreground">
+              Set a password for {email}
+            </h2>
+            <p className="text-sm text-muted mt-2">
+              This immediately replaces the customer&apos;s password and signs them out of any
+              active sessions. Share the new password with them securely.
+            </p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label htmlFor={`newpw-${customerId}`} className="block text-sm font-medium text-foreground mb-1">
+                  New password
+                </label>
+                <input
+                  id={`newpw-${customerId}`}
+                  type="password"
+                  minLength={8}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                />
+              </div>
+              <div>
+                <label htmlFor={`confirmpw-${customerId}`} className="block text-sm font-medium text-foreground mb-1">
+                  Confirm new password
+                </label>
+                <input
+                  id={`confirmpw-${customerId}`}
+                  type="password"
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                />
+              </div>
+            </div>
+            {error && (
+              <p role="alert" className="text-sm font-semibold text-stock-out mt-3">
+                {error}
+              </p>
+            )}
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => { setSetPwOpen(false); setNewPassword(""); setConfirmPassword(""); setError(null) }}
+                className="text-sm font-semibold text-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded px-3 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSetPassword}
+                disabled={isPending}
+                aria-disabled={isPending}
+                className="rounded-lg bg-brand hover:bg-brand-strong text-white px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50"
+              >
+                {isPending ? "Saving…" : "Set password"}
               </button>
             </div>
           </div>

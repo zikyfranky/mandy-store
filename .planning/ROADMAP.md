@@ -237,7 +237,7 @@ Plans:
 ### Phase 9: Admin Customer Management
 **Goal**: The store owner can administer customer accounts from the existing admin panel — viewing every registered customer, triggering a secure password reset, and changing a customer's role (promote to admin / revoke) — reusing the Phase 1 role model and the Phase 5 admin shell + `verifyAdminSession()` dual-auth pattern, with no password hashes or tokens ever reaching the browser.
 **Depends on**: Phase 1 (auth, sessions, `users.role` enum, `verificationTokens` + Resend seam, argon2id hashing), Phase 5 (admin panel shell/sidebar, `verifyAdminSession()` dual-auth, admin list-query + list-page patterns)
-**Requirements**: ADMN-08, ADMN-09, ADMN-10
+**Requirements**: ADMN-08, ADMN-09, ADMN-10, ADMN-11 (ADMN-11 added post-UAT — admin can directly set a customer's password)
 **Success Criteria** (what must be TRUE):
   1. An admin can open `/admin/customers` and see every registered user — name, email, role, email-verification status, join date, and order count — with server-side search and pagination
   2. An admin can trigger a password reset for a customer; the customer receives a one-time, time-limited email link to set a new password, and the admin never sees or sets the plaintext password

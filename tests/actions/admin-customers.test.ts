@@ -27,6 +27,7 @@ import {
   sendCustomerPasswordReset,
   resetPassword,
   updateCustomerRole,
+  adminSetCustomerPassword,
 } from "@/lib/actions/admin-customers"
 
 const ADMIN_USER = { id: "admin-1", role: "admin" as const, email: "admin@example.com" }
@@ -176,6 +177,57 @@ describe("resetPassword (ADMN-09, D-03/D-07 — public action)", () => {
     const { token } = await issue("short@example.com")
     const res = await resetPassword({ email: "short@example.com", token, password: "x" })
     expect(res.success).toBe(false)
+  })
+})
+
+// ─── ADMN-11 admin-set password ───────────────────────────────────────────────
+describe("adminSetCustomerPassword (ADMN-11)", () => {
+  it("rejects a non-admin caller (verifyAdminSession first statement)", async () => {
+    vi.mocked(verifyAdminSession).mockImplementation(() => { throw new Error("redirect") })
+    await expect(adminSetCustomerPassword("someone", "newpassword1")).rejects.toThrow()
+  })
+
+  it.skipIf(!hasDatabase)("sets the argon2id hash, revokes target sessions, and invalidates reset links", async () => {
+    const id = await insertUser({ email: "setpw@example.com" })
+    // a live reset link + a session that should both be cleared
+    await sendCustomerPasswordReset(id)
+    const db = await getDb()
+    const schema = await import("@/lib/db/schema")
+    const { eq } = await import("drizzle-orm")
+    await db.insert(schema.sessions).values({
+      sessionToken: crypto.randomUUID(), userId: id, expires: new Date(Date.now() + 86400000),
+    })
+    const res = await adminSetCustomerPassword(id, "adminsetpass1")
+    expect(res.success).toBe(true)
+    const u = await getUser(id)
+    expect(await argon2.verify(u.passwordHash as string, "adminsetpass1")).toBe(true)
+    expect(await db.select().from(schema.sessions).where(eq(schema.sessions.userId, id))).toHaveLength(0)
+    expect(await getResetTokens("setpw@example.com")).toHaveLength(0)
+  })
+
+  it.skipIf(!hasDatabase)("rejects a too-short password (zod min 8)", async () => {
+    const id = await insertUser({ email: "shortset@example.com" })
+    const res = await adminSetCustomerPassword(id, "x")
+    expect(res.success).toBe(false)
+    expect((await getUser(id)).passwordHash).toBe("old-hash") // unchanged
+  })
+
+  it.skipIf(!hasDatabase)("returns failure for an unknown user", async () => {
+    const res = await adminSetCustomerPassword("nope", "adminsetpass1")
+    expect(res.success).toBe(false)
+  })
+
+  it.skipIf(!hasDatabase)("does NOT revoke the acting admin's own session when setting their own password", async () => {
+    await insertUser({ id: "admin-1", email: "admin@example.com", role: "admin" })
+    const db = await getDb()
+    const schema = await import("@/lib/db/schema")
+    const { eq } = await import("drizzle-orm")
+    await db.insert(schema.sessions).values({
+      sessionToken: crypto.randomUUID(), userId: "admin-1", expires: new Date(Date.now() + 86400000),
+    })
+    const res = await adminSetCustomerPassword("admin-1", "adminsetpass1")
+    expect(res.success).toBe(true)
+    expect(await db.select().from(schema.sessions).where(eq(schema.sessions.userId, "admin-1"))).toHaveLength(1)
   })
 })
 

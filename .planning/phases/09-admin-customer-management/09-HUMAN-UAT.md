@@ -25,6 +25,20 @@ Steps:
 
 ---
 
+## 1b. Admin-set password (ADMN-11)
+
+**Why manual:** browser interaction.
+
+Steps:
+1. On `/admin/customers`, click **"Set password"** for a test customer → a dialog appears.
+2. Enter a new password (≥ 8 chars) twice → **Set password**. Confirm the "Password set" status.
+3. Sign in as that customer with the admin-set password → succeeds; the old password no longer works.
+4. Confirm any previously-issued reset link for that customer is now rejected (invalidated).
+
+**Expected:** password set immediately, admin-gated (server-verified); target's sessions revoked (they must re-login), outstanding reset links invalidated.
+
+---
+
 ## 2. Admin customers UI — visual + interaction (ADMN-08, ADMN-10)
 
 **Why manual:** browser visual/interaction; not exercisable in CI.
@@ -46,6 +60,7 @@ Steps:
 ## Sign-off
 
 - [ ] Item 1 — live reset email round-trip verified
+- [ ] Item 1b — admin-set password verified (ADMN-11)
 - [ ] Item 2 — admin customers UI verified
 
 Reply **"approved"** once both are confirmed, or describe any issues found.

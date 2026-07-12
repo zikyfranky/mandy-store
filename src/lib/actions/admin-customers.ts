@@ -130,6 +130,48 @@ export async function resetPassword(input: {
   return { success: true }
 }
 
+// ─── adminSetCustomerPassword (ADMN-11) ───────────────────────────────────────
+// Admin directly sets a new password for a customer (support path alongside the
+// email reset link). Admin-gated; argon2id; invalidates any outstanding reset links;
+// revokes the target's live sessions (force re-login) — but never the acting admin's
+// own session, so setting your own password doesn't log you out mid-action.
+export async function adminSetCustomerPassword(
+  userId: string,
+  password: string,
+): Promise<ActionResult> {
+  const admin = await verifyAdminSession() // first statement
+
+  if (!z.string().min(8).safeParse(password).success) {
+    return { success: false, error: "Password must be at least 8 characters" }
+  }
+
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) })
+  if (!user) {
+    return { success: false, error: "User not found" }
+  }
+
+  const passwordHash = await argon2.hash(password, { type: argon2.argon2id })
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId))
+
+  // Invalidate any outstanding reset links — the admin-set password is now authoritative.
+  await db
+    .delete(verificationTokens)
+    .where(
+      and(
+        eq(verificationTokens.identifier, user.email),
+        like(verificationTokens.token, "pwreset_%"),
+      ),
+    )
+
+  // Revoke the target's live sessions (credential changed) — but not the acting admin's own.
+  if (userId !== admin.id) {
+    await db.delete(sessions).where(eq(sessions.userId, userId))
+  }
+
+  revalidatePath("/admin/customers")
+  return { success: true }
+}
+
 // ─── updateCustomerRole (ADMN-10, D-04/D-07.4) ────────────────────────────────
 export async function updateCustomerRole(
   userId: string,
