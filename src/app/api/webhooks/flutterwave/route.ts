@@ -4,6 +4,9 @@
 // Security contract:
 //   - Toggle check FIRST (D-06 / PAY-12 / T-07-15) — disabled gateway rejected before reading body
 //   - Raw body via req.text() BEFORE any parse (Pitfall 4 — req.json() re-serialises and breaks HMAC)
+//   - Signing secret (webhook_hash) resolved DB-first via getGatewayConfig, env fallback
+//     (D-03/ADMN-07); fails closed (400, empty-config guard) BEFORE any HMAC compute if
+//     it resolves empty
 //   - HMAC SHA-256 base64 signature: "flutterwave-signature" header (newer API)
 //     with "verif-hash" plaintext fallback (legacy / transition period) (Pitfall 5 / RESEARCH Pattern 5)
 //   - Event filter: type="charge.completed" AND data.status="successful" (Pitfall 7 — NOT "success")
@@ -17,6 +20,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
 import { isPaymentMethodEnabled } from "@/lib/payments/config"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { flutterwaveRefund } from "@/lib/payments/gateways/flutterwave"
@@ -34,7 +38,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Re-stringifying parsed JSON may differ in whitespace/key order and break the sig.
   const body = await req.text()
 
-  // ── 2. Signature verification (RESEARCH Pattern 5 + Pitfall 5) ────────────────
+  // ── 2. Resolve signing secret — fail closed BEFORE any HMAC compute (D-03) ───
+  // Flutterwave's webhook_hash is a DEDICATED webhook secret, distinct from secret_key
+  // (08-06 plan interface note).
+  const { webhook_hash: secretHash } = await getGatewayConfig("flutterwave")
+  if (!secretHash) {
+    return NextResponse.json({ error: "Gateway not configured" }, { status: 400 })
+  }
+
+  // ── 3. Signature verification (RESEARCH Pattern 5 + Pitfall 5) ────────────────
   //
   // Flutterwave newer API: "flutterwave-signature" header, HMAC SHA-256 base64.
   // Flutterwave legacy:    "verif-hash" header, plaintext string compare.
@@ -46,8 +58,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     req.headers.get("flutterwave-signature") ??
     req.headers.get("verif-hash") ??
     ""
-
-  const secretHash = process.env.FLUTTERWAVE_WEBHOOK_HASH!
 
   // Primary: HMAC SHA-256 base64 (newer API — "flutterwave-signature")
   const expected = crypto
@@ -63,7 +73,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Signature verification failed" }, { status: 400 })
   }
 
-  // ── 3. Parse event + filter ────────────────────────────────────────────────────
+  // ── 4. Parse event + filter ────────────────────────────────────────────────────
   const event = JSON.parse(body) as {
     type: string
     id?: string
@@ -83,7 +93,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ received: true })
   }
 
-  // ── 4. Order lookup ────────────────────────────────────────────────────────────
+  // ── 5. Order lookup ────────────────────────────────────────────────────────────
   const txRef = event.data.tx_ref!
   const order = await getOrderByGatewayReference(txRef)
 
@@ -98,7 +108,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ received: true })
   }
 
-  // ── 5. Shared idempotent confirmation path (D-04, T-07-13) ───────────────────
+  // ── 6. Shared idempotent confirmation path (D-04, T-07-13) ───────────────────
   // eventId "flutterwave:"+txRef is shared with verifyFlutterwavePayment so exactly
   // one of them (callback verify OR webhook) wins the ON CONFLICT DO NOTHING insert.
   const eventId = "flutterwave:" + txRef

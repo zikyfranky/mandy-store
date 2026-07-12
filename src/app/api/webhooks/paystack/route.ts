@@ -4,7 +4,9 @@
 // Security contract:
 //   - Toggle check FIRST (D-06 / PAY-12) — disabled gateway rejected before reading body (T-07-09)
 //   - Raw body via req.text() BEFORE any parse (Pitfall 4 — req.json() re-serialises and breaks HMAC)
-//   - HMAC SHA-512 signature verification: x-paystack-signature vs PAYSTACK_SECRET_KEY (T-07-05)
+//   - HMAC SHA-512 signature verification: x-paystack-signature vs resolved secret_key
+//     (DB-first via getGatewayConfig, env fallback — D-03/ADMN-07); fails closed (400,
+//     empty-config guard) BEFORE any HMAC compute if it resolves empty (T-07-05)
 //   - Idempotency via confirmOrderPaid → processed_webhook_events ON CONFLICT DO NOTHING (D-04, T-07-07)
 //   - Atomic stock decrement inside confirmOrderPaid (T-07-08)
 //   - Oversold → paystackRefund + 200 (prevents Paystack retry storm)
@@ -15,6 +17,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
 import { isPaymentMethodEnabled } from "@/lib/payments/config"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { paystackRefund } from "@/lib/payments/gateways/paystack"
@@ -32,11 +35,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Re-stringifying parsed JSON may differ in whitespace/key order and break the sig.
   const body = await req.text()
 
-  // ── 2. HMAC SHA-512 signature verification (RESEARCH Pattern 4, T-07-05) ─────
-  // Paystack signs the request body with PAYSTACK_SECRET_KEY using HMAC-SHA512.
+  // ── 2. Resolve signing secret — fail closed BEFORE any HMAC compute (D-03) ───
+  // Paystack uses secret_key for BOTH API auth AND webhook HMAC — no separate
+  // webhook secret field exists for this gateway (08-06 plan interface note).
+  const { secret_key: secretKey } = await getGatewayConfig("paystack")
+  if (!secretKey) {
+    return NextResponse.json({ error: "Gateway not configured" }, { status: 400 })
+  }
+
+  // ── 3. HMAC SHA-512 signature verification (RESEARCH Pattern 4, T-07-05) ─────
+  // Paystack signs the request body with the resolved secret key using HMAC-SHA512.
   const signature = req.headers.get("x-paystack-signature") ?? ""
   const expected = crypto
-    .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
+    .createHmac("sha512", secretKey)
     .update(body)       // raw string — do NOT re-stringify parsed JSON (Pitfall 4)
     .digest("hex")
 
@@ -45,7 +56,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Signature verification failed" }, { status: 400 })
   }
 
-  // ── 3. Parse event + filter ───────────────────────────────────────────────────
+  // ── 4. Parse event + filter ───────────────────────────────────────────────────
   const event = JSON.parse(body) as {
     event: string
     data: {
@@ -63,7 +74,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ received: true })
   }
 
-  // ── 4. Order lookup ──────────────────────────────────────────────────────────
+  // ── 5. Order lookup ──────────────────────────────────────────────────────────
   const reference = event.data.reference
   const order = await getOrderByGatewayReference(reference)
 
@@ -73,7 +84,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Order not found" }, { status: 400 })
   }
 
-  // ── 5. Shared idempotent confirmation path (D-04, T-07-07) ──────────────────
+  // ── 6. Shared idempotent confirmation path (D-04, T-07-07) ──────────────────
   // eventId "paystack:"+reference is shared with verifyPaystackPayment so exactly
   // one of them (callback verify OR webhook) wins the ON CONFLICT DO NOTHING insert.
   const eventId = "paystack:" + reference

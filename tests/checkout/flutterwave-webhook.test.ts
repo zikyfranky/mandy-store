@@ -28,6 +28,31 @@ vi.mock("@/lib/payments/gateways/flutterwave", () => ({
   flutterwaveAdapter: { provider: "flutterwave" },
 }))
 
+// Phase 8 (08-06 / D-03 / ADMN-07): mock getGatewayConfig ITSELF (the public function both
+// isPaymentMethodEnabled and the webhook route call) rather than the internally-referenced
+// getGatewayCredentialsMap export (spreading `actual` and overriding only that named export
+// does NOT intercept getGatewayConfig's internal same-module self-reference call — see
+// 08-06-PLAN.md caveat — so the real Neon round trip would still fire underneath). Mocking
+// the PUBLIC function every external caller imports properly intercepts both call sites, and
+// keeps this DB-gated test file's real `db` (seedCatalog/seedVariant/seedOrder, truncate
+// helpers) completely untouched — only credential resolution is faked, to the same
+// DB-always-empty / env-fallback behavior the real resolver has today.
+vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/payments/gateway-credentials")>()
+  return {
+    ...actual,
+    getGatewayConfig: vi.fn(async (provider: string) => {
+      const manifest = actual.FIELD_MANIFEST[provider] ?? []
+      const result: Record<string, string> = {}
+      for (const spec of manifest) {
+        const value = process.env[spec.envVar]
+        if (value) result[spec.field] = value
+      }
+      return result
+    }),
+  }
+})
+
 // ─── HMAC helper ──────────────────────────────────────────────────────────────
 
 const TEST_FLW_WEBHOOK_HASH = "flutterwave-webhook-hash-secret"
@@ -234,6 +259,31 @@ describe("Flutterwave webhook handler", () => {
 
     // Should succeed (plaintext match accepted) and return 200 (non-charge.completed)
     expect(res.status).toBe(200)
+  })
+
+  // ── Test 4b: Not configured — fail closed BEFORE any HMAC compute (08-06 / ADMN-07) ──
+  it("returns 400 (gateway not configured) when webhook_hash resolves empty, even though secret_key (toggle) is present", async () => {
+    // Unlike Paystack, Flutterwave's webhook_hash is a DEDICATED field distinct from
+    // secret_key (08-06 plan interface note) — so this scenario is genuinely reachable:
+    // ENABLE_FLUTTERWAVE=true + FLUTTERWAVE_SECRET_KEY present means isPaymentMethodEnabled's
+    // toggle check PASSES, and the route's own getGatewayConfig("flutterwave") call must
+    // independently fail closed on the missing webhook_hash BEFORE any HMAC compute.
+    delete process.env.FLUTTERWAVE_WEBHOOK_HASH
+
+    const body = JSON.stringify(makeChargeCompletedEvent("txref-not-configured"))
+    // Any signature value — the route must reject before it ever reaches the HMAC compare.
+    const signature = "irrelevant-signature-value"
+
+    const { POST } = await import("@/app/api/webhooks/flutterwave/route")
+    const req = makeRequest(body, signature)
+    const res = await POST(req)
+
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json).toHaveProperty("error", "Gateway not configured")
+
+    // Restore for subsequent tests.
+    process.env.FLUTTERWAVE_WEBHOOK_HASH = TEST_FLW_WEBHOOK_HASH
   })
 
   // ── Test 5: Happy path — DB-GATED ─────────────────────────────────────────

@@ -27,6 +27,31 @@ vi.mock("@/lib/payments/gateways/paystack", () => ({
   paystackAdapter: { provider: "paystack" },
 }))
 
+// Phase 8 (08-06 / D-03 / ADMN-07): mock getGatewayConfig ITSELF (the public function both
+// isPaymentMethodEnabled and the webhook route call) rather than the internally-referenced
+// getGatewayCredentialsMap export (spreading `actual` and overriding only that named export
+// does NOT intercept getGatewayConfig's internal same-module self-reference call — see
+// 08-06-PLAN.md caveat — so the real Neon round trip would still fire underneath). Mocking
+// the PUBLIC function every external caller imports properly intercepts both call sites, and
+// keeps this DB-gated test file's real `db` (seedCatalog/seedVariant/seedOrder, truncate
+// helpers) completely untouched — only credential resolution is faked, to the same
+// DB-always-empty / env-fallback behavior the real resolver has today.
+vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/payments/gateway-credentials")>()
+  return {
+    ...actual,
+    getGatewayConfig: vi.fn(async (provider: string) => {
+      const manifest = actual.FIELD_MANIFEST[provider] ?? []
+      const result: Record<string, string> = {}
+      for (const spec of manifest) {
+        const value = process.env[spec.envVar]
+        if (value) result[spec.field] = value
+      }
+      return result
+    }),
+  }
+})
+
 // ─── HMAC helper ──────────────────────────────────────────────────────────────
 
 const TEST_PAYSTACK_SECRET = "sk_test_paystack_webhook_secret"
@@ -208,6 +233,32 @@ describe("Paystack webhook handler", () => {
     // Restore for subsequent tests
     process.env.PAYSTACK_SECRET_KEY = TEST_PAYSTACK_SECRET
     process.env.ENABLE_PAYSTACK = "true"
+  })
+
+  // ── Test 3b: Not configured — fail closed BEFORE any HMAC compute (08-06 / ADMN-07) ──
+  it("returns 400 (gateway not configured) when secret_key resolves empty (DB empty + env unset) — never attempts HMAC compare", async () => {
+    // Paystack's secret_key gates BOTH isPaymentMethodEnabled's toggle check AND the
+    // webhook route's own fail-closed guard (no separate webhook secret field exists for
+    // this gateway — 08-06 plan interface note). With ENABLE_PAYSTACK left "true" but the
+    // secret unresolvable (DB mock always empty + env deleted), the toggle check itself
+    // short-circuits to 400 before the route body even reads — proving the route never
+    // reaches crypto.createHmac with an empty key, which is the property under test.
+    delete process.env.PAYSTACK_SECRET_KEY
+
+    const body = JSON.stringify(makeChargeSuccessEvent("ref-not-configured"))
+    // Any signature value — the route must reject before it ever reaches the HMAC compare.
+    const signature = "irrelevant-signature-value"
+
+    const { POST } = await import("@/app/api/webhooks/paystack/route")
+    const req = makeRequest(body, signature)
+    const res = await POST(req)
+
+    expect(res.status).toBe(400)
+    const json = await res.json()
+    expect(json).toHaveProperty("error")
+
+    // Restore for subsequent tests (matches this file's existing restore convention).
+    process.env.PAYSTACK_SECRET_KEY = TEST_PAYSTACK_SECRET
   })
 
   // ── Test 4: Happy path — DB-GATED ─────────────────────────────────────────
