@@ -17,7 +17,7 @@
 - [ ] **Phase 7.1: Additional NG Gateways** - Opay, Palmpay, Interswitch, GTPay, Remita as fast-follow direct integrations against the Phase 7 adapter interface
 - [~] **Phase 8: Admin-Managed Payment Credentials** - All 8 gateways' credentials configurable in the admin portal (DB-stored), encrypted at rest with one master key, DB-overrides-env with fallback (code complete 2026-07-11 — browser human-verify pending)
 - [~] **Phase 9: Admin Customer Management** - Store owner can see all customers, reset their passwords, and upgrade a customer to admin status (code complete 2026-07-12 — 415 tests green; browser + live-email human-verify pending)
-- [ ] **Phase 10: Categories & Brands CRUD** - CRUD operation for Categories and Brands
+- [~] **Phase 10: Categories & Brands CRUD** - CRUD operation for Categories and Brands (code complete 2026-07-12 — 436 tests green; browser human-verify pending)
 
 ## Phase Details
 
@@ -276,7 +276,7 @@ Plans:
 - [x] 10-05-PLAN.md — Admin UI (D-08): /admin/categories + /admin/brands list pages (product count + reused ProductActivePill), CategoryRowActions/BrandRowActions islands (rename + deactivate/reactivate), sidebar nav entries *(COMPLETE 2026-07-12 — both routes build ◐; create-wiring in place)*
 
 **Wave 4** *(blocked on Wave 3 — human-verify checkpoint)*
-- [ ] 10-06-PLAN.md — Full-suite gate (D-11 migration live on test DB, no DB-gated skips) + end-to-end browser UAT (create→browse→rename[slug stable]→deactivate[404 + nav gone]→reactivate; inactive brand leaves facet; duplicate → friendly error)
+- [~] 10-06-PLAN.md — Full-suite gate (D-11 migration live on test DB, no DB-gated skips) + end-to-end browser UAT (create→browse→rename[slug stable]→deactivate[404 + nav gone]→reactivate; inactive brand leaves facet; duplicate → friendly error) *(CODE COMPLETE 2026-07-12 — full suite 436 green; browser human-verify PENDING in 10-HUMAN-UAT.md)*
 
 ## Progress
 
@@ -292,7 +292,7 @@ Plans:
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
 | 9. Admin Customer Management | 5/5 | Code complete — browser + live-email human-verify pending (09-HUMAN-UAT) | - |
-| 10. Categories & Brands CRUD | 5/6 | Executing (Waves 1-3 done) |  - |
+| 10. Categories & Brands CRUD | 6/6 | Code complete — browser human-verify pending (10-HUMAN-UAT) |   - |
 
 ---
 *Roadmap created: 2026-06-10*

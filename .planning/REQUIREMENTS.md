@@ -94,8 +94,8 @@ Give the store owner a customer administration surface in the existing admin pan
 
 Give the store owner CRUD control over the two catalog taxonomy entities (categories, brands) in the existing admin panel. Post-v1 scope added 2026-07-12. Reuses the Phase 5 admin shell + `verifyAdminSession()` dual-auth and product-CRUD conventions (soft-delete via `isActive`, `ActionResult` DTOs, `uniqueSlug`, cache invalidation).
 
-- [ ] **ADMN-12**: Admin can create, rename, and soft-delete/restore **product categories** (name + immutable slug) with a per-category product count shown; the storefront taxonomy is DB-driven so active categories are browsable at `/<slug>` and appear in nav, while soft-deleted (`isActive=false`) categories 404 and disappear from nav/filters (replaces the hardcoded `VALID_CATEGORY_SLUGS`).
-- [ ] **ADMN-13**: Admin can create, rename, and soft-delete/restore **brands** with a per-brand product count shown; only active brands appear in storefront brand filters. Deactivating a category/brand never cascades to (or hard-deletes) its products — the `product.categoryId`/`brandId` FKs are preserved.
+- [x] **ADMN-12**: Admin can create, rename, and soft-delete/restore **product categories** (name + immutable slug) with a per-category product count shown; the storefront taxonomy is DB-driven so active categories are browsable at `/<slug>` and appear in nav, while soft-deleted (`isActive=false`) categories 404 and disappear from nav/filters (replaces the hardcoded `VALID_CATEGORY_SLUGS`).
+- [x] **ADMN-13**: Admin can create, rename, and soft-delete/restore **brands** with a per-brand product count shown; only active brands appear in storefront brand filters. Deactivating a category/brand never cascades to (or hard-deletes) its products — the `product.categoryId`/`brandId` FKs are preserved.
 
 ## v2 Requirements
 
@@ -172,8 +172,8 @@ Give the store owner CRUD control over the two catalog taxonomy entities (catego
 | ADMN-09 | Phase 9 | Complete (09-02/09-04 — live-email go-live human-verify) |
 | ADMN-10 | Phase 9 | Complete (09-02/09-03) |
 | ADMN-11 | Phase 9 | Complete (09-02/09-03 — added post-UAT) |
-| ADMN-12 | Phase 10 | Pending |
-| ADMN-13 | Phase 10 | Pending |
+| ADMN-12 | Phase 10 | Complete (10-02/10-03/10-04/10-05 — browser human-verify pending) |
+| ADMN-13 | Phase 10 | Complete (10-02/10-03/10-05 — browser human-verify pending) |
 
 **Coverage:**
 - v1 requirements: 27 total
