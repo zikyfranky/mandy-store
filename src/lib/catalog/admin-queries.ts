@@ -14,8 +14,9 @@ import {
   variants,
   orders,
   orderStatusEnum,
+  users,
 } from "@/lib/db/schema"
-import { and, desc, eq, ilike, count, sql } from "drizzle-orm"
+import { and, desc, eq, ilike, or, isNotNull, count, sql } from "drizzle-orm"
 
 export const ADMIN_PAGE_SIZE = 24
 
@@ -222,6 +223,92 @@ export async function listOrdersForAdmin(opts: {
     total,
     page,
     pageCount,
+  }
+}
+
+// ─── listCustomersForAdmin (Phase 9, ADMN-08 / D-02 / D-06) ──────────────────────
+// Searchable, paginated all-customers list for /admin/customers. Mirrors
+// listOrdersForAdmin (single-table list) + the GROUP-BY aggregate subquery pattern.
+// Returns a MINIMAL DTO — never selects passwordHash or any token (D-06, T-09-06).
+// Caller MUST have called verifyAdminSession() first (file contract, line 8).
+export type AdminCustomerRow = {
+  id: string
+  name: string | null
+  email: string
+  role: "customer" | "admin"
+  emailVerified: boolean
+  createdAt: Date
+  orderCount: number
+}
+
+export type AdminCustomerListResult = {
+  rows: AdminCustomerRow[]
+  total: number
+  page: number
+  pageCount: number
+}
+
+export async function listCustomersForAdmin(opts: {
+  q?: string
+  page?: number
+}): Promise<AdminCustomerListResult> {
+  const { q, page = 1 } = opts
+
+  // Parameterized ilike (T-09-01) — value is bound, never string-concatenated.
+  const where = q
+    ? or(ilike(users.email, `%${q}%`), ilike(users.name, `%${q}%`))
+    : undefined
+
+  // Per-user order count; guest orders (userId IS NULL) attribute to nobody.
+  const orderAggSq = db
+    .select({
+      userId: orders.userId,
+      orderCount: sql<number>`COUNT(*)`.as("order_count"),
+    })
+    .from(orders)
+    .where(isNotNull(orders.userId))
+    .groupBy(orders.userId)
+    .as("order_agg_sq")
+
+  const baseQuery = db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      emailVerified: users.emailVerified,
+      createdAt: users.createdAt,
+      orderCount: orderAggSq.orderCount,
+    })
+    .from(users)
+    .leftJoin(orderAggSq, eq(users.id, orderAggSq.userId))
+    .where(where)
+
+  const countQuery = db.select({ total: count() }).from(users).where(where)
+
+  const [rows, countResult] = await Promise.all([
+    baseQuery
+      .orderBy(desc(users.createdAt))
+      .limit(ADMIN_PAGE_SIZE)
+      .offset((page - 1) * ADMIN_PAGE_SIZE),
+    countQuery,
+  ])
+
+  const total = countResult[0]?.total ?? 0
+
+  return {
+    rows: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      role: r.role,
+      emailVerified: !!r.emailVerified,
+      createdAt: r.createdAt,
+      orderCount: Number(r.orderCount ?? 0),
+    })),
+    total,
+    page,
+    pageCount: Math.ceil(total / ADMIN_PAGE_SIZE),
   }
 }
 

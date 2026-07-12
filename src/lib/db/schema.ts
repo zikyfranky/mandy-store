@@ -38,6 +38,7 @@ export const users = pgTable("user", {
   username:     text("username").unique(),            // unique username; nullable during OAuth if added later
   passwordHash: text("password_hash"),               // null for future OAuth-only users
   role:         roleEnum("role").default("customer").notNull(),
+  createdAt:    timestamp("created_at", { mode: "date" }).defaultNow().notNull(), // D-01 (Phase 9) — customer "joined" date + list sort key
 })
 
 export const accounts = pgTable(
