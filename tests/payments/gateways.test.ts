@@ -10,6 +10,20 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 // ─── Module mocks ──────────────────────────────────────────────────────────────
 vi.mock("server-only", () => ({}))
 
+// Phase 8 (08-05): mock the DB CLIENT itself, not gateway-credentials.ts's
+// getGatewayCredentialsMap export. getGatewayConfig() calls getGatewayCredentialsMap via
+// its own internal module-scope binding (an ESM self-reference) — spreading `actual` and
+// overriding only the named export does NOT intercept that internal call, so the real
+// Neon network request still fires underneath (silently "works" only because the test DB
+// table happens to be empty; it breaks outright once fetch is also stubbed per-suite below).
+// Mocking the db.select().from(...) chain at the source runs the REAL resolver logic
+// (FIELD_MANIFEST, fail-closed omission) against a fake empty row set — zero real Neon
+// calls, while keeping every existing vi.stubEnv(...)/process.env assertion in this file
+// working unchanged (empty DB rows -> real env fallback).
+vi.mock("@/lib/db/client", () => ({
+  db: { select: () => ({ from: () => Promise.resolve([]) }) },
+}))
+
 // ─── Paystack Adapter Tests (Plan 02) ────────────────────────────────────────
 
 describe("PaystackAdapter — status normalization and amount passthrough", () => {
@@ -186,6 +200,7 @@ describe("FlutterwaveAdapter — amount unit conversion (Pitfall 1/8)", () => {
       txRef: "order-ref-abc",
       orderId: "ord-uuid-1",
       customerName: "Ada Okafor",
+      publicKey: "FLWPUBK_TEST-pubkey",
     })
     // Must be naira (÷100), NOT kobo — anti-pattern would charge ₦150,000 instead of ₦1,500
     expect(params.amount).toBe(1500)
@@ -203,6 +218,7 @@ describe("FlutterwaveAdapter — amount unit conversion (Pitfall 1/8)", () => {
       txRef: "ref-guard",
       orderId: "ord-1",
       customerName: "Test",
+      publicKey: "FLWPUBK_TEST-pubkey",
     })).toThrow(/FLW amount > ₦1M/)
   })
 

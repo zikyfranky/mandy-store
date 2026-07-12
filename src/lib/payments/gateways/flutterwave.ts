@@ -18,6 +18,7 @@ import "server-only"
 // is returned to the client (T-07-16, PAY-12).
 
 import type { GatewayAdapter, VerifyResult, NormalizedStatus } from "./types"
+import { getGatewayConfig } from "../gateway-credentials"
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ export function flutterwaveBuildParams(params: {
   orderId: string
   customerName: string
   phone?: string
+  publicKey: string
 }) {
   const amountNaira = params.amountKobo / 100
 
@@ -47,7 +49,7 @@ export function flutterwaveBuildParams(params: {
   }
 
   return {
-    public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY!,  // client-safe
+    public_key: params.publicKey,  // client-safe
     tx_ref: params.txRef,
     amount: amountNaira,  // NAIRA — Flutterwave's expected unit
     currency: "NGN",
@@ -78,11 +80,12 @@ export function flutterwaveBuildParams(params: {
  *   Math.round() handles floating-point edge cases (e.g., 1500.0 × 100 = 150000.0).
  */
 export async function flutterwaveVerify(transactionId: number | string): Promise<VerifyResult> {
+  const { secret_key: secretKey } = await getGatewayConfig("flutterwave")
   const res = await fetch(
     `https://api.flutterwave.com/v3/transactions/${transactionId}/verify`,
     {
       headers: {
-        Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+        Authorization: `Bearer ${secretKey}`,
       },
     }
   )
@@ -126,6 +129,7 @@ export async function flutterwaveVerify(transactionId: number | string): Promise
  * Minimum refund: NGN 100 (₦100) — omit amount for full refund.
  */
 export async function flutterwaveRefund(transactionId: string, amountKobo?: number): Promise<void> {
+  const { secret_key: secretKey } = await getGatewayConfig("flutterwave")
   const body: Record<string, unknown> = {}
   if (amountKobo !== undefined) {
     body.amount = amountKobo / 100  // convert to naira for Flutterwave
@@ -136,7 +140,7 @@ export async function flutterwaveRefund(transactionId: string, amountKobo?: numb
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+        Authorization: `Bearer ${secretKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
@@ -166,6 +170,7 @@ export const flutterwaveAdapter: GatewayAdapter = {
   provider: "flutterwave",
 
   async initPayment(params) {
+    const { public_key: publicKey } = await getGatewayConfig("flutterwave")
     // D-16: client opens the Flutterwave inline popup with these params
     return {
       mode: "popup",
@@ -176,6 +181,7 @@ export const flutterwaveAdapter: GatewayAdapter = {
         orderId: params.orderId,
         customerName: params.customerName,
         phone: params.phone,
+        publicKey,
       }),
     }
   },

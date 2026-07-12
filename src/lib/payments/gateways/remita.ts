@@ -11,8 +11,7 @@ import "server-only"
 
 import type { GatewayAdapter, InitResult, VerifyResult, NormalizedStatus } from "./types"
 import crypto from "crypto"
-
-const BASE = () => process.env.REMITA_BASE ?? "https://demo.remita.net"
+import { getGatewayConfig } from "../gateway-credentials"
 
 const sha512 = (concat: string) => crypto.createHash("sha512").update(concat).digest("hex")
 
@@ -31,10 +30,11 @@ export const remitaAdapter: GatewayAdapter = {
   provider: "remita",
 
   async initPayment(params): Promise<InitResult> {
-    const merchantId = process.env.REMITA_MERCHANT_ID ?? ""
-    const apiKey = process.env.REMITA_API_KEY ?? ""
-    const serviceTypeId = process.env.REMITA_SERVICE_TYPE_ID ?? ""
-    const base = BASE()
+    const cfg = await getGatewayConfig("remita")
+    const merchantId = cfg.merchant_id ?? ""
+    const apiKey = cfg.api_key ?? ""
+    const serviceTypeId = cfg.service_type_id ?? ""
+    const base = cfg.base_url ?? "https://demo.remita.net"
 
     // Pitfall 1: convert kobo → naira and guard against a 100× unit slip.
     const amountNaira = params.amountKobo / 100
@@ -83,9 +83,10 @@ export const remitaAdapter: GatewayAdapter = {
   },
 
   async verifyTransaction(rrr: string): Promise<VerifyResult> {
-    const merchantId = process.env.REMITA_MERCHANT_ID ?? ""
-    const apiKey = process.env.REMITA_API_KEY ?? ""
-    const base = BASE()
+    const cfg = await getGatewayConfig("remita")
+    const merchantId = cfg.merchant_id ?? ""
+    const apiKey = cfg.api_key ?? ""
+    const base = cfg.base_url ?? "https://demo.remita.net"
 
     // Pitfall 2: statusHash concat order (rrr + apiKey + merchantId) DIFFERS from apiHash.
     const statusHash = sha512(rrr + apiKey + merchantId)

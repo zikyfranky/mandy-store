@@ -14,6 +14,7 @@ import "server-only"
 // is returned to the client in initPayment's result (T-07-10, PAY-12).
 
 import type { GatewayAdapter, VerifyResult, NormalizedStatus } from "./types"
+import { getGatewayConfig } from "../gateway-credentials"
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -31,10 +32,11 @@ export async function paystackInitialize(params: {
   orderId: string
   metadata?: Record<string, string>
 }): Promise<{ accessCode: string; reference: string }> {
+  const { secret_key: secretKey } = await getGatewayConfig("paystack")
   const res = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${secretKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -69,11 +71,12 @@ export async function paystackInitialize(params: {
  *   other       → "pending"
  */
 export async function paystackVerify(reference: string): Promise<VerifyResult> {
+  const { secret_key: secretKey } = await getGatewayConfig("paystack")
   const res = await fetch(
     `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
     {
       headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        Authorization: `Bearer ${secretKey}`,
       },
     }
   )
@@ -114,10 +117,11 @@ export async function paystackVerify(reference: string): Promise<VerifyResult> {
  * RESEARCH Code Examples / Paystack API: POST /refund, body { transaction, amount? }
  */
 export async function paystackRefund(reference: string, amountKobo?: number): Promise<void> {
+  const { secret_key: secretKey } = await getGatewayConfig("paystack")
   const res = await fetch("https://api.paystack.co/refund", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${secretKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -155,12 +159,14 @@ export const paystackAdapter: GatewayAdapter = {
       orderId: params.orderId,
     })
 
+    const { public_key: publicKey } = await getGatewayConfig("paystack")
+
     return {
       mode: "popup",  // D-16: client opens the Paystack inline popup with this data
       accessCode,
       reference,
       // Only the PUBLIC key is returned to the client (T-07-10, D-08)
-      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+      publicKey,
     }
   },
 
