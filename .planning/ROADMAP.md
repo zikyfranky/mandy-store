@@ -243,9 +243,13 @@ Plans:
   2. An admin can trigger a password reset for a customer; the customer receives a one-time, time-limited email link to set a new password, and the admin never sees or sets the plaintext password
   3. An admin can promote a customer to admin or revoke admin back to customer; the action re-verifies the admin role server-side and refuses to demote the last remaining admin or the acting admin's own account
   4. Every customer read/write enforces dual-auth (proxy redirect + in-action `verifyAdminSession()`), validates role input server-side, and returns no password hashes or tokens to the browser
-**Plans**: Not planned yet
+**Plans**: 5 plans, 4 waves
 Plans:
-- Not planned yet — run `/gsd-plan-phase 9`
+- [ ] 09-01-PLAN.md — Foundation: users.createdAt + [BLOCKING] dual-DB push, listCustomersForAdmin query, Wave 0 test scaffolds (ADMN-08)
+- [ ] 09-02-PLAN.md — Server logic: sendCustomerPasswordReset/resetPassword/updateCustomerRole + reset-email seam + verifyEmail hardening (ADMN-09/10)
+- [ ] 09-03-PLAN.md — Admin UI: /admin/customers list page, CustomerRowActions island, RoleBadge, Customers nav (ADMN-08/10)
+- [ ] 09-04-PLAN.md — Public /reset-password consume page + form island (ADMN-09)
+- [ ] 09-05-PLAN.md — Full automated gate + go-live human-verify checkpoint (ADMN-08/09/10)
 
 ## Progress
 
@@ -260,7 +264,7 @@ Plans:
 | 7. Nigerian Payment Gateways (Paystack + Flutterwave) | 3/4 | Code complete — live-verify pending | - |
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
-| 9. Admin Customer Management | 0/0 | Not planned yet | - |
+| 9. Admin Customer Management | 0/5 | Planned | - |
 
 ---
 *Roadmap created: 2026-06-10*
