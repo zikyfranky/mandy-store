@@ -262,9 +262,21 @@ Plans:
   3. The storefront category taxonomy is DB-driven: a newly-created active category is browsable at `/<slug>` and shown in nav; a soft-deleted category 404s and disappears from nav/filters (hardcoded `VALID_CATEGORY_SLUGS` removed); only active brands appear in filters
   4. Every taxonomy read/write enforces dual-auth (proxy redirect + in-action `verifyAdminSession()`), validates input server-side, handles unique-name/slug collisions gracefully, and invalidates the affected catalog caches
   5. The new `isActive` columns on `brand` and `category` are pushed to both the dev and test databases before verification (`[BLOCKING]`)
-**Plans**: Not planned yet
+**Plans**: 6 plans (4 waves)
 Plans:
-- Not planned yet
+**Wave 1**
+- [ ] 10-01-PLAN.md — Foundation: add `isActive` to brands+categories schema, [BLOCKING] dual-DB direct-SQL push (D-11), Wave 0 RED test scaffolds (admin-taxonomy + admin-queries + queries/schema extensions)
+
+**Wave 2** *(blocked on Wave 1)*
+- [ ] 10-02-PLAN.md — admin-taxonomy.ts Server Actions: create/rename/deactivate/reactivate for categories + brands (verifyAdminSession-first, D-05 friendly uniqueness, D-04 immutable slug, D-02 no-cascade, D-09 invalidation incl. `categories-nav` tag)
+- [ ] 10-03-PLAN.md — Read queries: listCategoriesForAdmin/listBrandsForAdmin (product-count aggregate) + getActiveCategoryBySlug + `'use cache'` listActiveCategoriesForNav + active-filter hardening of getCatalog/getBrandsForCategory (Pitfall 4)
+
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 10-04-PLAN.md — Storefront decouple (D-03): DB-drive `[categorySlug]` route (active-only 404 + generateStaticParams/metadata), SiteHeader nav, home rails — remove VALID_CATEGORY_SLUGS/CATEGORY_NAMES/NAV/RAILS; PPR shell preserved
+- [ ] 10-05-PLAN.md — Admin UI (D-08): /admin/categories + /admin/brands list pages (product count + reused ProductActivePill), CategoryRowActions/BrandRowActions islands (rename + deactivate/reactivate), sidebar nav entries
+
+**Wave 4** *(blocked on Wave 3 — human-verify checkpoint)*
+- [ ] 10-06-PLAN.md — Full-suite gate (D-11 migration live on test DB, no DB-gated skips) + end-to-end browser UAT (create→browse→rename[slug stable]→deactivate[404 + nav gone]→reactivate; inactive brand leaves facet; duplicate → friendly error)
 
 ## Progress
 
@@ -280,7 +292,7 @@ Plans:
 | 7.1. Additional NG Gateways (fast-follow) | 5/5 | Code complete — sandbox human-verify pending (D-19) | - |
 | 8. Admin-Managed Payment Credentials | 9/9 | Code complete — browser human-verify pending (08-HUMAN-UAT) | - |
 | 9. Admin Customer Management | 5/5 | Code complete — browser + live-email human-verify pending (09-HUMAN-UAT) | - |
-| 10. Categories & Brands CRUD | 0/0 | Not planned yet | - |
+| 10. Categories & Brands CRUD | 0/6 | Planned (6 plans, 4 waves) | - |
 
 ---
 *Roadmap created: 2026-06-10*
