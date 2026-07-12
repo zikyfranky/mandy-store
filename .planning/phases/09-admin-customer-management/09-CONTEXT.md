@@ -58,6 +58,15 @@ New route `src/app/admin/customers/page.tsx`, mirroring `admin/products/page.tsx
 ### D-06 — No PII/secret leakage
 `passwordHash`, `verificationTokens`, and any secret column are **never** selected into the customers DTO or sent to the client. Client islands receive only `{ id, email, role }`-level fields needed to render actions. Reset tokens exist only server-side and in the emailed link.
 
+### D-07 — Research-driven hardening (LOCKED; additive to D-03/D-04)
+From 09-RESEARCH.md (OWASP Forgot-Password + verified source review). These do not contradict any earlier decision — they tighten them:
+1. **Revoke sessions on reset.** `resetPassword` must `db.delete(sessions).where(eq(sessions.userId, userId))` after updating `passwordHash`. Sessions are DB rows here, so this is trivial and prevents a reset from leaving the target logged in (OWASP; ASVS V3).
+2. **Only-latest reset link.** `sendCustomerPasswordReset` must delete any prior `pwreset_` token(s) for that email before inserting the new one (the compound PK allows many rows/email). Keeps exactly one live reset link.
+3. **Cross-namespace token rejection.** `resetPassword` enforces the `pwreset_` prefix; additionally, `verifyEmail` must **reject** any token beginning with `pwreset_` so a reset token can't be consumed as an email-verify token (and vice-versa). This is a small, in-scope edit to the existing `verifyEmail` flow.
+4. **Atomic last-admin guard.** Implement D-04's last-admin protection as a single conditional `UPDATE users SET role='customer' WHERE id=$1 AND (SELECT COUNT(*) FROM users WHERE role='admin') > 1` (check `rowCount`), NOT a separate COUNT-then-UPDATE — avoids the TOCTOU race, mirroring CLAUDE.md's atomic-stock-decrement doctrine.
+5. **Role staleness is a non-issue (informational).** Auth.js here uses DB sessions and reads `role` live from the `user` row on every request (`adapter.getSessionAndUser()`), so a demoted admin loses `/admin` access on their next request — no forced logout or session rewrite needed for the role change itself. (Session revocation in item 1 is specifically for the *password* reset, not the role change.)
+6. **No user enumeration on the public consume page.** `/reset-password` shows a single generic "invalid or expired link" message for unknown/expired/wrong-prefix tokens (OWASP; ASVS V7).
+
 ### Claude's Discretion (planner/executor decides)
 - Exact plan/wave decomposition and file-by-file task breakdown.
 - Whether `RoleBadge` is a new component or an inline style.
