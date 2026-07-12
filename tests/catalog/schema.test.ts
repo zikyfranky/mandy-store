@@ -173,3 +173,42 @@ describe.skipIf(!hasDatabase)("catalog seed round-trip (integration)", () => {
     ).rejects.toThrow()
   })
 })
+
+// ─── Phase 10: soft-delete isActive on brands + categories (D-01) ──────────────
+
+describe("taxonomy isActive column (Phase 10, D-01)", () => {
+  it("categories table exports an isActive column", () => {
+    expect(categories.isActive).toBeDefined()
+    const cols = categories as unknown as Record<string, { name?: string }>
+    const colNames = Object.entries(cols)
+      .filter(([, v]) => v && typeof v === "object" && "name" in v)
+      .map(([, v]) => (v as { name: string }).name)
+    expect(colNames).toContain("is_active")
+  })
+
+  it("brands table exports an isActive column", () => {
+    expect(brands.isActive).toBeDefined()
+    const cols = brands as unknown as Record<string, { name?: string }>
+    const colNames = Object.entries(cols)
+      .filter(([, v]) => v && typeof v === "object" && "name" in v)
+      .map(([, v]) => (v as { name: string }).name)
+    expect(colNames).toContain("is_active")
+  })
+
+  it.skipIf(!hasDatabase)("defaults isActive to true when omitted on insert (round-trip)", async () => {
+    const { getDb } = await import("../helpers/db")
+    const { eq } = await import("drizzle-orm")
+    const db = await getDb()
+    await truncateCatalogTables()
+
+    const brandId = crypto.randomUUID()
+    const categoryId = crypto.randomUUID()
+    await db.insert(brands).values({ id: brandId, name: "Default Brand" })
+    await db.insert(categories).values({ id: categoryId, name: "Default Cat", slug: "default-cat" })
+
+    const [b] = await db.select().from(brands).where(eq(brands.id, brandId))
+    const [c] = await db.select().from(categories).where(eq(categories.id, categoryId))
+    expect(b.isActive).toBe(true)
+    expect(c.isActive).toBe(true)
+  })
+})

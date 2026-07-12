@@ -296,3 +296,54 @@ describe("getBrandsForCategory()", () => {
     expect(brands).toEqual(["Samsung"])
   })
 })
+
+// ─── Phase 10: storefront active-only taxonomy (D-03, ADMN-12/13) ──────────────
+// RED until Plan 10-03 adds getActiveCategoryBySlug / listActiveCategoriesForNav and
+// makes getBrandsForCategory exclude inactive brands.
+
+describe("active-only taxonomy resolution", () => {
+  async function deactivateCategoryRow(slug: string) {
+    const { db } = await import("@/lib/db/client")
+    const schema = await import("@/lib/db/schema")
+    const { eq } = await import("drizzle-orm")
+    await db.update(schema.categories).set({ isActive: false }).where(eq(schema.categories.slug, slug))
+  }
+  async function deactivateBrandRow(name: string) {
+    const { db } = await import("@/lib/db/client")
+    const schema = await import("@/lib/db/schema")
+    const { eq } = await import("drizzle-orm")
+    await db.update(schema.brands).set({ isActive: false }).where(eq(schema.brands.name, name))
+  }
+
+  it.skipIf(skip)("getActiveCategoryBySlug returns null for unknown AND soft-deleted slugs", async () => {
+    await seedFixture()
+    const { getActiveCategoryBySlug } = await import("@/lib/catalog/queries")
+
+    expect(await getActiveCategoryBySlug("electronics")).not.toBeNull()
+    expect(await getActiveCategoryBySlug("does-not-exist")).toBeNull()
+
+    await deactivateCategoryRow("electronics")
+    expect(await getActiveCategoryBySlug("electronics")).toBeNull()
+  })
+
+  it.skipIf(skip)("listActiveCategoriesForNav excludes soft-deleted categories", async () => {
+    await seedFixture()
+    const { listActiveCategoriesForNav } = await import("@/lib/catalog/queries")
+
+    await deactivateCategoryRow("electronics")
+    const nav = await listActiveCategoriesForNav()
+    const slugs = nav.map((c: { slug: string }) => c.slug)
+    expect(slugs).not.toContain("electronics")
+    expect(slugs).toContain("phones")
+  })
+
+  it.skipIf(skip)("getBrandsForCategory excludes inactive brands from the facet list", async () => {
+    await seedFixture()
+    const { getBrandsForCategory } = await import("@/lib/catalog/queries")
+
+    await deactivateBrandRow("Apple")
+    const brands = await getBrandsForCategory()
+    expect(brands).not.toContain("Apple")
+    expect(brands).toContain("Samsung")
+  })
+})
