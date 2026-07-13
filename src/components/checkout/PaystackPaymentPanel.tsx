@@ -137,7 +137,7 @@ export function PaystackPaymentPanel({
               setIsSubmitting(false)
             } else {
               // Verified — redirect to the confirmed order page
-              router.push("/order/" + verifyResult.guestToken)
+              router.push("/order/" + verifyResult.guestToken + "?checkout=1")
               // Button stays disabled during redirect
             }
           } catch (err) {

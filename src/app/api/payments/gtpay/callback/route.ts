@@ -29,7 +29,7 @@ async function handle(req: NextRequest): Promise<NextResponse> {
 
   const v = await gtpayAdapter.verifyTransaction(ref) // D-15 authoritative requery
   if (v.status !== "confirmed" || v.amountKobo < order.totalKobo) {
-    return NextResponse.redirect(new URL(`/order/${order.guestToken}`, req.url)) // D-14 fallback
+    return NextResponse.redirect(new URL(`/order/${order.guestToken}?checkout=1`, req.url)) // D-14 fallback
   }
 
   const result = await confirmOrderPaid(order, { provider: "gtpay", eventId: "gtpay:" + ref })
@@ -37,7 +37,7 @@ async function handle(req: NextRequest): Promise<NextResponse> {
     await gtpayAdapter.refund(ref).catch(console.error)
   }
 
-  return NextResponse.redirect(new URL(`/order/${order.guestToken}`, req.url))
+  return NextResponse.redirect(new URL(`/order/${order.guestToken}?checkout=1`, req.url))
 }
 
 export const GET = handle

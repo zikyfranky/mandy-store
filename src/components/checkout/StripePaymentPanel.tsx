@@ -105,8 +105,8 @@ function ConfirmButton({ guestToken, hasOOS }: ConfirmButtonProps) {
   const [paymentError, setPaymentError] = useState<{ title: string; body: string } | null>(null)
 
   const returnUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/order/${guestToken}`
-    : `/order/${guestToken}`
+    ? `${window.location.origin}/order/${guestToken}?checkout=1`
+    : `/order/${guestToken}?checkout=1`
 
   async function handleConfirm() {
     if (!stripe || !elements || isSubmitting) return

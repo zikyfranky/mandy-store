@@ -151,7 +151,7 @@ export function CheckoutForm({
         if ("error" in result) {
           setBankError(result.error)
         } else {
-          router.push("/order/" + result.guestToken)
+          router.push("/order/" + result.guestToken + "?checkout=1")
         }
       } catch (err) {
         // Unexpected throw (Server Action rejection, network) — show an inline error instead

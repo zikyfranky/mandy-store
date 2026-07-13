@@ -16,7 +16,7 @@ import { cart, cartItems, variants } from "@/lib/db/schema"
 import { eq, and, sql } from "drizzle-orm"
 import { z } from "zod"
 import { clampToStock, type GuestCartItem } from "@/lib/cart/logic"
-import { getGuestCartItems, setGuestCartItems } from "@/lib/cart/cookie"
+import { getGuestCartItems, setGuestCartItems, clearGuestCartCookie } from "@/lib/cart/cookie"
 import { getCartCount } from "@/lib/cart/queries"
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -271,4 +271,28 @@ export async function removeCartItem(
   revalidatePath("/", "layout")
   const count = await getCartCount()
   return { success: true, count }
+}
+
+/**
+ * Empty the cart after a completed checkout. Authed → delete the user's cart_items;
+ * guest → clear the cart cookie. Called from the order-confirmation page once, gated by a
+ * ?checkout=1 flag added at the post-checkout redirect (so revisiting an order later — e.g.
+ * from the confirmation email — never wipes a fresh cart). Safe to call on an empty cart.
+ */
+export async function clearCart(): Promise<void> {
+  const session = await auth()
+
+  if (session?.user?.id) {
+    const cartRow = await db.query.cart.findFirst({
+      where: eq(cart.userId, session.user.id),
+      columns: { id: true },
+    })
+    if (cartRow) {
+      await db.delete(cartItems).where(eq(cartItems.cartId, cartRow.id))
+    }
+  } else {
+    await clearGuestCartCookie()
+  }
+
+  revalidatePath("/", "layout")
 }

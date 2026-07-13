@@ -12,6 +12,7 @@ import { getOrderByToken } from "@/lib/orders/queries"
 import { OrderConfirmedView } from "@/components/order/OrderConfirmedView"
 import { BankTransferView } from "@/components/order/BankTransferView"
 import { PaymentProcessingView } from "@/components/order/PaymentProcessingView"
+import { ClearCartOnMount } from "@/components/order/ClearCartOnMount"
 import { OrderSummaryLines } from "@/components/order/OrderSummaryLines"
 import { ShippingAddressBlock } from "@/components/order/ShippingAddressBlock"
 import { PostPurchaseAccountOffer } from "@/components/order/PostPurchaseAccountOffer"
@@ -232,6 +233,8 @@ async function OrderContent({ params }: { params: Promise<{ token: string }> }) 
 
   return (
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+      {/* Clears the cart once after checkout (self-gates on ?checkout=1). */}
+      <ClearCartOnMount />
       <div className="rounded-2xl bg-surface border border-border p-8 space-y-6">
         {stateContent}
       </div>

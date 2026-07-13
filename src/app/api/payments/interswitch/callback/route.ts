@@ -38,7 +38,7 @@ async function handle(req: NextRequest): Promise<NextResponse> {
   // Tamper guard (Pitfall 3): confirm only on a verified success for the full amount.
   if (v.status !== "confirmed" || v.amountKobo < order.totalKobo) {
     // D-14 fallback: land on the order page; the "Payment processing…" interstitial + polling resolves.
-    return NextResponse.redirect(new URL(`/order/${order.guestToken}`, req.url))
+    return NextResponse.redirect(new URL(`/order/${order.guestToken}?checkout=1`, req.url))
   }
 
   const result = await confirmOrderPaid(order, { provider: "interswitch", eventId: "interswitch:" + ref })
@@ -46,7 +46,7 @@ async function handle(req: NextRequest): Promise<NextResponse> {
     await interswitchAdapter.refund(ref).catch(console.error)
   }
 
-  return NextResponse.redirect(new URL(`/order/${order.guestToken}`, req.url))
+  return NextResponse.redirect(new URL(`/order/${order.guestToken}?checkout=1`, req.url))
 }
 
 export const GET = handle

@@ -28,7 +28,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const v = await remitaAdapter.verifyTransaction(rrr) // D-15 authoritative status.reg requery
   if (v.status !== "confirmed" || v.amountKobo < order.totalKobo) {
-    return NextResponse.redirect(new URL(`/order/${order.guestToken}`, req.url)) // D-14 fallback
+    return NextResponse.redirect(new URL(`/order/${order.guestToken}?checkout=1`, req.url)) // D-14 fallback
   }
 
   const result = await confirmOrderPaid(order, { provider: "remita", eventId: "remita:" + rrr })
@@ -36,5 +36,5 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     await remitaAdapter.refund(rrr).catch(console.error)
   }
 
-  return NextResponse.redirect(new URL(`/order/${order.guestToken}`, req.url))
+  return NextResponse.redirect(new URL(`/order/${order.guestToken}?checkout=1`, req.url))
 }
