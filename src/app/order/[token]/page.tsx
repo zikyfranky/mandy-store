@@ -32,7 +32,7 @@ export async function generateMetadata({
   const { token } = await params
   const order = await getOrderByToken(token)
   if (!order) return {}
-  return { title: `Order ${order.reference} — YesBuy` }
+  return { title: `Order ${order.reference} — Yesbuy Store` }
 }
 
 // ─── OrderNotFound ────────────────────────────────────────────────────────────

@@ -51,7 +51,7 @@ export function BankTransferInstructionsEmail({
 
   return (
     <Html lang="en">
-      <Preview>Bank transfer instructions for order {orderRef} — YesBuy</Preview>
+      <Preview>Bank transfer instructions for order {orderRef} — Yesbuy Store</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
           <Heading style={headingStyle}>Complete your bank transfer</Heading>

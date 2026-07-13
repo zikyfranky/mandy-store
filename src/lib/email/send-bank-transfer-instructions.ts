@@ -48,7 +48,7 @@ export async function sendBankTransferInstructionsEmail(
   }
 
   const { error } = await resend.emails.send({
-    from: "YesBuy <onboarding@resend.dev>",
+    from: "Yesbuy Store <onboarding@resend.dev>",
     to: order.customerEmail,
     subject: `Bank transfer instructions — ${order.reference}`,
     react: BankTransferInstructionsEmail({

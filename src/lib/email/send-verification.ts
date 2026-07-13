@@ -24,7 +24,7 @@ export async function sendVerificationEmail(email: string, token: string): Promi
 
   const { error } = await resend.emails.send({
     // TODO: replace with verified domain before production (RESEARCH Open Question 1)
-    from: "YesBuy <onboarding@resend.dev>",
+    from: "Yesbuy Store <onboarding@resend.dev>",
     to: email,
     subject: "Verify your email address",
     react: VerificationEmail({ verifyUrl }),

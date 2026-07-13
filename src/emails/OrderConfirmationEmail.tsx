@@ -44,7 +44,7 @@ export function OrderConfirmationEmail({
 
   return (
     <Html lang="en">
-      <Preview>Order {orderRef} confirmed — YesBuy</Preview>
+      <Preview>Order {orderRef} confirmed — Yesbuy Store</Preview>
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
           <Heading style={headingStyle}>Order confirmed!</Heading>

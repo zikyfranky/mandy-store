@@ -28,7 +28,7 @@ export async function sendOrderStatusChangeEmail(input: OrderStatusChangeInput):
   }
 
   const { error } = await resend.emails.send({
-    from: "YesBuy <onboarding@resend.dev>",
+    from: "Yesbuy Store <onboarding@resend.dev>",
     to: input.customerEmail,
     subject: input.newStatus === "shipped"
       ? `Your order ${input.reference} has shipped`

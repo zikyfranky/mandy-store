@@ -115,7 +115,7 @@ export function FlutterwavePaymentPanel({
       phone_number: flwData?.phone ?? "",
     },
     customizations: {
-      title: "YesBuy",
+      title: "Yesbuy Store",
       description: "Payment for your order",
       logo: "",
     },

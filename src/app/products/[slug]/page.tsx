@@ -47,7 +47,7 @@ export async function generateMetadata({
   if (!product) return {}
 
   return {
-    title: `${product.name} | YesBuy`,
+    title: `${product.name} | Yesbuy Store`,
     description: product.description ?? undefined,
     alternates: {
       canonical: `/products/${product.slug}`,

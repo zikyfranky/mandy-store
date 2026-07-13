@@ -14,8 +14,8 @@ import { SortSelect } from "@/components/catalog/SortSelect"
 import { Pagination } from "@/components/catalog/Pagination"
 
 export const metadata: Metadata = {
-  title: "All Products — YesBuy",
-  description: "Browse all electronics, watches, and phones at YesBuy.",
+  title: "All Products — Yesbuy Store",
+  description: "Browse all electronics, watches, and phones at Yesbuy Store.",
 }
 
 interface ProductsPageProps {

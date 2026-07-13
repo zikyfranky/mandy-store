@@ -12,7 +12,7 @@ import { CartEmptyState } from "@/components/cart/CartEmptyState"
 import { formatNGN } from "@/lib/catalog/format"
 
 export const metadata: Metadata = {
-  title: "Your Cart — YesBuy",
+  title: "Your Cart — Yesbuy Store",
   description: "Review the items in your cart.",
 }
 
