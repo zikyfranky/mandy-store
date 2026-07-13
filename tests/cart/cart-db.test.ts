@@ -534,3 +534,131 @@ describe("mergeGuestCartOnLogin (D-10)", () => {
     }
   )
 })
+
+// ─── clearCart (post-checkout) ────────────────────────────────────────────────
+
+describe("clearCart() after checkout", () => {
+  it.skipIf(skip)(
+    "authed path: empties the caller's cart_items but keeps the cart row",
+    async () => {
+      const { variantId, userId, cartId } = await seedCartFixture()
+
+      const { auth } = await import("@/lib/auth")
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: userId, email: "test@example.com", name: "Test" },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as unknown as Awaited<ReturnType<typeof auth>>)
+
+      const { clearCart } = await import("@/lib/actions/cart")
+      await clearCart()
+
+      const { db } = await import("@/lib/db/client")
+      const schema = await import("@/lib/db/schema")
+      const { eq } = await import("drizzle-orm")
+
+      // All cart_items for this cart are gone
+      const items = await db
+        .select()
+        .from(schema.cartItems)
+        .where(eq(schema.cartItems.cartId, cartId))
+      expect(items).toHaveLength(0)
+
+      // The cart row itself survives (only items are cleared)
+      const cartRow = await db
+        .select()
+        .from(schema.cart)
+        .where(eq(schema.cart.id, cartId))
+      expect(cartRow).toHaveLength(1)
+
+      void variantId
+    }
+  )
+
+  it.skipIf(skip)(
+    "authed path: clears only the caller's cart — another user's items are untouched (no IDOR)",
+    async () => {
+      // Caller's cart (from fixture)
+      const { userId, cartId } = await seedCartFixture()
+      // A second, unrelated user with their own cart + item
+      const { cartId: otherCartId } = await seedCartFixture()
+
+      const { auth } = await import("@/lib/auth")
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: userId, email: "test@example.com", name: "Test" },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as unknown as Awaited<ReturnType<typeof auth>>)
+
+      const { clearCart } = await import("@/lib/actions/cart")
+      await clearCart()
+
+      const { db } = await import("@/lib/db/client")
+      const schema = await import("@/lib/db/schema")
+      const { eq } = await import("drizzle-orm")
+
+      const callerItems = await db
+        .select()
+        .from(schema.cartItems)
+        .where(eq(schema.cartItems.cartId, cartId))
+      expect(callerItems).toHaveLength(0) // caller cleared
+
+      const otherItems = await db
+        .select()
+        .from(schema.cartItems)
+        .where(eq(schema.cartItems.cartId, otherCartId))
+      expect(otherItems).toHaveLength(1) // other user untouched
+    }
+  )
+
+  it.skipIf(skip)(
+    "authed path: safe when the user has no cart row",
+    async () => {
+      const { db } = await import("@/lib/db/client")
+      const schema = await import("@/lib/db/schema")
+
+      // A user with NO cart row
+      const userId = crypto.randomUUID()
+      createdUserIds.push(userId)
+      await db.insert(schema.users).values({
+        id: userId,
+        email: `nocart-${userId.slice(0, 8)}@example.com`,
+        name: "No Cart User",
+        role: "customer",
+      })
+
+      const { auth } = await import("@/lib/auth")
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: userId, email: "test@example.com", name: "Test" },
+        expires: new Date(Date.now() + 86400000).toISOString(),
+      } as unknown as Awaited<ReturnType<typeof auth>>)
+
+      const { clearCart } = await import("@/lib/actions/cart")
+      await expect(clearCart()).resolves.toBeUndefined()
+    }
+  )
+
+  it("guest path: expires the guest cart cookie (no DB needed)", async () => {
+    // Default auth() mock resolves to null → guest branch.
+    const { auth } = await import("@/lib/auth")
+    vi.mocked(auth).mockResolvedValue(null)
+
+    const { cookies } = await import("next/headers")
+    const mockSet = vi.fn()
+    vi.mocked(cookies).mockResolvedValue({
+      get: vi.fn(),
+      set: mockSet,
+      delete: vi.fn(),
+      has: vi.fn(),
+      getAll: vi.fn(),
+    } as unknown as Awaited<ReturnType<typeof cookies>>)
+
+    const { clearCart } = await import("@/lib/actions/cart")
+    await clearCart()
+
+    // clearGuestCartCookie expires ms_cart with maxAge: 0
+    expect(mockSet).toHaveBeenCalledWith(
+      "ms_cart",
+      expect.any(String),
+      expect.objectContaining({ maxAge: 0 })
+    )
+  })
+})
