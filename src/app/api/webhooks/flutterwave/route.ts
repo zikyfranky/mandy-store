@@ -103,8 +103,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Order not found" }, { status: 400 })
   }
 
-  // Already confirmed guard — idempotency shortcut before calling confirmOrderPaid.
-  if (order.status === "payment_confirmed") {
+  // Already-paid guard — idempotency shortcut before calling confirmOrderPaid.
+  // A confirmed order rests at "processing" (or later fulfillment states).
+  if (["payment_confirmed", "processing", "shipped", "delivered"].includes(order.status)) {
     return NextResponse.json({ received: true })
   }
 

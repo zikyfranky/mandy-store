@@ -133,7 +133,9 @@ async function OrderContent({ params }: { params: Promise<{ token: string }> }) 
   // State-specific content block
   let stateContent: React.ReactNode
 
-  if (order.status === "payment_confirmed") {
+  // A paid order rests at "processing" (auto-set on gateway/bank confirmation) and may later be
+  // "shipped"/"delivered" — all show the confirmed view. "payment_confirmed" kept for safety.
+  if (["payment_confirmed", "processing", "shipped", "delivered"].includes(order.status)) {
     stateContent = (
       <>
         <OrderConfirmedView order={order} orderUrl={orderUrl} />

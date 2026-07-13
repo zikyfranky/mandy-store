@@ -14,22 +14,34 @@ import {
   Preview,
 } from "@react-email/components"
 
+export type NotifiableStatus = "processing" | "shipped" | "delivered" | "cancelled"
+
 interface OrderStatusChangeEmailProps {
   reference: string
   guestToken: string
-  newStatus: "shipped" | "delivered"
+  newStatus: NotifiableStatus
 }
 
-const STATUS_COPY: Record<OrderStatusChangeEmailProps["newStatus"], { heading: string; body: string; preview: string }> = {
+const STATUS_COPY: Record<NotifiableStatus, { heading: string; body: string; preview: string }> = {
+  processing: {
+    heading: "Your order is being processed",
+    body: "We've received your payment and started preparing your order. We'll email you again as soon as it ships.",
+    preview: "Your order is being processed",
+  },
   shipped: {
     heading: "Your order has shipped!",
-    body: "Good news — your order is on its way. You can track its progress and view your order details below.",
+    body: "Good news — your order is on its way. You can view your order details below.",
     preview: "Your order has shipped",
   },
   delivered: {
     heading: "Your order was delivered",
     body: "Your order has been delivered. We hope you enjoy your purchase! If anything is wrong, just reply to this email.",
     preview: "Your order was delivered",
+  },
+  cancelled: {
+    heading: "Your order was cancelled",
+    body: "Your order has been cancelled. If you believe this is a mistake or have any questions, just reply to this email.",
+    preview: "Your order was cancelled",
   },
 }
 

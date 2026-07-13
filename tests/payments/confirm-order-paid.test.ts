@@ -131,11 +131,11 @@ describe("confirmOrderPaid — shared idempotent confirmation helper", () => {
 
       expect(result.outcome).toBe("confirmed")
 
-      // Order should be payment_confirmed
+      // Order should be processing (paid → auto-processing)
       const updatedOrder = await db.query.orders.findFirst({
         where: eq(schema.orders.id, orderId),
       })
-      expect(updatedOrder?.status).toBe("payment_confirmed")
+      expect(updatedOrder?.status).toBe("processing")
       expect(updatedOrder?.paidAt).not.toBeNull()
 
       // Stock should be decremented by 2 (5 - 2 = 3)

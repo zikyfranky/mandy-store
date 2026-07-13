@@ -317,7 +317,7 @@ describe("Flutterwave webhook handler", () => {
       const order = await db.query.orders.findFirst({
         where: eq(schema.orders.id, orderId),
       })
-      expect(order?.status).toBe("payment_confirmed")
+      expect(order?.status).toBe("processing")
       expect(order?.paidAt).not.toBeNull()
 
       // Stock decremented by 2 (5 - 2 = 3)

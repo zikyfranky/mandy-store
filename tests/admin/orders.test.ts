@@ -170,7 +170,7 @@ describe("updateOrderStatus — bank transfer confirm", () => {
 
 describe("updateOrderStatus — status email", () => {
   it.skipIf(!hasDatabase)(
-    "fires the status-change email on shipped and delivered only, not on processing",
+    "fires the status-change email on every customer-visible change (processing, shipped, delivered)",
     async () => {
       const { db } = await import("@/lib/db/client")
       const schema = await import("@/lib/db/schema")
@@ -192,17 +192,17 @@ describe("updateOrderStatus — status email", () => {
         shippingState: "Lagos",
       })
 
-      // payment_confirmed -> processing: no email
+      // payment_confirmed -> processing: email fires (customer-visible)
       await updateOrderStatus(orderId, "processing")
-      expect(sendOrderStatusChangeEmail).not.toHaveBeenCalled()
+      expect(sendOrderStatusChangeEmail).toHaveBeenCalledTimes(1)
 
       // processing -> shipped: email fires
       await updateOrderStatus(orderId, "shipped")
-      expect(sendOrderStatusChangeEmail).toHaveBeenCalledTimes(1)
+      expect(sendOrderStatusChangeEmail).toHaveBeenCalledTimes(2)
 
       // shipped -> delivered: email fires again
       await updateOrderStatus(orderId, "delivered")
-      expect(sendOrderStatusChangeEmail).toHaveBeenCalledTimes(2)
+      expect(sendOrderStatusChangeEmail).toHaveBeenCalledTimes(3)
     }
   )
 })

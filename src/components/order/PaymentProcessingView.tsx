@@ -38,7 +38,8 @@ export function PaymentProcessingView({
 
         const data: { status: string } = await res.json()
 
-        if (data.status === "payment_confirmed") {
+        // A confirmed payment now rests at "processing" (auto-set); accept any paid state.
+        if (["payment_confirmed", "processing", "shipped", "delivered"].includes(data.status)) {
           clearInterval(intervalRef.current!)
           clearTimeout(fallbackRef.current!)
           setFadeIn(true)

@@ -203,12 +203,12 @@ describe("Stripe webhook handler", () => {
       const json = await res.json()
       expect(json).toEqual({ received: true })
 
-      // Order should now be payment_confirmed
+      // Order should now be processing (paid → auto-processing)
       const { eq } = await import("drizzle-orm")
       const updatedOrder = await db.query.orders.findFirst({
         where: eq(schema.orders.id, orderId),
       })
-      expect(updatedOrder?.status).toBe("payment_confirmed")
+      expect(updatedOrder?.status).toBe("processing")
       expect(updatedOrder?.paidAt).not.toBeNull()
 
       // Variant stock should be decremented by 2 (5 - 2 = 3)

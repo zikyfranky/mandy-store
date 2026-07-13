@@ -22,6 +22,10 @@ import { db } from "@/lib/db/client"
 import { orders } from "@/lib/db/schema"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { sendOrderStatusChangeEmail } from "@/lib/email/send-order-status-change"
+import type { NotifiableStatus } from "@/emails/OrderStatusChangeEmail"
+
+// Owner decision (2026-07-13): email the customer on every customer-visible fulfillment change.
+const NOTIFY_STATUSES: readonly NotifiableStatus[] = ["processing", "shipped", "delivered", "cancelled"]
 // D-08: single transition allowlist — extracted to a non-"use server" module because
 // Next.js requires every export of a "use server" file to be an async function, and
 // getValidNextStatuses is a plain sync helper the UI calls directly (see
@@ -55,7 +59,11 @@ export async function updateOrderStatus(
   // own idempotency guard resolves to { outcome: "duplicate" } (T-05-17). Any other
   // current status attempting to jump straight to payment_confirmed is still illegal.
   if (nextStatus === "payment_confirmed") {
-    const allowedForConfirm = order.status === "payment_confirmed" || (LEGAL_TRANSITIONS[order.status] ?? []).includes(nextStatus)
+    // Allow the confirm path from awaiting_bank_transfer (legal) OR when the order is already in
+    // a paid state — the latter is a re-confirm/double-call that confirmOrderPaid's own idempotency
+    // guard resolves to { outcome: "duplicate" } (a confirmed order now rests at "processing").
+    const paidStates = ["payment_confirmed", "processing", "shipped", "delivered"]
+    const allowedForConfirm = paidStates.includes(order.status) || (LEGAL_TRANSITIONS[order.status] ?? []).includes(nextStatus)
     if (!allowedForConfirm) {
       throw new Error(`Illegal transition: ${order.status} -> ${nextStatus}`)
     }
@@ -76,13 +84,14 @@ export async function updateOrderStatus(
     .set({ status: nextStatus as typeof order.status })
     .where(eq(orders.id, orderId))
 
-  // D-10: email ONLY on shipped/delivered, non-blocking.
-  if (nextStatus === "shipped" || nextStatus === "delivered") {
+  // Email on every customer-visible fulfillment change (processing/shipped/delivered/cancelled),
+  // non-blocking. (payment_confirmed is handled by the order-confirmation email on the pay path.)
+  if ((NOTIFY_STATUSES as readonly string[]).includes(nextStatus)) {
     sendOrderStatusChangeEmail({
       customerEmail: order.customerEmail,
       reference: order.reference,
       guestToken: order.guestToken,
-      newStatus: nextStatus,
+      newStatus: nextStatus as NotifiableStatus,
     }).catch(console.error)
   }
 

@@ -5,13 +5,20 @@ import "server-only"
 // (.catch(console.error) at the call site in src/lib/actions/admin-orders.ts).
 
 import { getResendClient } from "./resend-client"
-import { OrderStatusChangeEmail } from "@/emails/OrderStatusChangeEmail"
+import { OrderStatusChangeEmail, type NotifiableStatus } from "@/emails/OrderStatusChangeEmail"
 
 export interface OrderStatusChangeInput {
   customerEmail: string
   reference: string
   guestToken: string
-  newStatus: "shipped" | "delivered"
+  newStatus: NotifiableStatus
+}
+
+const SUBJECTS: Record<NotifiableStatus, (ref: string) => string> = {
+  processing: (ref) => `Your order ${ref} is being processed`,
+  shipped: (ref) => `Your order ${ref} has shipped`,
+  delivered: (ref) => `Your order ${ref} was delivered`,
+  cancelled: (ref) => `Your order ${ref} was cancelled`,
 }
 
 /**
@@ -30,9 +37,7 @@ export async function sendOrderStatusChangeEmail(input: OrderStatusChangeInput):
   const { error } = await resend.emails.send({
     from: "Yesbuy Store <onboarding@resend.dev>",
     to: input.customerEmail,
-    subject: input.newStatus === "shipped"
-      ? `Your order ${input.reference} has shipped`
-      : `Your order ${input.reference} was delivered`,
+    subject: SUBJECTS[input.newStatus](input.reference),
     react: OrderStatusChangeEmail({
       reference: input.reference,
       guestToken: input.guestToken,

@@ -85,10 +85,11 @@ export async function confirmOrderPaid(
     return { outcome: "duplicate" }
   }
 
-  // ── 2. Already-confirmed guard ────────────────────────────────────────────
-  // Defensive: if the order was already confirmed by another path (e.g. admin manual confirm),
-  // treat this as a duplicate rather than overwriting state.
-  if (order.status === "payment_confirmed") {
+  // ── 2. Already-paid guard ─────────────────────────────────────────────────
+  // Defensive: if the order was already confirmed by another path (e.g. admin manual confirm)
+  // it will be in a paid/fulfillment state — treat this as a duplicate rather than
+  // re-decrementing stock. (A confirmed order now rests at "processing", not "payment_confirmed".)
+  if (["payment_confirmed", "processing", "shipped", "delivered"].includes(order.status)) {
     return { outcome: "duplicate" }
   }
 
@@ -110,7 +111,9 @@ export async function confirmOrderPaid(
   const [, ...decrementResults] = (await db.batch([
     db
       .update(orders)
-      .set({ status: "payment_confirmed", paidAt: new Date() })
+      // Owner decision (2026-07-13): a gateway/bank confirmation moves the order straight to
+      // "processing" (paid + being prepared). paidAt records the payment instant.
+      .set({ status: "processing", paidAt: new Date() })
       .where(eq(orders.id, order.id)),
     ...decrementStatements,
   ])) as [unknown, ...DecrementResult[]]

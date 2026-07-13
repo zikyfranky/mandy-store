@@ -25,7 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const GENERIC_ILLEGAL_TRANSITION_MESSAGE =
-  "That status change isn't allowed. Orders can only move forward one step at a time. Refresh the page to see the current status."
+  "That status change isn't allowed for this order (an unpaid order can't be marked fulfilled, and a completed order can't be reopened). Refresh the page to see the current status."
 
 // ─── Icons (Heroicons v2, inlined) ─────────────────────────────────────────────
 
