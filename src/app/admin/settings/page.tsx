@@ -296,6 +296,46 @@ async function SettingsContent() {
             credentialsPresent={!!bankCfg.bank_name && !!bankCfg.account_number && !!bankCfg.account_name}
             envVarName="BANK_ACCOUNT_NUMBER"
           />
+          <PaymentToggleRow
+            method="paystack"
+            label="Paystack"
+            description="Cards, bank, USSD & transfer via Paystack (NGN)"
+            icon={<BoltIcon />}
+            enabled={settings["paystack"] ?? true}
+            credentialsPresent={!!paystackCfg.secret_key}
+          />
+          <PaymentToggleRow
+            method="flutterwave"
+            label="Flutterwave"
+            description="Cards, bank & USSD via Flutterwave (NGN)"
+            icon={<GlobeAltIcon />}
+            enabled={settings["flutterwave"] ?? true}
+            credentialsPresent={!!flutterwaveCfg.secret_key}
+          />
+          <PaymentToggleRow
+            method="interswitch"
+            label="Interswitch"
+            description="Interswitch WebPay (NGN)"
+            icon={<ArrowsRightLeftIcon />}
+            enabled={settings["interswitch"] ?? true}
+            credentialsPresent={!!interswitchCfg.mac_key && !!interswitchCfg.merchant_code}
+          />
+          <PaymentToggleRow
+            method="gtpay"
+            label="GTPay"
+            description="GTPay (NGN)"
+            icon={<CreditCardIcon />}
+            enabled={settings["gtpay"] ?? true}
+            credentialsPresent={!!gtpayCfg.hash_key && !!gtpayCfg.merchant_id}
+          />
+          <PaymentToggleRow
+            method="remita"
+            label="Remita"
+            description="Remita (NGN)"
+            icon={<BanknotesIcon />}
+            enabled={settings["remita"] ?? true}
+            credentialsPresent={!!remitaCfg.api_key && !!remitaCfg.merchant_id}
+          />
         </div>
       </div>
 

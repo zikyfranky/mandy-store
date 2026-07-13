@@ -15,6 +15,7 @@ import { db } from "@/lib/db/client"
 import { orders, orderItems } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { isPaymentMethodEnabled } from "@/lib/payments/config"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
 import { buildOrderContext, type CheckoutInput } from "@/lib/actions/checkout"
 import { paystackInitialize, paystackVerify, paystackRefund } from "@/lib/payments/gateways/paystack"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
@@ -108,10 +109,12 @@ export async function initPaystackPayment(input: CheckoutInput): Promise<Paystac
   }
 
   // ── 5. Return client data — secret NEVER in return value (T-07-10, D-08) ──
+  // Public key resolves DB-first (admin Settings), env-fallback — same resolver as the secret.
+  const paystackCfg = await getGatewayConfig("paystack")
   return {
     accessCode,
     reference,                                        // client passes this to verifyPaystackPayment
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,  // client-safe (NEXT_PUBLIC_ prefix)
+    publicKey: paystackCfg.public_key ?? "",          // client-safe public key (DB-first / env-fallback)
     guestToken,                                       // used to redirect to /order/{guestToken}
   }
 }

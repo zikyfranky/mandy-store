@@ -44,6 +44,11 @@ vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
 vi.mock("@/lib/cart/queries", () => ({
   getCart: vi.fn(),
 }))
+// Payment enablement (owner decision 2026-07-13) = credentials present AND store_settings
+// toggle ON. Mock the toggle loader so tests control on/off deterministically (default: ON).
+vi.mock("@/lib/payments/store-settings", () => ({
+  getStoreSettingsMap: vi.fn(),
+}))
 
 // ─── Lazy imports after mocks ─────────────────────────────────────────────────
 // Import after vi.mock so the mocked versions are used
@@ -52,6 +57,7 @@ import { getCart } from "@/lib/cart/queries"
 import { auth } from "@/lib/auth"
 import { sendBankTransferInstructionsEmail } from "@/lib/email/send-bank-transfer-instructions"
 import { getStripe } from "@/lib/payments/stripe"
+import { getStoreSettingsMap } from "@/lib/payments/store-settings"
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -98,6 +104,7 @@ beforeEach(() => {
   process.env.BANK_ACCOUNT_NAME = "Mandy Store Ltd"
   process.env.ENABLE_STRIPE = "true"
   process.env.STRIPE_SECRET_KEY = "sk_test_placeholder"
+  vi.mocked(getStoreSettingsMap).mockResolvedValue({}) // no explicit OFF => configured methods enabled
   process.env.FLAT_SHIPPING_KOBO = "200000"
 
   // Reset auth to guest (null) by default
@@ -125,7 +132,7 @@ afterEach(async () => {
 
 describe("createBankTransferOrder — pure unit tests", () => {
   it("returns { error } when bank_transfer toggle is disabled", async () => {
-    process.env.ENABLE_BANK_TRANSFER = ""
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ bank_transfer: false })
     const { createBankTransferOrder } = await import("@/lib/actions/checkout")
     const result = await createBankTransferOrder(VALID_INPUT)
     expect(result).toHaveProperty("error")
@@ -184,7 +191,7 @@ describe("createBankTransferOrder — pure unit tests", () => {
 
 describe("createStripePaymentIntent — pure unit tests", () => {
   it("returns { error } when stripe toggle is disabled", async () => {
-    process.env.ENABLE_STRIPE = ""
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ stripe: false })
     const { createStripePaymentIntent } = await import("@/lib/actions/checkout")
     const result = await createStripePaymentIntent(VALID_INPUT)
     expect(result).toHaveProperty("error")
@@ -387,7 +394,7 @@ describe("createBankTransferOrder — DB integration", () => {
   it.skipIf(!hasDatabase)(
     "returns { error } when toggle is off — creates no order row",
     async () => {
-      process.env.ENABLE_BANK_TRANSFER = ""
+      vi.mocked(getStoreSettingsMap).mockResolvedValue({ bank_transfer: false })
       const { db } = await import("@/lib/db/client")
       const schema = await import("@/lib/db/schema")
 

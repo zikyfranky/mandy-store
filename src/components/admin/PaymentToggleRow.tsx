@@ -8,8 +8,9 @@
 
 import { useState, useTransition } from "react"
 import { toggleStoreSetting } from "@/lib/actions/admin-settings"
+import type { PaymentMethod } from "@/lib/payments/config"
 
-type ToggleableMethod = "stripe" | "paypal" | "bank_transfer"
+type ToggleableMethod = PaymentMethod
 
 function ExclamationTriangleIcon() {
   return (
@@ -30,7 +31,7 @@ interface PaymentToggleRowProps {
   icon: React.ReactNode
   enabled: boolean
   credentialsPresent: boolean
-  envVarName: string
+  envVarName?: string
 }
 
 export function PaymentToggleRow({
@@ -73,7 +74,7 @@ export function PaymentToggleRow({
             <div className="flex items-start gap-1.5 mt-1 text-amber-700 dark:text-amber-400">
               <ExclamationTriangleIcon />
               <p className="text-sm">
-                {`${label} is toggled on, but no credentials are configured on the server. Customers won't see it as a payment option until ${envVarName} is set.`}
+                {`${label} is toggled on, but its credentials aren't configured yet. Customers won't see it as a payment option until you add its keys in "Gateway credentials" below${envVarName ? ` (or set ${envVarName})` : ""}.`}
               </p>
             </div>
           )}

@@ -10,6 +10,9 @@ import { hasDatabase, truncateOrderTables, truncateCartTables, truncateCatalogTa
 
 // ─── Module mocks ──────────────────────────────────────────────────────────────
 vi.mock("server-only", () => ({}))
+// Enablement (owner decision 2026-07-13) = credentials present AND store_settings toggle ON.
+// Mock the toggle loader so tests control on/off deterministically (default ON, set per-test).
+vi.mock("@/lib/payments/store-settings", () => ({ getStoreSettingsMap: vi.fn() }))
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 vi.mock("@/lib/auth", () => ({
@@ -66,6 +69,7 @@ vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
 
 // ─── Lazy imports after mocks ──────────────────────────────────────────────────
 import { getCart } from "@/lib/cart/queries"
+import { getStoreSettingsMap } from "@/lib/payments/store-settings"
 import { paystackInitialize, paystackVerify, paystackRefund } from "@/lib/payments/gateways/paystack"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
@@ -112,6 +116,7 @@ beforeEach(() => {
   vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_test_paystack_key")
   vi.stubEnv("NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY", "pk_test_paystack_pub")
   vi.stubEnv("FLAT_SHIPPING_KOBO", "200000")
+  vi.mocked(getStoreSettingsMap).mockResolvedValue({}) // no explicit OFF => configured methods enabled
   // Reset mocked implementations each test (clearAllMocks wipes them)
   vi.mocked(getCart).mockResolvedValue({
     items: [
@@ -153,8 +158,8 @@ afterEach(async () => {
 // ─── initPaystackPayment — toggle rejection ────────────────────────────────────
 
 describe("initPaystackPayment — toggle rejection (PAY-12)", () => {
-  it("returns { error } when ENABLE_PAYSTACK is not set — toggle is FIRST statement", async () => {
-    vi.stubEnv("ENABLE_PAYSTACK", "")
+  it("returns { error } when the Paystack toggle is OFF — toggle is FIRST statement", async () => {
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ paystack: false })
 
     const { initPaystackPayment } = await import("@/lib/actions/paystack")
     const result = await initPaystackPayment(VALID_INPUT)
@@ -178,8 +183,8 @@ describe("initPaystackPayment — toggle rejection (PAY-12)", () => {
 // ─── verifyPaystackPayment — toggle rejection ─────────────────────────────────
 
 describe("verifyPaystackPayment — toggle rejection (PAY-12)", () => {
-  it("returns { error } when ENABLE_PAYSTACK is not set — toggle is FIRST statement", async () => {
-    vi.stubEnv("ENABLE_PAYSTACK", "")
+  it("returns { error } when the Paystack toggle is OFF — toggle is FIRST statement", async () => {
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ paystack: false })
 
     const { verifyPaystackPayment } = await import("@/lib/actions/paystack")
     const result = await verifyPaystackPayment({ reference: "ref-test" })

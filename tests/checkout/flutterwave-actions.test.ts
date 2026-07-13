@@ -10,6 +10,9 @@ import { hasDatabase, truncateOrderTables, truncateCartTables, truncateCatalogTa
 
 // ─── Module mocks ──────────────────────────────────────────────────────────────
 vi.mock("server-only", () => ({}))
+// Enablement (owner decision 2026-07-13) = credentials present AND store_settings toggle ON.
+// Mock the toggle loader so tests control on/off deterministically (default ON, set per-test).
+vi.mock("@/lib/payments/store-settings", () => ({ getStoreSettingsMap: vi.fn() }))
 vi.mock("next/headers", () => ({ cookies: vi.fn() }))
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 vi.mock("@/lib/auth", () => ({
@@ -66,6 +69,7 @@ vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
 
 // ─── Lazy imports after mocks ──────────────────────────────────────────────────
 import { getCart } from "@/lib/cart/queries"
+import { getStoreSettingsMap } from "@/lib/payments/store-settings"
 import { flutterwaveVerify, flutterwaveRefund } from "@/lib/payments/gateways/flutterwave"
 import { confirmOrderPaid } from "@/lib/payments/shared/confirm-order-paid"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
@@ -112,6 +116,7 @@ beforeEach(() => {
   vi.stubEnv("FLUTTERWAVE_SECRET_KEY", "FLWSECK_TEST-testkey")
   vi.stubEnv("NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY", "FLWPUBK_TEST-pubkey")
   vi.stubEnv("FLAT_SHIPPING_KOBO", "200000")
+  vi.mocked(getStoreSettingsMap).mockResolvedValue({}) // no explicit OFF => configured methods enabled
   // Reset mocked implementations each test (clearAllMocks wipes them)
   vi.mocked(getCart).mockResolvedValue({
     items: [
@@ -158,7 +163,7 @@ afterEach(async () => {
 
 describe("initFlutterwavePayment — toggle rejection (PAY-12)", () => {
   it("returns { error } when ENABLE_FLUTTERWAVE is not set — toggle is FIRST statement", async () => {
-    vi.stubEnv("ENABLE_FLUTTERWAVE", "")
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ flutterwave: false })
 
     const { initFlutterwavePayment } = await import("@/lib/actions/flutterwave")
     const result = await initFlutterwavePayment(VALID_INPUT)
@@ -185,7 +190,7 @@ describe("initFlutterwavePayment — toggle rejection (PAY-12)", () => {
 
 describe("verifyFlutterwavePayment — toggle rejection (PAY-12)", () => {
   it("returns { error } when ENABLE_FLUTTERWAVE is not set — toggle is FIRST statement", async () => {
-    vi.stubEnv("ENABLE_FLUTTERWAVE", "")
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ flutterwave: false })
 
     const { verifyFlutterwavePayment } = await import("@/lib/actions/flutterwave")
     const result = await verifyFlutterwavePayment({ transactionId: "txn-123", txRef: "MS-FLWTEST" })

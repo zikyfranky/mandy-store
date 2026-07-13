@@ -11,6 +11,8 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }
 vi.mock("@/lib/auth", () => ({ auth: vi.fn().mockResolvedValue(null), signIn: vi.fn(), signOut: vi.fn(), handlers: {} }))
 vi.mock("@/lib/email/send-order-confirmation", () => ({ sendOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined) }))
 vi.mock("@/lib/cart/queries", () => ({ getCart: vi.fn() }))
+// Enablement (owner decision 2026-07-13) = credentials present AND store_settings toggle ON.
+vi.mock("@/lib/payments/store-settings", () => ({ getStoreSettingsMap: vi.fn() }))
 vi.mock("@/lib/payments/gateways/remita", () => ({
   remitaAdapter: { provider: "remita", initPayment: vi.fn(), verifyTransaction: vi.fn(), refund: vi.fn() },
 }))
@@ -24,6 +26,7 @@ vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
 
 import { getCart } from "@/lib/cart/queries"
 import { remitaAdapter } from "@/lib/payments/gateways/remita"
+import { getStoreSettingsMap } from "@/lib/payments/store-settings"
 
 const RRR = "123456789012"
 const VALID_INPUT = {
@@ -36,6 +39,7 @@ beforeEach(() => {
   vi.stubEnv("REMITA_API_KEY", "ak")
   vi.stubEnv("REMITA_MERCHANT_ID", "RM")
   vi.stubEnv("FLAT_SHIPPING_KOBO", "200000")
+  vi.mocked(getStoreSettingsMap).mockResolvedValue({}) // no explicit OFF => configured methods enabled
   vi.mocked(getCart).mockResolvedValue({
     items: [{ variantId: "00000000-0000-0000-0000-000000000001", quantity: 1, stock: 10, priceKobo: 10_000_000, productName: "Test Phone", variantLabel: "Black / 128GB", imageUrl: null, lineTotalKobo: 10_000_000, isOOS: false, isClamped: false }],
     subtotalKobo: 10_000_000, totalQty: 1, hasOOS: false,
@@ -51,8 +55,8 @@ afterEach(async () => {
 })
 
 describe("initRemitaPayment — toggle rejection (PAY-12, toggle FIRST)", () => {
-  it("returns { error } when ENABLE_REMITA is not set — adapter NOT called", async () => {
-    vi.stubEnv("ENABLE_REMITA", "")
+  it("returns { error } when the Remita toggle is OFF — adapter NOT called", async () => {
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ remita: false })
     const { initRemitaPayment } = await import("@/lib/actions/remita")
     const result = await initRemitaPayment(VALID_INPUT)
     expect(result).toHaveProperty("error")

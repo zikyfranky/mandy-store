@@ -27,14 +27,14 @@ vi.mock("@/lib/dal", () => ({
 // vi.hoisted runs before vi.mock factory hoisting — allows us to share these
 // references reliably (the bare "mock"-prefix hoisting convention does not
 // reliably hoist a chain of variables that reference each other).
-const { mockUpdate } = vi.hoisted(() => {
-  const mockWhere = vi.fn().mockResolvedValue(undefined)
-  const mockSet = vi.fn(() => ({ where: mockWhere }))
-  const mockUpdate = vi.fn(() => ({ set: mockSet }))
-  return { mockWhere, mockSet, mockUpdate }
+const { mockInsert } = vi.hoisted(() => {
+  const mockOnConflict = vi.fn().mockResolvedValue(undefined)
+  const mockValues = vi.fn(() => ({ onConflictDoUpdate: mockOnConflict }))
+  const mockInsert = vi.fn(() => ({ values: mockValues }))
+  return { mockValues, mockOnConflict, mockInsert }
 })
 vi.mock("@/lib/db/client", () => ({
-  db: { update: mockUpdate },
+  db: { insert: mockInsert },
 }))
 
 // ─── Lazy imports after mocks ─────────────────────────────────────────────────
@@ -63,18 +63,24 @@ describe("toggleStoreSetting — toggle enforcement", () => {
       throw new Error("redirect")
     })
     await expect(toggleStoreSetting("stripe", true)).rejects.toThrow()
-    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(mockInsert).not.toHaveBeenCalled()
   })
 
   it("rejects an invalid payment method (Zod enum validation)", async () => {
     const result = await toggleStoreSetting("not-a-real-method", true)
     expect(result).toHaveProperty("success", false)
-    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(mockInsert).not.toHaveBeenCalled()
   })
 
   it("updates the row for a valid method + admin caller", async () => {
     const result = await toggleStoreSetting("stripe", false)
     expect(result).toHaveProperty("success", true)
-    expect(mockUpdate).toHaveBeenCalled()
+    expect(mockInsert).toHaveBeenCalled()
+  })
+
+  it("accepts an NG gateway method (all 8 are now admin-toggleable)", async () => {
+    const result = await toggleStoreSetting("paystack", true)
+    expect(result).toHaveProperty("success", true)
+    expect(mockInsert).toHaveBeenCalled()
   })
 })

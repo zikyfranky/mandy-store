@@ -16,6 +16,7 @@ import { db } from "@/lib/db/client"
 import { orders, orderItems } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { isPaymentMethodEnabled } from "@/lib/payments/config"
+import { getGatewayConfig } from "@/lib/payments/gateway-credentials"
 import { buildOrderContext, type CheckoutInput } from "@/lib/actions/checkout"
 import { flutterwaveBuildParams, flutterwaveVerify, flutterwaveRefund } from "@/lib/payments/gateways/flutterwave"
 import { getOrderByGatewayReference } from "@/lib/orders/queries"
@@ -102,9 +103,10 @@ export async function initFlutterwavePayment(input: CheckoutInput): Promise<Flut
   const amountNaira = totals.totalKobo / 100
 
   // ── 5. Return client data — secret NEVER in return value (T-07-16, D-08) ──
-  // Only NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY is returned (client-safe prefix).
+  // Public key resolves DB-first (admin Settings), env-fallback — same resolver as the secret.
+  const flutterwaveCfg = await getGatewayConfig("flutterwave")
   return {
-    publicKey: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY!,
+    publicKey: flutterwaveCfg.public_key ?? "",
     txRef: reference,     // client passes tx_ref to FlutterwaveCheckout() + verifyFlutterwavePayment
     amountNaira,          // naira amount for FlutterwaveCheckout({ amount })
     email: customerEmail,

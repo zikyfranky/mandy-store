@@ -22,8 +22,12 @@ vi.mock("@/lib/payments/gateway-credentials", async (importOriginal) => {
   return { ...actual, getGatewayCredentialsMap: vi.fn().mockResolvedValue({}) }
 })
 
+// Enablement (owner decision 2026-07-13) = credentials present AND store_settings toggle ON.
+vi.mock("@/lib/payments/store-settings", () => ({ getStoreSettingsMap: vi.fn() }))
+
 import { getCart } from "@/lib/cart/queries"
 import { interswitchAdapter } from "@/lib/payments/gateways/interswitch"
+import { getStoreSettingsMap } from "@/lib/payments/store-settings"
 
 const VALID_INPUT = {
   email: "ada@example.com",
@@ -35,6 +39,7 @@ beforeEach(() => {
   vi.stubEnv("INTERSWITCH_MAC_KEY", "mac")
   vi.stubEnv("INTERSWITCH_MERCHANT_CODE", "MX")
   vi.stubEnv("FLAT_SHIPPING_KOBO", "200000")
+  vi.mocked(getStoreSettingsMap).mockResolvedValue({}) // no explicit OFF => configured methods enabled
   vi.mocked(getCart).mockResolvedValue({
     items: [{ variantId: "00000000-0000-0000-0000-000000000001", quantity: 1, stock: 10, priceKobo: 10_000_000, productName: "Test Phone", variantLabel: "Black / 128GB", imageUrl: null, lineTotalKobo: 10_000_000, isOOS: false, isClamped: false }],
     subtotalKobo: 10_000_000, totalQty: 1, hasOOS: false,
@@ -50,8 +55,8 @@ afterEach(async () => {
 })
 
 describe("initInterswitchPayment — toggle rejection (PAY-12, toggle FIRST)", () => {
-  it("returns { error } when ENABLE_INTERSWITCH is not set — adapter NOT called", async () => {
-    vi.stubEnv("ENABLE_INTERSWITCH", "")
+  it("returns { error } when the Interswitch toggle is OFF — adapter NOT called", async () => {
+    vi.mocked(getStoreSettingsMap).mockResolvedValue({ interswitch: false })
     const { initInterswitchPayment } = await import("@/lib/actions/interswitch")
     const result = await initInterswitchPayment(VALID_INPUT)
     expect(result).toHaveProperty("error")
