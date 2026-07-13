@@ -4,6 +4,7 @@
 // D-03 / D-13: cart icon badge wired to live count via CartIconButton + CartProvider.
 
 import Link from "next/link"
+import Image from "next/image"
 import { SearchBar } from "@/components/catalog/SearchBar"
 import { CartIconButton } from "@/components/layout/CartIconButton"
 import { listActiveCategoriesForNav } from "@/lib/catalog/queries"
@@ -26,13 +27,16 @@ export async function SiteHeader({ initialCount = 0 }: SiteHeaderProps) {
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#0c0c16]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 shadow-sm">
       <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center gap-4">
         {/* Logo + brand mark */}
-        <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap group shrink-0">
-          <span className="brand-gradient inline-flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md shadow-indigo-500/30 transition-transform group-hover:scale-105">
-            {/* Bolt / spark mark */}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" aria-hidden="true">
-              <path d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" />
-            </svg>
-          </span>
+        <Link href="/" aria-label="Yesbuy Store — home" className="flex items-center gap-2.5 whitespace-nowrap group shrink-0">
+          {/* Brand badge — the YesBuy Store logo */}
+          <Image
+            src="/yesbuy-badge.png"
+            alt="Yesbuy Store"
+            width={40}
+            height={40}
+            priority
+            className="h-10 w-10 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/15 shadow-sm transition-transform group-hover:scale-105"
+          />
           <span className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
             Yesbuy <span className="text-indigo-600 dark:text-indigo-400">Store</span>
           </span>
