@@ -159,11 +159,11 @@ describe("sendOrderConfirmationEmail", () => {
     expect(arg.to).toBe("customer@example.com")
   })
 
-  it("sends from Mandy Store sender address", async () => {
+  it("sends from Yesbuy Store sender address", async () => {
     await sendOrderConfirmationEmail(sampleOrder)
 
     const [arg] = mockSend.mock.calls[0]
-    expect(arg.from).toContain("Mandy Store")
+    expect(arg.from).toContain("Yesbuy Store")
   })
 
   it("throws when Resend returns an error", async () => {
