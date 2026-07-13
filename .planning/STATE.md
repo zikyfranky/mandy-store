@@ -114,7 +114,7 @@ Plan: 6 of 6
 
 | Date | Slug | Summary |
 |------|------|---------|
-| 2026-07-12 | rebrand-yesbuy | Renamed customer-facing brand "Mandy Store" → **YesBuy** (domain yesbuy.store) across 20 source files — metadata, emails, payment panels, storefront + admin wordmarks. package.json/repo-dir/.planning left as internal identifiers. tsc + build clean. |
+| 2026-07-12 | rebrand-yesbuy | Renamed customer-facing brand "Mandy Store" → **Yesbuy Store** (domain yesbuy.store) across 20 source files — metadata, emails, payment panels, storefront + admin wordmarks. package.json/repo-dir/.planning left as internal identifiers. tsc + build clean. |
 
 ### Todos
 

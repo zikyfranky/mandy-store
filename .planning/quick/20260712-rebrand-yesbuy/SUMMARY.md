@@ -4,16 +4,17 @@ status: complete
 completed: 2026-07-12
 ---
 
-# Summary: Rebrand → YesBuy
+# Summary: Rebrand → Yesbuy Store
 
-Replaced the customer-facing brand "Mandy Store" with **YesBuy** across 20 source files.
+Replaced the customer-facing brand "Mandy Store" with **Yesbuy Store** across 20 source files.
 
 ## Changes
-- **Bulk** `"Mandy Store"` → `"YesBuy"` in all metadata titles/descriptions, all 5 transactional
+- **Bulk** `"Mandy Store"` → `"Yesbuy Store"` in all metadata titles/descriptions, all 5 transactional
   email templates (`Preview`/body) + 5 email senders (`from:` display name), and the 2
   payment-panel titles (`FlutterwavePaymentPanel.tsx`, `flutterwave.ts`).
-- **Wordmarks** re-split two-tone to match the domain root: `Yes` + accent `Buy`
-  (`SiteHeader.tsx` → "YesBuy"; `AdminSidebar.tsx` → "YesBuy Admin").
+- **Wordmarks** two-tone `Yesbuy` + accent `Store` (mirrors the original Mandy+Store
+  treatment): `SiteHeader.tsx` → "Yesbuy Store"; `AdminSidebar.tsx` → "Yesbuy Store Admin".
+- **Casing:** owner chose the two-word "Yesbuy Store" (not camel "YesBuy").
 - **Cart comment** reworded (cookie key `ms_cart` intentionally kept — renaming drops carts).
 
 ## Verification
