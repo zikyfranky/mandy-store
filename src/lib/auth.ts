@@ -64,6 +64,18 @@ const adapter = DrizzleAdapter(db, {
 // encode/decode session-bridge directly against the DB. See tests/auth/session.test.ts.
 export const authConfig = {
   adapter,
+  // Self-hosted deployment (VPS behind CloudPanel/Nginx reverse proxy) — Auth.js's
+  // trustHost defaults to `!!(AUTH_URL ?? AUTH_TRUST_HOST ?? VERCEL ?? CF_PAGES ?? NODE_ENV
+  // !== "production")` (@auth/core/lib/utils/env.js). Locally NODE_ENV !== "production" so
+  // it's true by accident; in production on a non-Vercel/non-Cloudflare host with no AUTH_URL
+  // set, it silently defaults to FALSE, which makes assertConfig() reject EVERY Auth.js
+  // request (including session reads and the credentials sign-in POST) with a 500
+  // "Configuration"/UntrustedHost error — surfacing as an always-unauthenticated session and
+  // proxy.ts redirecting every /admin and /account/* visit to /account/login. Explicitly
+  // trusting the host is the documented pattern for self-hosted deployments behind your own
+  // reverse proxy (authjs.dev/reference/core#trusthost); the proxy is trusted to forward the
+  // real Host/X-Forwarded-Proto headers (verify CloudPanel's vhost does this — see deploy notes).
+  trustHost: true,
   // D-08: Credentials REQUIRES "jwt" strategy or @auth/core throws UnsupportedStrategy.
   // The encode/decode overrides below back this "jwt" cookie with a real DB session row.
   session: {

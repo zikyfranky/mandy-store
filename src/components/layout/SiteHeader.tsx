@@ -3,15 +3,46 @@
 // Contains SearchBar (Client island), nav links, CartIconButton (Client island), account icon.
 // D-03 / D-13: cart icon badge wired to live count via CartIconButton + CartProvider.
 
+import { Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { SearchBar } from "@/components/catalog/SearchBar"
 import { CartIconButton } from "@/components/layout/CartIconButton"
 import { listActiveCategoriesForNav } from "@/lib/catalog/queries"
+import { auth } from "@/lib/auth"
 
 interface SiteHeaderProps {
   /** Server-read cart count — passed through to CartIconButton via CartProvider (D-13) */
   initialCount?: number
+}
+
+const accountIconLinkClassName =
+  "min-h-11 min-w-11 flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+
+const accountIconSvg = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+  </svg>
+)
+
+/**
+ * Account icon target: signed-in users go to their profile (/account), everyone else to
+ * login. Read-only session check — this is UX routing only, /account itself re-verifies
+ * via verifySession() (CLAUDE.md dual-auth, see src/app/account/page.tsx).
+ *
+ * Isolated in its own component + Suspense boundary because auth() is a dynamic (cookie-
+ * reading) API — SiteHeader itself must stay static (no dynamic APIs) since it's rendered
+ * directly in the root layout's Suspense `fallback` for the static PPR shell (Pitfall 3,
+ * D-03). Only this icon streams in dynamically; the rest of the header prerenders as before.
+ */
+async function AccountIcon() {
+  const session = await auth()
+  const accountHref = session?.user ? "/account" : "/account/login"
+  return (
+    <Link href={accountHref} aria-label="Account" className={accountIconLinkClassName}>
+      {accountIconSvg}
+    </Link>
+  )
 }
 
 // Async Server Component: the nav categories come from the cached (`'use cache'` +
@@ -65,16 +96,17 @@ export async function SiteHeader({ initialCount = 0 }: SiteHeaderProps) {
           {/* Cart icon — wired to live count via CartIconButton + CartProvider (D-03/D-13) */}
           <CartIconButton />
 
-          {/* Account icon — links to /account/login */}
-          <Link
-            href="/account/login"
-            aria-label="Account"
-            className="min-h-11 min-w-11 flex items-center justify-center rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+          {/* Account icon — /account (profile) when signed in, /account/login otherwise.
+              Own Suspense boundary: auth() is dynamic, the rest of the header is static. */}
+          <Suspense
+            fallback={
+              <span className={accountIconLinkClassName} aria-hidden="true">
+                {accountIconSvg}
+              </span>
+            }
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-            </svg>
-          </Link>
+            <AccountIcon />
+          </Suspense>
         </div>
       </div>
 
